@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/hero.gif" alt="3D render: the two-stage 33:1 planetary gearbox of the reference design with its gears turning as the output arm swings" width="900">
+  <img src="docs/images/hero.gif" alt="Blender Cycles render of the reference two-stage 33:1 planetary gearbox, rings cut away, gears turning in step with the output shaft" width="900">
 </p>
 
 MotionProof takes a CAD assembly and its tolerance specification, builds **virtual
