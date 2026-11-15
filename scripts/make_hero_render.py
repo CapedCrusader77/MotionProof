@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs" / "images" / "hero.gif"
 MODULE = 0.5
 STAGES = [(12, 21, 54, -40.0, 8.0), (12, 24, 60, -16.0, 8.0)]  # zs, zp, zr, y0 (mm), width
-W, H = 800, 380
+W, H = 720, 342
 
 
 def gear_points(z: int, internal: bool = False) -> list[tuple[float, float]]:
@@ -153,6 +153,7 @@ def main() -> None:
     ap.add_argument("--samples", type=int, default=64)
     ap.add_argument("--work", default=None)
     ap.add_argument("--assemble-only", action="store_true")
+    ap.add_argument("--step", type=int, default=1, help="use every n-th rendered frame")
     args = ap.parse_args()
     tmp = Path(args.work or tempfile.mkdtemp(prefix="mp_hero_"))
     tmp.mkdir(parents=True, exist_ok=True)
@@ -171,7 +172,7 @@ def main() -> None:
     light.set_variation_by_name("Light")
     mono = ImageFont.truetype("C:/Windows/Fonts/consola.ttf", 13)
     imgs = []
-    for f, frame in enumerate(fr):
+    for f, frame in list(enumerate(fr))[:: args.step]:
         im = Image.open(tmp / "frames" / f"{f:03d}.png").convert("RGB").resize((W, H),
                                                                                 Image.LANCZOS)
         d = ImageDraw.Draw(im)
@@ -184,9 +185,9 @@ def main() -> None:
     strip = Image.new("RGB", (W, H * 3))
     for n, fi in enumerate((0, len(imgs) // 3, 2 * len(imgs) // 3)):
         strip.paste(imgs[fi], (0, n * H))
-    pal = strip.quantize(192, method=Image.Quantize.MEDIANCUT)
+    pal = strip.quantize(128, method=Image.Quantize.MEDIANCUT)
     q = [im.quantize(palette=pal, dither=Image.Dither.FLOYDSTEINBERG) for im in imgs]
-    q[0].save(OUT, save_all=True, append_images=q[1:], duration=70, loop=0, optimize=True)
+    q[0].save(OUT, save_all=True, append_images=q[1:], duration=70 * args.step, loop=0, optimize=True)
     imgs[len(imgs) // 4].save(tmp / "preview.png")
     print(OUT, OUT.stat().st_size // 1024, "KB", (tmp / "preview.png").as_posix())
 
