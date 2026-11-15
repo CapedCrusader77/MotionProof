@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/hero.gif" alt="Drawing sheet: a detail view of two meshing gear teeth with the backlash gap dimensioned, beside the output-versus-input trace that the gap produces, and the MotionProof title block" width="900">
+  <img src="docs/images/hero.gif" alt="3D render: the two-stage 33:1 planetary gearbox of the reference design with its gears turning as the output arm swings" width="900">
 </p>
 
 MotionProof takes a CAD assembly and its tolerance specification, builds **virtual
