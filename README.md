@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/workflow-tour.gif" alt="Tour of the MotionProof application: project, assembly workbench, tolerances, virtual assemblies, robustness, sensitivity, model trust and benchmarks" width="900">
+  <img src="docs/images/hero.gif" alt="Drawing sheet: a detail view of two meshing gear teeth with the backlash gap dimensioned, beside the output-versus-input trace that the gap produces, and the MotionProof title block" width="900">
 </p>
 
 MotionProof takes a CAD assembly and its tolerance specification, builds **virtual
@@ -53,6 +53,8 @@ and the backlash *b* is computed per variant from the gear stages:
 `((j_sun-planet + j_planet-ring)/2 + c_bearing) / centre_distance`, worst planet wins.
 
 ## A look inside
+
+<p align="center"><img src="docs/images/workflow-tour.gif" alt="Tour of the MotionProof application: project, assembly workbench, tolerances, virtual assemblies, robustness, sensitivity, model trust and benchmarks" width="860"></p>
 
 <table>
   <tr>
