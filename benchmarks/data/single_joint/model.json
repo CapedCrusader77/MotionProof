@@ -1,0 +1,104 @@
+{
+ "schema": "motionproof.model/1",
+ "name": "benchmark single joint",
+ "description": "",
+ "synthetic": true,
+ "source": {
+  "kind": "mjcf",
+  "generator": null,
+  "file": "single.xml",
+  "parameters": {}
+ },
+ "fidelity": "F2_reduced_order_dynamics",
+ "features": [],
+ "datums": [],
+ "tolerances": [
+  {
+   "id": "backlash_tol",
+   "component": "gearbox",
+   "feature": null,
+   "parameter": "backlash",
+   "characteristic": "backlash",
+   "category": "assembly",
+   "nominal": 0.0,
+   "upper": 0.02,
+   "lower": 0.0,
+   "unit": "rad",
+   "datum": null,
+   "zone_group": null,
+   "distribution": {
+    "type": "uniform",
+    "low": 0.0,
+    "high": 0.02
+   },
+   "correlation_group": null,
+   "source": "benchmark input",
+   "confidence": "specified",
+   "verification": "unverified",
+   "process": null,
+   "note": null
+  }
+ ],
+ "correlations": [],
+ "fits": [],
+ "radial_supports": [],
+ "gear_stages": [],
+ "drives": {
+  "j": {
+   "motor": {
+    "model": null,
+    "continuous_torque": 1.0,
+    "peak_torque": 2.0,
+    "max_speed": 300.0,
+    "torque_speed": [],
+    "rotor_inertia": 0.00001,
+    "friction_torque": 0.0,
+    "source": "benchmark input",
+    "confidence": "specified"
+   },
+   "gearbox": {
+    "ratio": 20.0,
+    "efficiency": 1.0,
+    "backlash": 0.0,
+    "stiffness": 2000.0,
+    "damping_ratio": 0.3,
+    "source": "benchmark input",
+    "confidence": "specified"
+   },
+   "controller": {
+    "bandwidth": 40.0,
+    "kp": null,
+    "kd": null
+   },
+   "friction": 0.0,
+   "damping": 0.0
+  }
+ },
+ "held_joints": {},
+ "effects": [
+  {
+   "tolerance": "backlash_tol",
+   "joint": "j",
+   "target": "backlash",
+   "mode": "add",
+   "gain": 1.0
+  }
+ ],
+ "end_effector": {
+  "body": "arm",
+  "offset": [
+   0.3,
+   0.0,
+   0.0
+  ]
+ },
+ "simulation": {
+  "timestep": 0.0005,
+  "gravity": [
+   0.0,
+   0.0,
+   -9.81
+  ]
+ },
+ "assumptions": []
+}

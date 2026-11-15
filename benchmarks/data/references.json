@@ -1,0 +1,168 @@
+{
+ "generated_by": "benchmarks/reference_calculations.py (NumPy 2.5.4, no motionproof import)",
+ "expected": {
+  "A": {
+   "min clearance (bore LSL - shaft USL)": -0.0030000000000001137,
+   "max clearance (bore USL - shaft LSL)": 0.014000000000000234,
+   "clearance mean (Monte Carlo vs analytic)": 0.0055000000000005045,
+   "clearance std (Monte Carlo vs RSS)": 0.0019604710783936376,
+   "exact B-rep radial gap with 10 um offset": 0.014999999999999467,
+   "diameter recovered from SYNTHETIC noisy scan (unknown pose)": 8.03
+  },
+  "B": {
+   "stage 1 ratio 1 + 54/12": 5.5,
+   "stage 2 ratio 1 + 60/12": 6.0,
+   "overall 33:1 from tooth counts": 33.0,
+   "stage 2 backlash ((0.04 + 0.04)/2 + 0.012) / 9 mm": 0.005777777777777778,
+   "output backlash = s2 + s1 / 6": 0.006828282828282829,
+   "transmission error amplitude e / r_sun / 33": 0.00010101010101010101
+  },
+  "C": {
+   "IK elbow angle vs law of cosines": 1.3284304757559333,
+   "shoulder gravity torque = sum m g x_com": 0.3379741200476899,
+   "shoulder upper limit compiled from the model file": 3.0,
+   "workspace outer radius": 0.35
+  },
+  "D": {
+   "lost motion = b for b = 0.0": 0.0,
+   "direction error at the tip = L b for b = 0.0": 0.0,
+   "lost motion = b for b = 0.005": 0.005,
+   "direction error at the tip = L b for b = 0.005": 0.0015,
+   "lost motion = b for b = 0.012": 0.012,
+   "direction error at the tip = L b for b = 0.012": 0.0036
+  },
+  "E": {
+   "tip error from 0.05 mm joint offset": 5e-05,
+   "tip error from 0.2 mm joint offset": 0.0002,
+   "sensitivity d(tip error)/d(tilt) = arm length": 0.3,
+   "radial play grows with seat clearance (6 um)": 6e-06,
+   "axis tilt from extra play = play / bearing span": 0.0004
+  },
+  "F": {
+   "motor torque with 0.0 kg payload = (m+mp) g L / N": 0.14715,
+   "torque utilisation with 0.0 kg": 0.073575,
+   "tip error with 0.0 kg = L tau / k": 0.00044145,
+   "motor torque with 0.5 kg payload = (m+mp) g L / N": 0.22072499999999998,
+   "torque utilisation with 0.5 kg": 0.11036249999999999,
+   "tip error with 0.5 kg = L tau / k": 0.0006621749999999999,
+   "motor torque with 1.5 kg payload = (m+mp) g L / N": 0.367875,
+   "torque utilisation with 1.5 kg": 0.1839375,
+   "tip error with 1.5 kg = L tau / k": 0.0011036249999999998
+  },
+  "I": {
+   "wear rate recovered from SYNTHETIC data": 2e-09,
+   "threshold crossing (cycles)": 1528500.0000000002
+  },
+  "L": {
+   "L1 deflection vs closed form": 0.0064715,
+   "L1 - L2 tip error difference (frictionless)": 0.0
+  },
+  "G": {
+   "batch std recovered": 0.01,
+   "setup std recovered": 0.006,
+   "part std recovered": 0.004,
+   "clearance std, setup error independent": 0.017435595774162694,
+   "clearance std, setup error shared": 0.015231546211727816,
+   "tool-wear drift rate recovered": 2e-05
+  },
+  "K": {
+   "true failure probability Phi(-3) (reference only)": 0.0013498980316300933
+  },
+  "M": {
+   "largest scale with zero failures": 0.6000000000000001,
+   "largest scale meeting the reliability target (point estimate; cost optimum 1/s without confidence margin)": 0.7499900000000002
+  }
+ },
+ "estimates": {
+  "A": [
+   {
+    "estimate": "Kasa circle fit of the raw posed scan (no registration)",
+    "value": 8.02982701555979,
+    "compare_with": "true diameter",
+    "target": 8.03,
+    "tolerance": 0.002,
+    "unit": "mm"
+   }
+  ],
+  "C": [
+   {
+    "estimate": "max deviation of MotionProof FK from the closed form",
+    "value": 1.0007415106216802e-16,
+    "compare_with": "zero",
+    "target": 0.0,
+    "tolerance": 1e-09,
+    "unit": "m"
+   }
+  ],
+  "I": [
+   {
+    "estimate": "wear rate, numpy.polyfit on the raw data",
+    "value": 2.003705194110801e-09,
+    "compare_with": "suite: wear rate recovered from SYNTHETIC data",
+    "tolerance_rel": 1e-09,
+    "unit": "rad/cycle"
+   }
+  ],
+  "G": [
+   {
+    "estimate": "batch std, own nested ANOVA",
+    "value": 0.009377387364164172,
+    "compare_with": "suite: batch std recovered",
+    "tolerance_rel": 1e-09,
+    "unit": "mm"
+   },
+   {
+    "estimate": "setup std, own nested ANOVA",
+    "value": 0.006099359221443163,
+    "compare_with": "suite: setup std recovered",
+    "tolerance_rel": 1e-09,
+    "unit": "mm"
+   },
+   {
+    "estimate": "part std, own nested ANOVA",
+    "value": 0.003982187147432855,
+    "compare_with": "suite: part std recovered",
+    "tolerance_rel": 1e-09,
+    "unit": "mm"
+   },
+   {
+    "estimate": "clearance std (independent setup), numpy std of bore - shaft",
+    "value": 0.017930733217779417,
+    "compare_with": "suite: clearance std, setup error independent",
+    "tolerance_rel": 1e-09,
+    "unit": "mm"
+   },
+   {
+    "estimate": "clearance std (shared setup), numpy std of bore - shaft",
+    "value": 0.015594394726187377,
+    "compare_with": "suite: clearance std, setup error shared",
+    "tolerance_rel": 1e-09,
+    "unit": "mm"
+   },
+   {
+    "estimate": "drift rate, numpy.polyfit",
+    "value": 1.9401504922481118e-05,
+    "compare_with": "suite: tool-wear drift rate recovered",
+    "tolerance_rel": 1e-06,
+    "unit": "mm/part"
+   }
+  ],
+  "M": [
+   {
+    "estimate": "yield cost (unit cost 1.0) / yield at the chosen scale 0.685584",
+    "value": 1.0947339575051485,
+    "target": 1.0947339575051485,
+    "compare_with": "MotionProof cost of the chosen candidate",
+    "tolerance_rel": 1e-12
+   },
+   {
+    "estimate": "chosen scale (reciprocal cost) within [0.5, point-estimate optimum]; 0.5 is the suite's lower bound allowing for the confidence margin",
+    "value": 0.6025753041800642,
+    "band": [
+     0.5,
+     0.7499900000000002
+    ]
+   }
+  ]
+ }
+}

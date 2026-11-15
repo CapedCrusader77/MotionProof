@@ -1,0 +1,130 @@
+{
+ "note": "Benchmark inputs. All values are benchmark definitions, not measurements; data files marked SYNTHETIC are generated with known ground truth.",
+ "single_joint": {
+  "xml": "single_joint/single.xml",
+  "arm_length": 0.3,
+  "arm_mass": 1.0,
+  "ratio": 20.0,
+  "stiffness": 2000.0,
+  "peak_torque": 2.0,
+  "gravity": 9.81
+ },
+ "A": {
+  "brep_gap": {
+   "shaft": 9.98,
+   "bore": 10.03,
+   "length": 20.0,
+   "offset": 0.01
+  },
+  "scan": {
+   "true_diameter": 8.03,
+   "length": 40.0,
+   "points": 20000,
+   "noise": 0.005,
+   "seed": 3,
+   "pose_axis": [
+    0.3,
+    1.0,
+    0.2
+   ],
+   "pose_angle_rad": 0.02,
+   "pose_translation": [
+    0.4,
+    -0.3,
+    0.2
+   ],
+   "transform": [
+    [
+     0.9998159353391513,
+     -0.00370953704440844,
+     0.01882378221331539,
+     0.4
+    ],
+    [
+     0.003815728194898127,
+     0.9999769919173939,
+     -0.005608551879316696,
+     -0.3
+    ],
+    [
+     -0.01880254398321745,
+     0.005679345979643154,
+     0.9998070860766104,
+     0.2
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ]
+  }
+ },
+ "B": {
+  "runout": 0.02
+ },
+ "C": {
+  "ik_target": [
+   0.25,
+   0.0,
+   0.12
+  ]
+ },
+ "D": {
+  "backlash": [
+   0.0,
+   0.005,
+   0.012
+  ],
+  "friction": 0.4,
+  "gravity": false
+ },
+ "E": {
+  "offsets_m": [
+   5e-05,
+   0.0002
+  ],
+  "tilts_rad": [
+   0.001,
+   0.002
+  ],
+  "seat_change_mm": 0.006
+ },
+ "F": {
+  "payloads": [
+   0.0,
+   0.5,
+   1.5
+  ]
+ },
+ "G": {
+  "batch_std": 0.01,
+  "setup_std": 0.006,
+  "part_std": 0.004,
+  "drift_rate": 2e-05
+ },
+ "I": {
+  "true_rate": 2e-09,
+  "limit": 0.005,
+  "initial_backlash": 0.004
+ },
+ "L": {
+  "backlash": 0.01
+ },
+ "M": {
+  "centre": 0.01,
+  "half_width": 0.01,
+  "backlash_limit": 0.016,
+  "windup": 0.0014715,
+  "scale_lower": 0.2,
+  "scale_upper": 1.0,
+  "reliability_target": 0.9,
+  "confidence": 0.9,
+  "unit_cost": 1.0,
+  "yield_process": {
+   "mean": 0.01,
+   "std": 0.004
+  }
+ }
+}

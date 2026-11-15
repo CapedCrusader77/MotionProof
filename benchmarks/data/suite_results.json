@@ -1,0 +1,914 @@
+[
+ {
+  "title": "Shaft and bearing fit; as-built scan recovery",
+  "area": "geometry",
+  "fidelity": "F1 geometry",
+  "synthetic": true,
+  "purpose": "Fit limits, Monte Carlo clearance statistics, exact B-rep gap and diameter recovery from a scan, each against an independent value.",
+  "formulation": "clearance = bore - shaft; var = var_bore + var_shaft (independent); radial gap = (D - d)/2 - offset",
+  "checks": [
+   {
+    "quantity": "min clearance (bore LSL - shaft USL)",
+    "expected": -0.0030000000000001137,
+    "actual": -0.0030000000000001137,
+    "error": 0.0,
+    "criterion": "|error| <= 1e-12 mm",
+    "passed": true,
+    "unit": "mm"
+   },
+   {
+    "quantity": "max clearance (bore USL - shaft LSL)",
+    "expected": 0.014000000000000234,
+    "actual": 0.014000000000000234,
+    "error": 0.0,
+    "criterion": "|error| <= 1e-12 mm",
+    "passed": true,
+    "unit": "mm"
+   },
+   {
+    "quantity": "clearance mean (Monte Carlo vs analytic)",
+    "expected": 0.0055000000000005045,
+    "actual": 0.0054971447548870945,
+    "error": -2.855245113409996e-06,
+    "criterion": "|error| <= 2e-05 mm",
+    "passed": true,
+    "unit": "mm"
+   },
+   {
+    "quantity": "clearance std (Monte Carlo vs RSS)",
+    "expected": 0.0019604710783936376,
+    "actual": 0.0019564205095120423,
+    "error": -4.050568881595277e-06,
+    "criterion": "|error| <= 0.01 x expected",
+    "passed": true,
+    "unit": "mm"
+   },
+   {
+    "quantity": "exact B-rep radial gap with 10 um offset",
+    "expected": 0.015,
+    "actual": 0.015000000000047642,
+    "error": 4.764244554422703e-14,
+    "criterion": "|error| <= 1e-07 mm",
+    "passed": true,
+    "unit": "mm"
+   },
+   {
+    "quantity": "diameter recovered from SYNTHETIC noisy scan (unknown pose)",
+    "expected": 8.03,
+    "actual": 8.030086949397582,
+    "error": 8.694939758235876e-05,
+    "criterion": "|error| <= 0.002 mm",
+    "passed": true,
+    "unit": "mm"
+   },
+   {
+    "quantity": "registration accepted for inspection",
+    "expected": null,
+    "actual": "RMS 0.0144 mm, 10 iterations",
+    "error": null,
+    "criterion": "condition holds",
+    "passed": true,
+    "unit": ""
+   }
+  ],
+  "id": "A",
+  "name": "fit",
+  "seconds": 5.29,
+  "status": "PASS"
+ },
+ {
+  "title": "Two-stage planetary gearbox (NEMA 17 reference, 33:1)",
+  "area": "transmission",
+  "fidelity": "F2 reduced order",
+  "synthetic": true,
+  "purpose": "Ratios, lost-motion relation, transmission error and the static torque path of the reference gearbox.",
+  "formulation": "i = 1 + z_r/z_s; backlash = ((j_sp + j_pr)/2 + c)/a; TE = (e/2)/r_sun/i; static: tau_m = tau_out/N, defl = b/2 + tau/k",
+  "checks": [
+   {
+    "quantity": "stage 1 ratio 1 + 54/12",
+    "expected": 5.5,
+    "actual": 5.5,
+    "error": 0.0,
+    "criterion": "|error| <= 1e-12 ",
+    "passed": true,
+    "unit": ""
+   },
+   {
+    "quantity": "stage 2 ratio 1 + 60/12",
+    "expected": 6.0,
+    "actual": 6.0,
+    "error": 0.0,
+    "criterion": "|error| <= 1e-12 ",
+    "passed": true,
+    "unit": ""
+   },
+   {
+    "quantity": "overall 33:1 from tooth counts",
+    "expected": 33.0,
+    "actual": 33.0,
+    "error": 0.0,
+    "criterion": "|error| <= 1e-12 ",
+    "passed": true,
+    "unit": ""
+   },
+   {
+    "quantity": "stage 2 backlash ((0.04 + 0.04)/2 + 0.012) / 9 mm",
+    "expected": 0.0057777777777777775,
+    "actual": 0.005777777777777778,
+    "error": 8.673617379884035e-19,
+    "criterion": "|error| <= 1e-12 rad",
+    "passed": true,
+    "unit": "rad"
+   },
+   {
+    "quantity": "output backlash = s2 + s1 / 6",
+    "expected": 0.006828282828282829,
+    "actual": 0.006828282828282829,
+    "error": 0.0,
+    "criterion": "|error| <= 1e-12 rad",
+    "passed": true,
+    "unit": "rad"
+   },
+   {
+    "quantity": "transmission error amplitude e / r_sun / 33",
+    "expected": 0.00010101010101010101,
+    "actual": 0.00010101010101010101,
+    "error": 0.0,
+    "criterion": "|error| <= 1e-12 rad",
+    "passed": true,
+    "unit": "rad"
+   },
+   {
+    "quantity": "motor torque = output torque / 33 (eta does not act at rest)",
+    "expected": 0.010241572179186444,
+    "actual": 0.010241572169905786,
+    "error": -9.28065783944998e-12,
+    "criterion": "|error| <= 0.01 x expected",
+    "passed": true,
+    "unit": "N*m"
+   },
+   {
+    "quantity": "output deflection = b/2 + tau/k",
+    "expected": 0.003639456002083516,
+    "actual": 0.0036394560018977408,
+    "error": -1.8577544017017722e-13,
+    "criterion": "|error| <= 0.01 x expected",
+    "passed": true,
+    "unit": "rad"
+   }
+  ],
+  "notes": [
+   "Efficiency acts on transmitted power; at rest it does not change the motor torque in this model. The dynamic efficiency check is in tests/physics (mid-stroke torque)."
+  ],
+  "id": "B",
+  "name": "gearbox",
+  "seconds": 0.09,
+  "status": "PASS"
+ },
+ {
+  "title": "Two-link arm kinematics and gravity torque",
+  "area": "robotics",
+  "fidelity": "kinematics",
+  "synthetic": true,
+  "purpose": "Forward and inverse kinematics against closed form, gravity torque against the mass distribution.",
+  "formulation": "x = l1 cos q1 + l2 cos(q1+q2); cos q2 = (r^2 - l1^2 - l2^2)/(2 l1 l2)",
+  "checks": [
+   {
+    "quantity": "FK error at q = (0.0, 0.0)",
+    "expected": 0.0,
+    "actual": 0.0,
+    "error": 0.0,
+    "criterion": "|error| <= 1e-09 m",
+    "passed": true,
+    "unit": "m"
+   },
+   {
+    "quantity": "FK error at q = (0.7, 0.0)",
+    "expected": 0.0,
+    "actual": 5.551115123125783e-17,
+    "error": 5.551115123125783e-17,
+    "criterion": "|error| <= 1e-09 m",
+    "passed": true,
+    "unit": "m"
+   },
+   {
+    "quantity": "FK error at q = (0.4, 1.1)",
+    "expected": 0.0,
+    "actual": 6.206335383118183e-17,
+    "error": 6.206335383118183e-17,
+    "criterion": "|error| <= 1e-09 m",
+    "passed": true,
+    "unit": "m"
+   },
+   {
+    "quantity": "FK error at q = (-0.9, -0.5)",
+    "expected": 0.0,
+    "actual": 1.0007415106216802e-16,
+    "error": 1.0007415106216802e-16,
+    "criterion": "|error| <= 1e-09 m",
+    "passed": true,
+    "unit": "m"
+   },
+   {
+    "quantity": "IK (damped least squares, SciPy) reaches the target",
+    "expected": 0.0,
+    "actual": 1.9397808968188242e-10,
+    "error": 1.9397808968188242e-10,
+    "criterion": "|error| <= 1e-09 m",
+    "passed": true,
+    "unit": "m"
+   },
+   {
+    "quantity": "IK elbow angle vs law of cosines",
+    "expected": 1.3284304757559333,
+    "actual": 1.328430475077037,
+    "error": -6.7889627253237e-10,
+    "criterion": "|error| <= 1e-06 rad",
+    "passed": true,
+    "unit": "rad"
+   },
+   {
+    "quantity": "shoulder gravity torque = sum m g x_com",
+    "expected": 0.3379741200476899,
+    "actual": 0.3379741200476899,
+    "error": 0.0,
+    "criterion": "|error| <= 1e-09 x expected",
+    "passed": true,
+    "unit": "N*m"
+   },
+   {
+    "quantity": "shoulder upper limit compiled from the model file",
+    "expected": 3.0,
+    "actual": 3.0,
+    "error": 0.0,
+    "criterion": "|error| <= 1e-09 rad",
+    "passed": true,
+    "unit": "rad"
+   },
+   {
+    "quantity": "pose inside the limit reachable, pose outside not",
+    "expected": null,
+    "actual": "limit 3.0 rad",
+    "error": null,
+    "criterion": "condition holds",
+    "passed": true,
+    "unit": ""
+   },
+   {
+    "quantity": "workspace outer radius",
+    "expected": 0.35,
+    "actual": 0.35,
+    "error": 0.0,
+    "criterion": "|error| <= 1e-09 m",
+    "passed": true,
+    "unit": "m"
+   }
+  ],
+  "outputs": {
+   "fk": [
+    {
+     "q": [
+      0.0,
+      0.0
+     ],
+     "ee": [
+      0.35,
+      0.055,
+      0.0
+     ]
+    },
+    {
+     "q": [
+      0.7,
+      0.0
+     ],
+     "ee": [
+      0.2676947655495709,
+      0.055,
+      0.22547619053319184
+     ]
+    },
+    {
+     "q": [
+      0.4,
+      1.1
+     ],
+     "ee": [
+      0.19482277905073245,
+      0.055000000000000014,
+      0.2275079164523383
+     ]
+    },
+    {
+     "q": [
+      -0.9,
+      -0.5
+     ],
+     "ee": [
+      0.14981706508916895,
+      0.054999999999999986,
+      -0.30448284142376564
+     ]
+    }
+   ],
+   "ik_target": [
+    0.25,
+    0.0,
+    0.12
+   ]
+  },
+  "notes": [
+   "IK is a SciPy least-squares solve over the model's own kinematics, done in this benchmark; MotionProof has no general IK module."
+  ],
+  "id": "C",
+  "name": "two_link",
+  "seconds": 0.02,
+  "status": "PASS"
+ },
+ {
+  "title": "Joint reversal and replay",
+  "area": "transmission",
+  "fidelity": "F2 reduced order",
+  "synthetic": true,
+  "purpose": "Dead-band lost motion on reversal and bit-exact replay.",
+  "formulation": "no gravity: lost motion = b (friction windup relaxes, see limitations); tip error = L b",
+  "checks": [
+   {
+    "quantity": "lost motion = b for b = 0.0",
+    "expected": 0.0,
+    "actual": 1.2968448537264976e-10,
+    "error": 1.2968448537264976e-10,
+    "criterion": "|error| <= 2e-05 rad",
+    "passed": true,
+    "unit": "rad"
+   },
+   {
+    "quantity": "direction error at the tip = L b for b = 0.0",
+    "expected": 0.0,
+    "actual": 3.935758081482439e-11,
+    "error": 3.935758081482439e-11,
+    "criterion": "|error| <= 6e-06 m",
+    "passed": true,
+    "unit": "m"
+   },
+   {
+    "quantity": "lost motion = b for b = 0.005",
+    "expected": 0.005,
+    "actual": 0.004997740664471839,
+    "error": -2.259335528160926e-06,
+    "criterion": "|error| <= 2e-05 rad",
+    "passed": true,
+    "unit": "rad"
+   },
+   {
+    "quantity": "direction error at the tip = L b for b = 0.005",
+    "expected": 0.0015,
+    "actual": 0.001499320638986096,
+    "error": -6.793610139040583e-07,
+    "criterion": "|error| <= 6e-06 m",
+    "passed": true,
+    "unit": "m"
+   },
+   {
+    "quantity": "lost motion = b for b = 0.012",
+    "expected": 0.012,
+    "actual": 0.011997625322612893,
+    "error": -2.374677387107643e-06,
+    "criterion": "|error| <= 2e-05 rad",
+    "passed": true,
+    "unit": "rad"
+   },
+   {
+    "quantity": "direction error at the tip = L b for b = 0.012",
+    "expected": 0.0036,
+    "actual": 0.003599266009671162,
+    "error": -7.33990328837756e-07,
+    "criterion": "|error| <= 6e-06 m",
+    "passed": true,
+    "unit": "m"
+   },
+   {
+    "quantity": "replay reproduces every stored scenario exactly",
+    "expected": null,
+    "actual": "6/6 reproduced",
+    "error": null,
+    "criterion": "condition holds",
+    "passed": true,
+    "unit": ""
+   }
+  ],
+  "id": "D",
+  "name": "reversal",
+  "seconds": 3.27,
+  "status": "PASS"
+ },
+ {
+  "title": "Misaligned assembly",
+  "area": "geometry",
+  "fidelity": "F2 reduced order",
+  "synthetic": true,
+  "purpose": "A known offset, tilt and clearance change propagate to the expected tip error and joint misalignment.",
+  "formulation": "tip error = offset; d(error)/d(tilt) = L; tilt = play / span",
+  "checks": [
+   {
+    "quantity": "tip error from 0.05 mm joint offset",
+    "expected": 5e-05,
+    "actual": 5e-05,
+    "error": 0.0,
+    "criterion": "|error| <= 0.001 x expected",
+    "passed": true,
+    "unit": "m"
+   },
+   {
+    "quantity": "tip error from 0.2 mm joint offset",
+    "expected": 0.0002,
+    "actual": 0.0002,
+    "error": 0.0,
+    "criterion": "|error| <= 0.001 x expected",
+    "passed": true,
+    "unit": "m"
+   },
+   {
+    "quantity": "sensitivity d(tip error)/d(tilt) = arm length",
+    "expected": 0.3,
+    "actual": 0.29999991250000474,
+    "error": -8.74999952493738e-08,
+    "criterion": "|error| <= 0.01 x expected",
+    "passed": true,
+    "unit": "m/rad"
+   },
+   {
+    "quantity": "radial play grows with seat clearance (6 um)",
+    "expected": 6e-06,
+    "actual": 6.000000000000227e-06,
+    "error": 2.270048298641525e-19,
+    "criterion": "|error| <= 1e-12 m",
+    "passed": true,
+    "unit": "m"
+   },
+   {
+    "quantity": "axis tilt from extra play = play / bearing span",
+    "expected": 0.0004,
+    "actual": 0.00040000000000001514,
+    "error": 1.5124620306172787e-17,
+    "criterion": "|error| <= 1e-12 rad",
+    "passed": true,
+    "unit": "rad"
+   }
+  ],
+  "id": "E",
+  "name": "misalignment",
+  "seconds": 0.25,
+  "status": "PASS"
+ },
+ {
+  "title": "Loaded arm: torque requirement and motor margin",
+  "area": "robotics",
+  "fidelity": "F2 reduced order",
+  "synthetic": true,
+  "purpose": "Payload torque, utilisation, deflection and overload behaviour.",
+  "formulation": "tau = (m + mp) g L; tau_motor = tau / N; deflection = tau / k",
+  "checks": [
+   {
+    "quantity": "motor torque with 0.0 kg payload = (m+mp) g L / N",
+    "expected": 0.14715,
+    "actual": 0.1471498406875249,
+    "error": -1.593124751009256e-07,
+    "criterion": "|error| <= 0.005 x expected",
+    "passed": true,
+    "unit": "N*m"
+   },
+   {
+    "quantity": "torque utilisation with 0.0 kg",
+    "expected": 0.073575,
+    "actual": 0.07357492034376245,
+    "error": -7.96562375504628e-08,
+    "criterion": "|error| <= 0.03 x expected",
+    "passed": true,
+    "unit": ""
+   },
+   {
+    "quantity": "tip error with 0.0 kg = L tau / k",
+    "expected": 0.00044145,
+    "actual": 0.00044144948223449296,
+    "error": -5.177655070637797e-10,
+    "criterion": "|error| <= 0.01 x expected",
+    "passed": true,
+    "unit": "m"
+   },
+   {
+    "quantity": "motor torque with 0.5 kg payload = (m+mp) g L / N",
+    "expected": 0.22072499999999998,
+    "actual": 0.2207244623219732,
+    "error": -5.376780267685177e-07,
+    "criterion": "|error| <= 0.005 x expected",
+    "passed": true,
+    "unit": "N*m"
+   },
+   {
+    "quantity": "torque utilisation with 0.5 kg",
+    "expected": 0.11036249999999999,
+    "actual": 0.1103622311609866,
+    "error": -2.6883901338425886e-07,
+    "criterion": "|error| <= 0.03 x expected",
+    "passed": true,
+    "unit": ""
+   },
+   {
+    "quantity": "tip error with 0.5 kg = L tau / k",
+    "expected": 0.0006621749999999999,
+    "actual": 0.0006621732525466939,
+    "error": -1.7474533059707448e-09,
+    "criterion": "|error| <= 0.01 x expected",
+    "passed": true,
+    "unit": "m"
+   },
+   {
+    "quantity": "motor torque with 1.5 kg payload = (m+mp) g L / N",
+    "expected": 0.367875,
+    "actual": 0.3678725107732319,
+    "error": -2.489226768098707e-06,
+    "criterion": "|error| <= 0.005 x expected",
+    "passed": true,
+    "unit": "N*m"
+   },
+   {
+    "quantity": "torque utilisation with 1.5 kg",
+    "expected": 0.1839375,
+    "actual": 0.18393625538661595,
+    "error": -1.2446133840493534e-06,
+    "criterion": "|error| <= 0.03 x expected",
+    "passed": true,
+    "unit": ""
+   },
+   {
+    "quantity": "tip error with 1.5 kg = L tau / k",
+    "expected": 0.0011036249999999998,
+    "actual": 0.001103616910016618,
+    "error": -8.089983381765961e-09,
+    "criterion": "|error| <= 0.01 x expected",
+    "passed": true,
+    "unit": "m"
+   },
+   {
+    "quantity": "overload saturates the motor and loses position",
+    "expected": null,
+    "actual": "saturated 1.00, angle error 0.355 rad",
+    "error": null,
+    "criterion": "condition holds",
+    "passed": true,
+    "unit": ""
+   }
+  ],
+  "id": "F",
+  "name": "loaded_arm",
+  "seconds": 0.31,
+  "status": "PASS"
+ },
+ {
+  "title": "Hierarchical manufacturing variation",
+  "area": "manufacturing",
+  "fidelity": "statistical process model",
+  "synthetic": true,
+  "purpose": "Variance components, shared setup effects and drift are recovered from a SYNTHETIC batch with known parameters.",
+  "formulation": "x = target + drift + batch + setup + tool + part; shared setup cancels in bore - shaft",
+  "checks": [
+   {
+    "quantity": "batch std recovered",
+    "expected": 0.01,
+    "actual": 0.009377387364164293,
+    "error": -0.0006226126358357068,
+    "criterion": "|error| <= 0.12 x expected",
+    "passed": true,
+    "unit": "mm"
+   },
+   {
+    "quantity": "setup std recovered",
+    "expected": 0.006,
+    "actual": 0.006099359221443162,
+    "error": 9.93592214431618e-05,
+    "criterion": "|error| <= 0.08 x expected",
+    "passed": true,
+    "unit": "mm"
+   },
+   {
+    "quantity": "part std recovered",
+    "expected": 0.004,
+    "actual": 0.003982187147432855,
+    "error": -1.7812852567145217e-05,
+    "criterion": "|error| <= 0.03 x expected",
+    "passed": true,
+    "unit": "mm"
+   },
+   {
+    "quantity": "clearance std, setup error independent",
+    "expected": 0.017435595774162694,
+    "actual": 0.017930733217779417,
+    "error": 0.0004951374436167229,
+    "criterion": "|error| <= 0.06 x expected",
+    "passed": true,
+    "unit": "mm"
+   },
+   {
+    "quantity": "clearance std, setup error shared",
+    "expected": 0.015231546211727816,
+    "actual": 0.015594394726187377,
+    "error": 0.0003628485144595607,
+    "criterion": "|error| <= 0.06 x expected",
+    "passed": true,
+    "unit": "mm"
+   },
+   {
+    "quantity": "tool-wear drift rate recovered",
+    "expected": 2e-05,
+    "actual": 1.9401504922476716e-05,
+    "error": -5.984950775232852e-07,
+    "criterion": "|error| <= 0.1 x expected",
+    "passed": true,
+    "unit": "mm/part"
+   }
+  ],
+  "id": "G",
+  "name": "process",
+  "seconds": 0.0,
+  "status": "PASS"
+ },
+ {
+  "title": "Workspace reliability map",
+  "area": "reliability",
+  "fidelity": "L1 map checked against L2",
+  "synthetic": true,
+  "purpose": "Level 1 workspace map against direct dynamic simulation at grid poses.",
+  "formulation": "per pose: static deflection b/2 + tau(q)/k propagated through FK",
+  "checks": [
+   {
+    "quantity": "map RMS error vs direct Level 2 simulation at q = -1.0",
+    "expected": 0.001284098671157857,
+    "actual": 0.0012840664242300807,
+    "error": -3.2246927776256526e-08,
+    "criterion": "|error| <= 0.05 x expected",
+    "passed": true,
+    "unit": "m"
+   },
+   {
+    "quantity": "map RMS error vs direct Level 2 simulation at q = 0.0",
+    "expected": 0.0014736227298155526,
+    "actual": 0.0014735813204385623,
+    "error": -4.140937699030969e-08,
+    "criterion": "|error| <= 0.05 x expected",
+    "passed": true,
+    "unit": "m"
+   },
+   {
+    "quantity": "map RMS error vs direct Level 2 simulation at q = 1.0",
+    "expected": 0.001315790263237401,
+    "actual": 0.001315757690872964,
+    "error": -3.257236443694918e-08,
+    "criterion": "|error| <= 0.05 x expected",
+    "passed": true,
+    "unit": "m"
+   }
+  ],
+  "id": "H",
+  "name": "workspace",
+  "seconds": 1.98,
+  "status": "PASS"
+ },
+ {
+  "title": "Lifetime degradation",
+  "area": "reliability",
+  "fidelity": "L1",
+  "synthetic": true,
+  "purpose": "Recovery of a SYNTHETIC linear wear law and its requirement crossing.",
+  "formulation": "b(n) = b0 + r n; crossing where b/2 + tau/k = limit",
+  "checks": [
+   {
+    "quantity": "wear rate recovered from SYNTHETIC data",
+    "expected": 2e-09,
+    "actual": 2.0037051942136715e-09,
+    "error": 3.705194213671335e-12,
+    "criterion": "|error| <= 0.05 x expected",
+    "passed": true,
+    "unit": "rad/cycle"
+   },
+   {
+    "quantity": "threshold crossing (cycles)",
+    "expected": 1528500.0000000002,
+    "actual": 1528518.4036042197,
+    "error": 18.403604219434783,
+    "criterion": "|error| <= 0.001 x expected",
+    "passed": true,
+    "unit": ""
+   }
+  ],
+  "id": "I",
+  "name": "degradation",
+  "seconds": 0.06,
+  "status": "PASS"
+ },
+ {
+  "title": "Hardware measurements",
+  "area": "hardware",
+  "fidelity": "L4 physical",
+  "synthetic": false,
+  "status": "NOT RUN",
+  "purpose": "Predicted versus measured behaviour of a physical rig.",
+  "formulation": "-",
+  "checks": [],
+  "notes": [
+   "No physical rig or measurements exist. The software path is verified with a SIMULATED DEVICE in tests/integration/test_hardware.py; that is not physical validation."
+  ],
+  "id": "J",
+  "name": "hardware",
+  "seconds": 0.0
+ },
+ {
+  "title": "Adaptive versus random sampling",
+  "area": "reliability",
+  "fidelity": "analytic limit state",
+  "synthetic": true,
+  "purpose": "Failure-probability accuracy at equal true-evaluation budgets, 10 seeds.",
+  "formulation": "g = 3 - (x1 + x2)/sqrt(2), x ~ N(0, I); P(fail) = Phi(-3) = 1.35e-3",
+  "checks": [
+   {
+    "quantity": "median relative error, adaptive (<= 60 true evaluations)",
+    "expected": 0.0,
+    "actual": 0.13860849454660654,
+    "error": 0.13860849454660654,
+    "criterion": "|error| <= 0.4 ",
+    "passed": true,
+    "unit": ""
+   },
+   {
+    "quantity": "adaptive beats random at the same number of true evaluations",
+    "expected": null,
+    "actual": "median relative error adaptive 0.139, random 1.000; mean true evaluations 22.0",
+    "error": null,
+    "criterion": "condition holds",
+    "passed": true,
+    "unit": ""
+   }
+  ],
+  "notes": [
+   "Rare-event case chosen on purpose; for failure fractions of tens of percent random sampling is competitive and no advantage is claimed."
+  ],
+  "id": "K",
+  "name": "adaptive",
+  "seconds": 4.19,
+  "status": "PASS"
+ },
+ {
+  "title": "Multi-fidelity agreement and sufficiency",
+  "area": "reliability",
+  "fidelity": "L1 vs L2",
+  "synthetic": true,
+  "purpose": "Analytic vs L1 vs L2, and the rule that refuses an L1 verdict near a limit.",
+  "formulation": "deflection = b/2 + m g L cos q / k",
+  "checks": [
+   {
+    "quantity": "L1 deflection vs closed form",
+    "expected": 0.0064715,
+    "actual": 0.006471469186961226,
+    "error": -3.081303877414815e-08,
+    "criterion": "|error| <= 0.0001 x expected",
+    "passed": true,
+    "unit": "rad"
+   },
+   {
+    "quantity": "L1 - L2 tip error difference (frictionless)",
+    "expected": 0.0,
+    "actual": 0.0,
+    "error": 0.0,
+    "criterion": "|error| <= 2e-05 m",
+    "passed": true,
+    "unit": "m"
+   },
+   {
+    "quantity": "near-limit L1 result flagged as insufficient",
+    "expected": null,
+    "actual": "L1/L2 difference with friction 0.0 um; verdict undecided",
+    "error": null,
+    "criterion": "condition holds",
+    "passed": true,
+    "unit": ""
+   }
+  ],
+  "notes": [
+   "Level 3 (contact, flexible bodies) is not implemented; no comparison."
+  ],
+  "id": "L",
+  "name": "fidelity",
+  "seconds": 0.1,
+  "status": "PASS"
+ },
+ {
+  "title": "Engineering Challenge on an analytic case",
+  "area": "optimisation",
+  "fidelity": "L1 search, L2 verification",
+  "synthetic": true,
+  "purpose": "Known feasible and infeasible requirements; optimum against the analytic band.",
+  "formulation": "uniform: F(s) = max(0, (0.01 + 0.01 s - b_lim) / (0.02 s)), cost = 1/s; yield: process N(0.01, 0.004) sorted to 0.01 +- 0.01 s, cost = 1 / (2 Phi(0.01 s / 0.004) - 1)",
+  "checks": [
+   {
+    "quantity": "a verified candidate exists",
+    "expected": null,
+    "actual": "C018",
+    "error": null,
+    "criterion": "condition holds",
+    "passed": true,
+    "unit": ""
+   },
+   {
+    "quantity": "chosen scale inside the analytic feasible band 0.5 to 0.75",
+    "expected": null,
+    "actual": "scale 0.6026",
+    "error": null,
+    "criterion": "condition holds",
+    "passed": true,
+    "unit": ""
+   },
+   {
+    "quantity": "infeasible requirement reported as infeasible",
+    "expected": null,
+    "actual": "no candidate met the requirement in the search within the given variable ranges",
+    "error": null,
+    "criterion": "condition holds",
+    "passed": true,
+    "unit": ""
+   },
+   {
+    "quantity": "yield model: a verified candidate exists",
+    "expected": null,
+    "actual": "C003",
+    "error": null,
+    "criterion": "condition holds",
+    "passed": true,
+    "unit": ""
+   },
+   {
+    "quantity": "yield model: cost per accepted part = 1 / yield",
+    "expected": 1.0947339575051485,
+    "actual": 1.0947339575051485,
+    "error": 0.0,
+    "criterion": "|error| <= 1e-12 x expected",
+    "passed": true,
+    "unit": ""
+   },
+   {
+    "quantity": "yield model: chosen scale inside the analytic band 0.5 to 0.75",
+    "expected": null,
+    "actual": "scale 0.6856",
+    "error": null,
+    "criterion": "condition holds",
+    "passed": true,
+    "unit": ""
+   }
+  ],
+  "outputs": {
+   "reciprocal_chosen": {
+    "scale": 0.6025753041800642,
+    "cost": 1.659543617308909
+   },
+   "yield_chosen": {
+    "scale": 0.6855840387280367,
+    "cost": 1.0947339575051485
+   }
+  },
+  "id": "M",
+  "name": "challenge",
+  "seconds": 22.97,
+  "status": "PASS"
+ },
+ {
+  "title": "Root cause of a deliberate failure",
+  "area": "reliability",
+  "fidelity": "F2 reduced order",
+  "synthetic": true,
+  "purpose": "The variable that causes the failure is ranked first by counterfactual rerun.",
+  "formulation": "tip error = L (b/2 + tau/k); payload minor",
+  "checks": [
+   {
+    "quantity": "dominant variable identified",
+    "expected": null,
+    "actual": "backlash_tol",
+    "error": null,
+    "criterion": "condition holds",
+    "passed": true,
+    "unit": ""
+   },
+   {
+    "quantity": "counterfactual rerun removes the failure",
+    "expected": null,
+    "actual": "metric after rerun 0.000442261",
+    "error": null,
+    "criterion": "condition holds",
+    "passed": true,
+    "unit": ""
+   }
+  ],
+  "id": "N",
+  "name": "root_cause",
+  "seconds": 3.14,
+  "status": "PASS"
+ }
+]

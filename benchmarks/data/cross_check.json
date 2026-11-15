@@ -1,0 +1,545 @@
+[
+ {
+  "benchmark": "A",
+  "quantity": "min clearance (bore LSL - shaft USL)",
+  "kind": "expected value",
+  "reference": -0.0030000000000001137,
+  "suite": -0.0030000000000001137,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "A",
+  "quantity": "max clearance (bore USL - shaft LSL)",
+  "kind": "expected value",
+  "reference": 0.014000000000000234,
+  "suite": 0.014000000000000234,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "A",
+  "quantity": "clearance mean (Monte Carlo vs analytic)",
+  "kind": "expected value",
+  "reference": 0.0055000000000005045,
+  "suite": 0.0055000000000005045,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "A",
+  "quantity": "clearance std (Monte Carlo vs RSS)",
+  "kind": "expected value",
+  "reference": 0.0019604710783936376,
+  "suite": 0.0019604710783936376,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "A",
+  "quantity": "exact B-rep radial gap with 10 um offset",
+  "kind": "expected value",
+  "reference": 0.014999999999999467,
+  "suite": 0.015,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "A",
+  "quantity": "diameter recovered from SYNTHETIC noisy scan (unknown pose)",
+  "kind": "expected value",
+  "reference": 8.03,
+  "suite": 8.03,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "B",
+  "quantity": "stage 1 ratio 1 + 54/12",
+  "kind": "expected value",
+  "reference": 5.5,
+  "suite": 5.5,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "B",
+  "quantity": "stage 2 ratio 1 + 60/12",
+  "kind": "expected value",
+  "reference": 6.0,
+  "suite": 6.0,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "B",
+  "quantity": "overall 33:1 from tooth counts",
+  "kind": "expected value",
+  "reference": 33.0,
+  "suite": 33.0,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "B",
+  "quantity": "stage 2 backlash ((0.04 + 0.04)/2 + 0.012) / 9 mm",
+  "kind": "expected value",
+  "reference": 0.005777777777777778,
+  "suite": 0.0057777777777777775,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "B",
+  "quantity": "output backlash = s2 + s1 / 6",
+  "kind": "expected value",
+  "reference": 0.006828282828282829,
+  "suite": 0.006828282828282829,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "B",
+  "quantity": "transmission error amplitude e / r_sun / 33",
+  "kind": "expected value",
+  "reference": 0.00010101010101010101,
+  "suite": 0.00010101010101010101,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "C",
+  "quantity": "IK elbow angle vs law of cosines",
+  "kind": "expected value",
+  "reference": 1.3284304757559333,
+  "suite": 1.3284304757559333,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "C",
+  "quantity": "shoulder gravity torque = sum m g x_com",
+  "kind": "expected value",
+  "reference": 0.3379741200476899,
+  "suite": 0.3379741200476899,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "C",
+  "quantity": "shoulder upper limit compiled from the model file",
+  "kind": "expected value",
+  "reference": 3.0,
+  "suite": 3.0,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "C",
+  "quantity": "workspace outer radius",
+  "kind": "expected value",
+  "reference": 0.35,
+  "suite": 0.35,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "D",
+  "quantity": "lost motion = b for b = 0.0",
+  "kind": "expected value",
+  "reference": 0.0,
+  "suite": 0.0,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "D",
+  "quantity": "direction error at the tip = L b for b = 0.0",
+  "kind": "expected value",
+  "reference": 0.0,
+  "suite": 0.0,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "D",
+  "quantity": "lost motion = b for b = 0.005",
+  "kind": "expected value",
+  "reference": 0.005,
+  "suite": 0.005,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "D",
+  "quantity": "direction error at the tip = L b for b = 0.005",
+  "kind": "expected value",
+  "reference": 0.0015,
+  "suite": 0.0015,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "D",
+  "quantity": "lost motion = b for b = 0.012",
+  "kind": "expected value",
+  "reference": 0.012,
+  "suite": 0.012,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "D",
+  "quantity": "direction error at the tip = L b for b = 0.012",
+  "kind": "expected value",
+  "reference": 0.0036,
+  "suite": 0.0036,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "E",
+  "quantity": "tip error from 0.05 mm joint offset",
+  "kind": "expected value",
+  "reference": 5e-05,
+  "suite": 5e-05,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "E",
+  "quantity": "tip error from 0.2 mm joint offset",
+  "kind": "expected value",
+  "reference": 0.0002,
+  "suite": 0.0002,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "E",
+  "quantity": "sensitivity d(tip error)/d(tilt) = arm length",
+  "kind": "expected value",
+  "reference": 0.3,
+  "suite": 0.3,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "E",
+  "quantity": "radial play grows with seat clearance (6 um)",
+  "kind": "expected value",
+  "reference": 6e-06,
+  "suite": 6e-06,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "E",
+  "quantity": "axis tilt from extra play = play / bearing span",
+  "kind": "expected value",
+  "reference": 0.0004,
+  "suite": 0.0004,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "F",
+  "quantity": "motor torque with 0.0 kg payload = (m+mp) g L / N",
+  "kind": "expected value",
+  "reference": 0.14715,
+  "suite": 0.14715,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "F",
+  "quantity": "torque utilisation with 0.0 kg",
+  "kind": "expected value",
+  "reference": 0.073575,
+  "suite": 0.073575,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "F",
+  "quantity": "tip error with 0.0 kg = L tau / k",
+  "kind": "expected value",
+  "reference": 0.00044145,
+  "suite": 0.00044145,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "F",
+  "quantity": "motor torque with 0.5 kg payload = (m+mp) g L / N",
+  "kind": "expected value",
+  "reference": 0.22072499999999998,
+  "suite": 0.22072499999999998,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "F",
+  "quantity": "torque utilisation with 0.5 kg",
+  "kind": "expected value",
+  "reference": 0.11036249999999999,
+  "suite": 0.11036249999999999,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "F",
+  "quantity": "tip error with 0.5 kg = L tau / k",
+  "kind": "expected value",
+  "reference": 0.0006621749999999999,
+  "suite": 0.0006621749999999999,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "F",
+  "quantity": "motor torque with 1.5 kg payload = (m+mp) g L / N",
+  "kind": "expected value",
+  "reference": 0.367875,
+  "suite": 0.367875,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "F",
+  "quantity": "torque utilisation with 1.5 kg",
+  "kind": "expected value",
+  "reference": 0.1839375,
+  "suite": 0.1839375,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "F",
+  "quantity": "tip error with 1.5 kg = L tau / k",
+  "kind": "expected value",
+  "reference": 0.0011036249999999998,
+  "suite": 0.0011036249999999998,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "I",
+  "quantity": "wear rate recovered from SYNTHETIC data",
+  "kind": "expected value",
+  "reference": 2e-09,
+  "suite": 2e-09,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "I",
+  "quantity": "threshold crossing (cycles)",
+  "kind": "expected value",
+  "reference": 1528500.0000000002,
+  "suite": 1528500.0000000002,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "L",
+  "quantity": "L1 deflection vs closed form",
+  "kind": "expected value",
+  "reference": 0.0064715,
+  "suite": 0.0064715,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "L",
+  "quantity": "L1 - L2 tip error difference (frictionless)",
+  "kind": "expected value",
+  "reference": 0.0,
+  "suite": 0.0,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "G",
+  "quantity": "batch std recovered",
+  "kind": "expected value",
+  "reference": 0.01,
+  "suite": 0.01,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "G",
+  "quantity": "setup std recovered",
+  "kind": "expected value",
+  "reference": 0.006,
+  "suite": 0.006,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "G",
+  "quantity": "part std recovered",
+  "kind": "expected value",
+  "reference": 0.004,
+  "suite": 0.004,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "G",
+  "quantity": "clearance std, setup error independent",
+  "kind": "expected value",
+  "reference": 0.017435595774162694,
+  "suite": 0.017435595774162694,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "G",
+  "quantity": "clearance std, setup error shared",
+  "kind": "expected value",
+  "reference": 0.015231546211727816,
+  "suite": 0.015231546211727816,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "G",
+  "quantity": "tool-wear drift rate recovered",
+  "kind": "expected value",
+  "reference": 2e-05,
+  "suite": 2e-05,
+  "passed": true,
+  "comment": "suite expected value equals independent reference"
+ },
+ {
+  "benchmark": "K",
+  "quantity": "true failure probability Phi(-3) (reference only)",
+  "kind": "reference value",
+  "reference": 0.0013498980316300933,
+  "suite": null,
+  "passed": null,
+  "comment": "no matching suite check; reported for context"
+ },
+ {
+  "benchmark": "M",
+  "quantity": "largest scale with zero failures",
+  "kind": "reference value",
+  "reference": 0.6000000000000001,
+  "suite": null,
+  "passed": null,
+  "comment": "no matching suite check; reported for context"
+ },
+ {
+  "benchmark": "M",
+  "quantity": "largest scale meeting the reliability target (point estimate; cost optimum 1/s without confidence margin)",
+  "kind": "reference value",
+  "reference": 0.7499900000000002,
+  "suite": null,
+  "passed": null,
+  "comment": "no matching suite check; reported for context"
+ },
+ {
+  "benchmark": "A",
+  "quantity": "Kasa circle fit of the raw posed scan (no registration)",
+  "kind": "estimate",
+  "reference": 8.02982701555979,
+  "suite": 8.03,
+  "passed": true,
+  "comment": "vs true diameter; |difference| <= 0.002"
+ },
+ {
+  "benchmark": "C",
+  "quantity": "max deviation of MotionProof FK from the closed form",
+  "kind": "estimate",
+  "reference": 1.0007415106216802e-16,
+  "suite": 0.0,
+  "passed": true,
+  "comment": "vs zero; |difference| <= 1e-09"
+ },
+ {
+  "benchmark": "I",
+  "quantity": "wear rate, numpy.polyfit on the raw data",
+  "kind": "estimate",
+  "reference": 2.003705194110801e-09,
+  "suite": 2.0037051942136715e-09,
+  "passed": true,
+  "comment": "vs suite: wear rate recovered from SYNTHETIC data; |difference| <= 2e-18"
+ },
+ {
+  "benchmark": "G",
+  "quantity": "batch std, own nested ANOVA",
+  "kind": "estimate",
+  "reference": 0.009377387364164172,
+  "suite": 0.009377387364164293,
+  "passed": true,
+  "comment": "vs suite: batch std recovered; |difference| <= 9.38e-12"
+ },
+ {
+  "benchmark": "G",
+  "quantity": "setup std, own nested ANOVA",
+  "kind": "estimate",
+  "reference": 0.006099359221443163,
+  "suite": 0.006099359221443162,
+  "passed": true,
+  "comment": "vs suite: setup std recovered; |difference| <= 6.1e-12"
+ },
+ {
+  "benchmark": "G",
+  "quantity": "part std, own nested ANOVA",
+  "kind": "estimate",
+  "reference": 0.003982187147432855,
+  "suite": 0.003982187147432855,
+  "passed": true,
+  "comment": "vs suite: part std recovered; |difference| <= 3.98e-12"
+ },
+ {
+  "benchmark": "G",
+  "quantity": "clearance std (independent setup), numpy std of bore - shaft",
+  "kind": "estimate",
+  "reference": 0.017930733217779417,
+  "suite": 0.017930733217779417,
+  "passed": true,
+  "comment": "vs suite: clearance std, setup error independent; |difference| <= 1.79e-11"
+ },
+ {
+  "benchmark": "G",
+  "quantity": "clearance std (shared setup), numpy std of bore - shaft",
+  "kind": "estimate",
+  "reference": 0.015594394726187377,
+  "suite": 0.015594394726187377,
+  "passed": true,
+  "comment": "vs suite: clearance std, setup error shared; |difference| <= 1.56e-11"
+ },
+ {
+  "benchmark": "G",
+  "quantity": "drift rate, numpy.polyfit",
+  "kind": "estimate",
+  "reference": 1.9401504922481118e-05,
+  "suite": 1.9401504922476716e-05,
+  "passed": true,
+  "comment": "vs suite: tool-wear drift rate recovered; |difference| <= 1.94e-11"
+ },
+ {
+  "benchmark": "M",
+  "quantity": "yield cost (unit cost 1.0) / yield at the chosen scale 0.685584",
+  "kind": "estimate",
+  "reference": 1.0947339575051485,
+  "suite": 1.0947339575051485,
+  "passed": true,
+  "comment": "vs MotionProof cost of the chosen candidate; |difference| <= 1.09e-12"
+ },
+ {
+  "benchmark": "M",
+  "quantity": "chosen scale (reciprocal cost) within [0.5, point-estimate optimum]; 0.5 is the suite's lower bound allowing for the confidence margin",
+  "kind": "estimate",
+  "reference": [
+   0.5,
+   0.7499900000000002
+  ],
+  "suite": 0.6025753041800642,
+  "passed": true,
+  "comment": "MotionProof choice inside the reference band"
+ }
+]

@@ -1,0 +1,75 @@
+name: ci
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --locked --extra hardware
+      - name: Lint
+        run: uv run ruff check motionproof tests benchmarks
+      - name: Type check (strict)
+        run: uv run mypy motionproof benchmarks/reference_calculations.py benchmarks/publish.py
+      - name: Tests (unit, physics, integration, API and CLI contracts)
+        run: uv run pytest
+      - name: Benchmark references run without MotionProof
+        run: uv run python -I benchmarks/reference_calculations.py benchmarks/data
+
+  benchmarks:
+    runs-on: ubuntu-latest
+    needs: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --locked
+      - name: Regenerate the benchmark package and cross-check it
+        run: uv run python benchmarks/publish.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-package
+          path: |
+            BENCHMARK_RESULTS.md
+            benchmarks/data/
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --locked
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - name: Type check
+        run: npm run typecheck
+        working-directory: frontend
+      - name: Build
+        run: npm run build
+        working-directory: frontend
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - name: End-to-end tests (real backend, fresh workspace)
+        run: npm run e2e
+        working-directory: frontend
+        env:
+          MP_PYTHON: ${{ github.workspace }}/.venv/bin/python
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
