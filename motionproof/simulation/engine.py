@@ -158,7 +158,7 @@ class Engine:
             jid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, name)
             if jid < 0:
                 raise SimulationError(f"joint {name!r} does not exist in the dynamics model")
-            if model.jnt_type[jid] not in (mujoco.mjtJoint.mjJNT_HINGE,):
+            if int(model.jnt_type[jid]) != int(mujoco.mjtJoint.mjJNT_HINGE):
                 raise SimulationError(f"joint {name!r}: only revolute joints can be driven")
         ee = spec.end_effector
         if ee is None:
