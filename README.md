@@ -147,4 +147,4 @@ and the `docs/` folder (start with `docs/getting-started.md`).
 
 ## Licence
 
-No licence has been chosen yet; this is an open decision for the project owner.
+MIT. See `LICENSE`.

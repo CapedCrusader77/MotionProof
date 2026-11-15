@@ -1,6 +1,7 @@
 [project]
 name = "motionproof"
 version = "0.3.0"
+license = "MIT"
 description = "Tolerance-to-dynamics verification for mechanical assemblies"
 readme = "README.md"
 requires-python = ">=3.12"

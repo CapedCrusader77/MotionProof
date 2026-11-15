@@ -9,7 +9,7 @@ Updated 2026-11-15. Version 0.3.0 (advanced upgrade; audit in ADVANCED_UPGRADE_A
 | 1. Test the real NEMA 17 planetary gearbox | **Tooling ready, not run** | serial device, firmware sketch, rig test files, `hardware analyse`; tests/integration/test_hardware.py (15) incl. serial path with a fake port and model-independent analysis | build the rig (`docs/rig-build-and-test.md`), compile the firmware, run the tests; no physical measurement exists |
 | 2. Validate against real manufacturing measurements | **Tooling ready, no data** | measurement CSV import, summary, apply, per-part evaluation; test_measurements.py (4); as-built scan path from 0.3.0 | measured dimensions or a real scan of the parts |
 | 3. Reproducible benchmarks | **Done (synthetic)** | `benchmarks/`: inputs, raw data, references, hashes; 13 PASS, J NOT RUN; cross-check 57/57 agree; test_benchmark_package.py (3) | physical benchmark J needs item 1 |
-| 4. Software hardening | **Done except licence** | full pytest 225 passed; mypy strict clean (78 files); ruff clean; test_contracts.py (CLI help for every command, every API route); 7 Playwright E2E tests passed against the real backend with installed Chrome; CI workflow for Windows and Linux | licence choice by the owner; CI has not run yet (no remote) |
+| 4. Software hardening | **Done** | full pytest 225 passed; mypy strict clean (78 files); ruff clean; test_contracts.py (CLI help for every command, every API route); 7 Playwright E2E tests passed against the real backend with installed Chrome; CI workflow for Windows and Linux | CI first run on GitHub to be checked |
 | 5. Engineering Challenge with a defensible cost model | **Method verified, defensible run waits for data** | yield cost model, closed-form test, benchmark M; template refuses placeholder values | real unit cost, inspection cost and measured process spread (item 2) |
 
 ## Advanced upgrade: verified
@@ -157,7 +157,7 @@ assembly, the two poses and the design README from `out.zip`.
 * **Fidelity 3 and 4** (tooth contact, bearing contact, FEA, thermal) are not implemented.
 * Planar, pin-slot and ball joints cannot be driven; only revolute joints.
 * Only `payload_mass` and `speed_scale` can be varied as operating conditions.
-* Git was initialised in this folder but nothing is committed. No licence has been chosen.
+* Pushed to GitHub. Licence: MIT.
 * CI workflow (Windows and Linux, E2E with bundled Chromium) has never run: there is no remote.
   Locally the E2E tests ran with the installed Chrome (`MP_E2E_CHANNEL=chrome`) because the
   Playwright Chromium download did not complete on this machine.
@@ -182,5 +182,5 @@ assembly, the two poses and the design README from `out.zip`.
 1. Import a real Fusion-exported MJCF and a real STEP assembly; fix what breaks.
 2. Record a reversal test on physical hardware and run calibration with a separate holdout.
 3. Drive each screen's launch actions in the E2E suite.
-4. Choose a licence.
+4. Check the first CI run on GitHub.
 5. Level B feature variation for cylindrical features of imported STEP solids.

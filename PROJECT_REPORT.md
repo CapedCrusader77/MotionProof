@@ -376,9 +376,9 @@ physically impossible.
 | Adaptive sampling on the 28-input reference | Surrogate not predictive (Q² about 0.2); the run says so and gives no saving |
 | Joint types | Only revolute joints can be driven |
 | E2E coverage | Screens render; launch buttons of each screen are not driven automatically |
-| CI | Workflow written; has not run (no remote) |
-| Git | Initialised; nothing committed |
-| Licence | Not chosen |
+| CI | Workflow pushed; first run not yet checked |
+| Git | Pushed to GitHub |
+| Licence | MIT |
 
 ## 9. Next steps
 
@@ -386,7 +386,7 @@ physically impossible.
    Calibrate on one recording and validate on the other, which fills benchmark J.
 2. Measure the gearbox parts (or scan them), apply the measurements, and evaluate each part.
 3. Run the yield-cost Engineering Challenge with real cost and process data.
-4. Choose a licence, make the first commit, push, and let CI run.
+4. Let CI run and fix what it finds.
 5. Drive each screen's launch actions in the E2E suite.
 
 ## 10. How to run
