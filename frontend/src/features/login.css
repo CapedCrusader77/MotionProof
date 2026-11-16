@@ -1,0 +1,78 @@
+/* Login: a dark instrument plate beside a plain form. Uses the design-system tokens. */
+.lg { min-height: 100%; height: 100%; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); background: var(--bg); }
+
+/* plate (always dark, both themes) */
+.lg-plate {
+  --p-ink: #e9ebe6; --p-mut: #9ca39d; --p-line: #2c312e; --p-accent: #e5603f;
+  background: #101211; color: var(--p-ink); padding: 28px 40px 36px; display: flex; flex-direction: column; gap: 28px; min-height: 0; overflow: hidden;
+}
+.lg-plate-top { display: flex; justify-content: space-between; align-items: center; }
+.lg-brand { display: inline-flex; align-items: center; gap: 9px; font: 650 15px var(--sans); letter-spacing: -0.01em; }
+.lg-brand .mark { width: 18px; height: 18px; position: relative; border: 2px solid currentColor; border-radius: 50%; }
+.lg-brand .mark::before { content: ""; position: absolute; left: 50%; top: -5px; bottom: -5px; width: 2px; margin-left: -1px; background: currentColor; }
+.lg-brand .mark::after { content: ""; position: absolute; inset: 3px; background: var(--accent); border-radius: 50%; }
+.lg-tag { font: 500 11px var(--mono); color: var(--p-mut); letter-spacing: 0.04em; }
+.lg-plate-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 22px; min-height: 0; }
+.lg-claim { font: 600 clamp(34px, 4.4vw, 62px)/1.02 var(--sans); letter-spacing: -0.035em; margin: 0; }
+.lg-sub { max-width: 40ch; color: var(--p-mut); font-size: 15px; line-height: 1.5; }
+
+.lg-scope { margin: 0; border: 1px solid var(--p-line); background: #0b0d0c; }
+.lg-scope svg { display: block; width: 100%; height: 190px; }
+.lg-scope .g { stroke: #1b1f1d; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.lg-scope .zero { stroke: #3a413d; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.lg-scope .band { fill: rgba(229, 96, 63, 0.07); }
+.lg-scope .t { fill: none; stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: lg-draw 2.2s var(--mp-ease) forwards; }
+.lg-scope .sim { stroke: #8d948e; }
+.lg-scope .mea { stroke: var(--p-accent); animation-delay: 0.35s; }
+@keyframes lg-draw { to { stroke-dashoffset: 0; } }
+.lg-legend { display: flex; gap: 18px; align-items: center; padding: 9px 12px; border-top: 1px solid var(--p-line); font: 500 11px var(--mono); color: var(--p-mut); }
+.lg-legend .sw { display: inline-block; width: 14px; height: 2px; margin-right: 7px; vertical-align: middle; background: #8d948e; }
+.lg-legend .sw.mea { background: var(--p-accent); }
+.lg-ill { margin-left: auto; opacity: 0.8; }
+
+/* form side */
+.lg-side { position: relative; display: flex; flex-direction: column; min-height: 0; padding: 28px 40px; }
+.lg-theme { position: absolute; top: 20px; right: 24px; }
+.lg-form { margin: auto; width: 100%; max-width: 372px; display: flex; flex-direction: column; gap: 18px; }
+.lg-brand.sm { display: none; color: var(--text); }
+.lg-form h1 { font-size: 30px; letter-spacing: -0.03em; line-height: 1.1; }
+.lg-lede { color: var(--muted); font-size: 14px; margin-top: -8px; }
+.lg-f { display: flex; flex-direction: column; gap: 6px; }
+.lg-f > span { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 500; color: var(--muted); }
+.lg-f .input { height: 40px; font-size: 14px; padding: 0 12px; width: 100%; }
+.lg-f .input[aria-invalid="true"] { border-color: var(--bad); }
+.lg-forgot { font-weight: 400; font-size: 12px; }
+.lg-pw { position: relative; }
+.lg-pw .input { padding-right: 42px; }
+.lg-pw .btn { position: absolute; right: 3px; top: 3px; height: 34px; width: 34px; padding: 0; justify-content: center; }
+.lg-err { font-style: normal; font-size: 12px; color: var(--bad); }
+.lg-go { height: 42px; font-size: 14px; justify-content: center; gap: 8px; margin-top: 4px; }
+.lg-go svg { transition: transform var(--mp-fast) var(--mp-ease); }
+.lg-go:hover:not(:disabled) svg { transform: translateX(3px); }
+.lg-note { font-size: 12px; color: var(--faint); border-top: 1px solid var(--border); padding-top: 14px; line-height: 1.5; }
+.lg-foot { display: flex; justify-content: space-between; font: 500 11px var(--mono); color: var(--faint); letter-spacing: 0.03em; }
+
+@media (max-width: 900px) {
+  .lg { grid-template-columns: 1fr; grid-template-rows: auto; overflow-y: auto; }
+  .lg-plate { display: none; }
+  .lg-side { padding: 24px 20px; min-height: 100vh; }
+  .lg-brand.sm { display: inline-flex; margin-bottom: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lg-scope .t { animation: none; stroke-dashoffset: 0; }
+}
+
+/* instrument additions */
+.lg-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 6px 0 0; border-top: 1px solid var(--p-line); max-width: 560px; }
+.lg-stats > div { padding: 12px 14px 0 0; }
+.lg-stats > div + div { padding-left: 14px; border-left: 1px solid var(--p-line); }
+.lg-stats dt { font: 500 10.5px var(--mono); color: var(--p-mut); text-transform: uppercase; letter-spacing: 0.06em; }
+.lg-stats dd { margin: 5px 0 0; font: 500 18px var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lg-stats dd.dim { font-size: 12px; color: var(--p-mut); line-height: 27px; }
+.lg-scope svg { cursor: crosshair; touch-action: none; }
+.lg-scope .cur line { stroke: #e9ebe6; stroke-width: 1; vector-effect: non-scaling-stroke; opacity: 0.5; }
+.lg-scope .cur line.gap { stroke: var(--p-accent); stroke-width: 3; opacity: 1; }
+.lg-caps { font-style: normal; font-size: 12px; color: var(--warn); }
+.lg-go:active:not(:disabled) { transform: translateY(1px); }
+.lg-plate-top { padding-bottom: 14px; border-bottom: 1px solid var(--p-line); }
+@media (max-height: 760px) { .lg-claim { font-size: clamp(30px, 3.6vw, 46px); } .lg-scope svg { height: 140px; } }

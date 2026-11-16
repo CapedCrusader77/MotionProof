@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   Activity, BarChart3, Boxes, ChevronsLeft, ChevronsRight, Cog, Command as CommandIcon, Cpu, Crosshair,
   FileText, FlaskConical, FolderOpen, Gauge, GitCompare, Hourglass, Layers, ListChecks, Map, Moon, Radar,
   Ruler, Scale, ScanLine, Search, Settings, ShieldCheck, Sun, Target, TrendingUp, Trophy, Upload,
-  Wrench, Factory, FlaskRound, Menu, X,
+  Wrench, Factory, FlaskRound, LogOut,
 } from "lucide-react";
 import { api } from "./lib/api";
 import { useAsync } from "./hooks/useAsync";
@@ -21,6 +21,7 @@ import { AsBuiltScreen } from "./features/asbuilt";
 import { BenchmarksScreen, ChallengeScreen, HardwareScreen, ProcessScreen, TrustScreen } from "./features/lab";
 import { AdaptiveScreen, DegradationScreen, FidelityScreen, InvestigationScreen, WorkspaceScreen } from "./features/reliability";
 import { CommandPalette } from "./components/CommandPalette";
+import { PublicSite } from "./features/home";
 import { ExternalValidationScreen } from "./features/external";
 
 type Need = "project" | "model" | "experiment" | null;
@@ -33,7 +34,7 @@ const NAV: { group: string; items: [Route, string, typeof Cog, Need][] }[] = [
   { group: "Reliability", items: [["robustness", "Robustness", BarChart3, "experiment"], ["sensitivity", "Sensitivity", TrendingUp, "experiment"], ["investigate", "Failure investigation", Search, "experiment"],
     ["worstcase", "Worst case", Target, "experiment"], ["workspace", "Workspace analysis", Map, "model"], ["degradation", "Degradation", Hourglass, "model"], ["fidelity", "Model fidelity", Gauge, "model"]] },
   { group: "Optimisation", items: [["challenge", "Engineering Challenge", Trophy, "model"], ["optimisation", "Tolerance optimisation", Scale, "experiment"], ["comparison", "Design comparison", GitCompare, "experiment"]] },
-  { group: "Evidence", items: [["external", "External validation", FlaskRound, null], ["trust", "Model trust", ShieldCheck, "model"], ["reports", "Reports", FileText, "project"], ["benchmarks", "Benchmarks", ListChecks, null]] },
+  { group: "Evidence", items: [["trust", "Model trust", ShieldCheck, "model"], ["reports", "Reports", FileText, "project"], ["benchmarks", "Benchmarks", ListChecks, null], ["external", "External validation", FlaskRound, null]] },
 ];
 const SCREENS: Record<Route, () => React.ReactElement> = {
   projects: ProjectsScreen, import: ImportScreen, workbench: WorkbenchScreen, features: FeaturesScreen, tolerances: TolerancesScreen,
@@ -63,31 +64,27 @@ export default function App() {
   const has: Record<Exclude<Need, null>, boolean> = { project: !!s.projectId, model: !!s.modelId, experiment: !!s.experimentId };
   const label = NAV.flatMap((g) => g.items).find((i) => i[0] === s.route)?.[1] ?? "Settings";
   const Screen = SCREENS[s.route];
-  const [navOpen, setNavOpen] = useState(false);
+  if (!s.user) return <PublicSite />;
 
   return (
-    <div className={`shell ${navOpen ? "nav-open" : ""}`}>
-      <a className="skip-link" href="#main-content">Skip to content</a>
-      <div className="nav-scrim" onClick={() => setNavOpen(false)} aria-hidden="true" />
-      <nav id="main-nav" className={`nav ${s.navCollapsed ? "collapsed" : ""}`} aria-label="Main navigation">
+    <div className="shell">
+      <nav className={`nav ${s.navCollapsed ? "collapsed" : ""}`} aria-label="Main navigation">
         <div className="brand"><i className="mark" /><span>MotionProof</span></div>
         {NAV.map((g) => (
           <div key={g.group}>
             <div className="nav-group">{g.group}</div>
             {g.items.map(([route, text, Icon, need]) => (
-              <button key={route} className={`nav-item ${s.route === route ? "active" : ""}`} onClick={() => { s.go(route); setNavOpen(false); }} disabled={need !== null && !has[need]}
+              <button key={route} className={`nav-item ${s.route === route ? "active" : ""}`} onClick={() => s.go(route)} disabled={need !== null && !has[need]}
                 title={need !== null && !has[need] ? `${text} — select a ${need} first` : text} aria-current={s.route === route ? "page" : undefined}>
                 <Icon /><span className="nav-label">{text}</span></button>))}
           </div>))}
         <div className="nav-foot">
-          <button className={`nav-item ${s.route === "settings" ? "active" : ""}`} onClick={() => { s.go("settings"); setNavOpen(false); }} title="Settings"><Settings /><span className="nav-label">Settings</span></button>
+          <button className={`nav-item ${s.route === "settings" ? "active" : ""}`} onClick={() => s.go("settings")} title="Settings"><Settings /><span className="nav-label">Settings</span></button>
           <button className="nav-item" onClick={s.toggleNav} title={s.navCollapsed ? "Expand navigation" : "Collapse navigation"}>
             {s.navCollapsed ? <ChevronsRight /> : <ChevronsLeft />}<span className="nav-label">Collapse</span></button>
         </div>
       </nav>
       <header className="topbar">
-        <button className="btn ghost menu-btn" onClick={() => setNavOpen(!navOpen)} aria-label={navOpen ? "Close navigation" : "Open navigation"}
-          aria-expanded={navOpen} aria-controls="main-nav">{navOpen ? <X /> : <Menu />}</button>
         <div className="crumbs">
           <span>{project.data?.name ?? "No project"}</span>
           {model && <><span>/</span><span>{model.name}</span>{model.synthetic ? <Badge kind="warn" title="Generated reference geometry, not user hardware">synthetic</Badge> : null}</>}
@@ -96,18 +93,19 @@ export default function App() {
         </div>
         <span className="spacer" />
         {project.data && project.data.models.length > 0 && (
-          <select value={s.modelId ?? ""} onChange={(e) => s.setModel(e.target.value || null)} aria-label="Current model">
+          <select style={{ width: 210 }} value={s.modelId ?? ""} onChange={(e) => s.setModel(e.target.value || null)} aria-label="Current model">
             <option value="">select model…</option>{project.data.models.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>)}
         {project.data && project.data.experiments.length > 0 && (
-          <select value={s.experimentId ?? ""} onChange={(e) => { const id = e.target.value || null; s.setExperiment(id);
+          <select style={{ width: 210 }} value={s.experimentId ?? ""} onChange={(e) => { const id = e.target.value || null; s.setExperiment(id);
             const m = project.data?.experiments.find((x) => x.id === id)?.model_id; if (m) s.setModel(m); }} aria-label="Current experiment">
             <option value="">select experiment…</option>{project.data.experiments.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}</select>)}
-        {health.error ? <span className="status-dot down" title={health.error} role="status">backend offline</span>
-          : health.data ? <span className="status-dot" role="status" title="Backend reachable">{health.data.active_jobs > 0 ? `${health.data.active_jobs} job running` : "backend ready"}</span> : null}
-        <button className="btn ghost small" onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }))} title="Command palette (Ctrl+K)" aria-label="Command palette"><CommandIcon /><span className="kbd-hint">Ctrl+K</span></button>
+        {health.error ? <Badge kind="bad" title={health.error}>backend offline</Badge>
+          : health.data && health.data.active_jobs > 0 ? <Badge kind="info" title="Background simulation jobs">{health.data.active_jobs} job running</Badge> : null}
+        <button className="btn ghost small" onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }))} title="Command palette (Ctrl+K)" aria-label="Command palette"><CommandIcon />Ctrl+K</button>
         <button className="btn ghost" onClick={s.toggleTheme} aria-label={`Switch to ${s.theme === "light" ? "dark" : "light"} theme`}>{s.theme === "light" ? <Moon /> : <Sun />}</button>
+        <button className="btn ghost" onClick={s.logout} aria-label={`Sign out ${s.user}`} title={`Sign out ${s.user}`}><LogOut /></button>
       </header>
-      <main className="main" id="main-content" tabIndex={-1}>
+      <main className="main">
         <ErrorBoundary name={s.route}><Screen /></ErrorBoundary>
       </main>
       <CommandPalette />

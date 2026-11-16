@@ -1,5 +1,5 @@
 import { Component, type ReactNode } from "react";
-import { AlertTriangle, CheckCircle2, Info, Inbox, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
 import type { Async } from "../hooks/useAsync";
 
 export function Panel(props: { title?: ReactNode; actions?: ReactNode; foot?: ReactNode; flush?: boolean;
@@ -54,7 +54,6 @@ export function Alert(props: { kind: "ok" | "warn" | "bad" | "info"; children: R
 export function Empty(props: { title: string; children?: ReactNode; action?: ReactNode }) {
   return (
     <div className="empty">
-      <Inbox />
       <b>{props.title}</b>
       {props.children && <div>{props.children}</div>}
       {props.action}
@@ -66,16 +65,6 @@ export const Spinner = ({ label }: { label?: string }) => (
   <span className="row center" style={{ gap: 7 }} role="status"><span className="spinner" />{label && <span className="muted">{label}</span>}</span>
 );
 
-/** Layout-holding placeholder while backend data load; announces its label to screen readers. */
-export function Skeleton({ label }: { label: string }) {
-  return (
-    <div className="loading" role="status" aria-live="polite">
-      <span className="label"><span className="spinner" />{label}</span>
-      <div className="bar" /><div className="bar" /><div className="bar" />
-    </div>
-  );
-}
-
 /** Renders loading / error / empty states for an async resource, then the content. */
 export function Load<T>(props: { state: Async<T>; children: (data: T) => ReactNode; label?: string }) {
   const { state } = props;
@@ -86,7 +75,7 @@ export function Load<T>(props: { state: Async<T>; children: (data: T) => ReactNo
       </Alert>
     );
   }
-  if (state.data === null) return <Skeleton label={props.label ?? "Loading"} />;
+  if (state.data === null) return <div className="empty"><Spinner label={props.label ?? "Loading"} /></div>;
   return <>{props.children(state.data)}</>;
 }
 

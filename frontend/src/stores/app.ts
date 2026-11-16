@@ -17,6 +17,9 @@ interface AppState {
   theme: "light" | "dark";
   navCollapsed: boolean;
   toasts: Toast[];
+  user: string | null;
+  login: (email: string) => void;
+  logout: () => void;
   go: (route: Route) => void;
   setProject: (id: string | null) => void;
   setModel: (id: string | null) => void;
@@ -28,7 +31,7 @@ interface AppState {
 }
 
 const KEY = "motionproof.ui";
-type Saved = Pick<AppState, "projectId" | "modelId" | "experimentId" | "theme" | "navCollapsed">;
+type Saved = Pick<AppState, "projectId" | "modelId" | "experimentId" | "theme" | "navCollapsed" | "user">;
 
 function load(): Partial<Saved> {
   try {
@@ -40,7 +43,7 @@ function load(): Partial<Saved> {
 function save(s: AppState) {
   const data: Saved = {
     projectId: s.projectId, modelId: s.modelId, experimentId: s.experimentId, theme: s.theme,
-    navCollapsed: s.navCollapsed,
+    navCollapsed: s.navCollapsed, user: s.user,
   };
   try {
     localStorage.setItem(KEY, JSON.stringify(data));
@@ -67,6 +70,9 @@ export const useApp = create<AppState>((set, get) => ({
   theme: saved.theme ?? "light",
   navCollapsed: saved.navCollapsed ?? false,
   toasts: [],
+  user: saved.user ?? null,
+  login: (user) => { set({ user }); save(get()); },
+  logout: () => { set({ user: null }); save(get()); },
   go: (route) => {
     window.location.hash = `#/${route}`;
     set({ route });

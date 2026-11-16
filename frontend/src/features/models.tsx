@@ -1,15 +1,24 @@
 import { useMemo, useRef, useState } from "react";
-import { Eye, EyeOff, Focus, Plus, Trash2, UploadCloud } from "lucide-react";
+import { Eye, EyeOff, Focus, Plus, ShieldCheck, Trash2, UploadCloud } from "lucide-react";
 import { api } from "../lib/api";
 import { useAsync } from "../hooks/useAsync";
 import { useModel, usePose } from "../hooks/useModel";
 import { useApp } from "../stores/app";
-import type { Component, Dict, Feature, ModelDetail } from "../lib/types";
+import type { Component, Dict, Feature, ModelDetail, Readiness } from "../lib/types";
 import { Alert, Badge, Empty, Field, Load, NeedSelection, Num, Panel, fmt } from "../components/ui";
 import { Viewer, type Marker } from "../components/Viewer";
 
 const FORMATS = [".step", ".stp", ".stl", ".obj", ".urdf", ".xml"];
 const FEATURE_TYPES = ["shaft", "bore", "bearing_seat", "mounting_hole", "datum_plane", "datum_axis", "mating_face", "joint_interface", "gear_interface"];
+
+function CheckList({ r }: { r: Readiness }) {
+  const kind = { ok: "ok", warning: "warn", error: "bad", info: "info" } as const;
+  return (
+    <table className="grid"><tbody>{r.checks.map((c, i) => (
+      <tr key={i}><td><Badge kind={kind[c.status]}>{c.status}</Badge></td><td className="muted">{c.area}</td><td className="wrap">{c.message}</td></tr>))}
+    </tbody></table>
+  );
+}
 
 // ---------------------------------------------------------------- import
 
@@ -95,9 +104,6 @@ export function ImportScreen() {
 
 // ---------------------------------------------------------------- workbench
 
-/** Round values that are floating-point noise relative to a scale to exactly zero. */
-const clean = (v: number, scale: number) => (Math.abs(v) < 1e-9 * Math.max(scale, 1e-30) ? 0 : v);
-
 function Inspector({ c, model }: { c: Component; model: ModelDetail }) {
   const bb = c.bbox_mm ?? c.bbox;
   const feats = model.spec.features.filter((f) => f.component === c.id);
@@ -109,15 +115,12 @@ function Inspector({ c, model }: { c: Component; model: ModelDetail }) {
         <dt>Volume</dt><dd>{c.volume_mm3 == null ? "undefined" : `${fmt(c.volume_mm3, 6)} mm³`}</dd>
         <dt>Mass</dt><dd>{c.mass_kg == null ? "undefined (no density)" : `${fmt(c.mass_kg * 1000, 5)} g`}</dd>
         <dt>Density</dt><dd>{c.density_kg_m3 == null ? "–" : `${c.density_kg_m3} kg/m³`}</dd>
-        {bb && <><dt>Extents</dt><dd>{bb[0].map((v, i) => fmt(bb[1][i] - v, 4)).join(" × ")} {c.mesh_units}</dd></>}
-        {c.com_m && <><dt>Centre of mass</dt><dd>{c.com_m.map((v) => fmt(clean(v * 1000, 1), 4)).join(", ")} mm</dd></>}
+        {bb && <><dt>Extents</dt><dd>{bb[0].map((v, i) => fmt(bb[1][i] - v, 5)).join(" × ")} {c.mesh_units}</dd></>}
+        {c.com_m && <><dt>Centre of mass</dt><dd>{c.com_m.map((v) => fmt(v * 1000, 4)).join(", ")} mm</dd></>}
         <dt>Source</dt><dd>{c.source ?? "–"}</dd>
       </dl>
       {c.inertia_com_kgm2 && <div><h3>Inertia about COM (kg·m²)</h3>
-        <table className="grid"><tbody>{c.inertia_com_kgm2.map((r, i) => {
-          const scale = Math.max(...c.inertia_com_kgm2!.map((row, k) => Math.abs(row[k])));
-          return <tr key={i}>{r.map((v, j) => { const x = clean(v, scale); return <td key={j} className="num">{x === 0 ? "0" : x.toExponential(3)}</td>; })}</tr>;
-        })}</tbody></table></div>}
+        <table className="grid"><tbody>{c.inertia_com_kgm2.map((r, i) => <tr key={i}>{r.map((v, j) => <td key={j} className="num">{v.toExponential(3)}</td>)}</tr>)}</tbody></table></div>}
       {c.note && <Alert kind="info">{c.note}</Alert>}
       <div><h3>Features ({feats.length})</h3>{feats.map((f) => <div key={f.id} className="small">{f.id} <span className="faint">{f.type}</span></div>)}</div>
       <div><h3>Tolerances ({tols.length})</h3>{tols.map((t) => <div key={t.id} className="small">{t.id} <span className="faint">{t.lower}/{t.upper} {t.unit}</span></div>)}</div>
@@ -132,114 +135,53 @@ export function WorkbenchScreen() {
   const [selected, setSelected] = useState<string | null>(null);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [isolate, setIsolate] = useState<string | null>(null);
-  const [tab, setTab] = useState<"properties" | "readiness">("properties");
   const [q, setQ] = useState<Dict>({});
   const pose = usePose(modelId, q);
   const readiness = useAsync(modelId ? () => api.validateModel(modelId) : null, [modelId, model.data?.fingerprint]);
   if (!modelId) return <NeedSelection what="model" action={<button className="btn primary" onClick={() => go("projects")}>Open projects</button>} />;
 
   const toggle = (id: string) => setHidden((h) => { const n = new Set(h); if (n.has(id)) n.delete(id); else n.add(id); return n; });
-  if (model.data === null || model.error) return <div className="page"><Load state={model}>{() => null}</Load></div>;
-  const m = model.data;
-  const groups = Array.from(new Set(m.components.map((c) => c.group)));
-  const sel = m.components.find((c) => c.id === selected) ?? null;
-  const joints = pose?.joints ?? [];
-  const r = readiness.data;
-  const issues = r ? r.checks.filter((c) => c.status === "warning" || c.status === "error").length : 0;
-  const shown = m.components.filter((c) => !hidden.has(c.id) && (!isolate || isolate === c.id)).length;
-  const masses = m.components.map((c) => c.mass_kg);
-  const totalMass = masses.every((x) => x != null) ? masses.reduce((a: number, b) => a + (b ?? 0), 0) : null;
-  const glyph = { ok: ["ok", "\u2713"], warning: ["warn", "!"], error: ["bad", "\u2715"], info: ["info", "i"] } as const;
   return (
-    <div className="ws">
-      <div className="ws-head">
-        <h1>Assembly workbench</h1>
-        <span className="meta">{m.name}</span>
-        {m.spec.synthetic && <Badge kind="warn" title="Generated by MotionProof for demonstration; not user hardware">Synthetic reference design</Badge>}
-        <span className="meta">{m.spec.fidelity.replace(/_/g, " ")}</span>
-        <span className="spacer" />
-        {r && <button className="btn ghost small" onClick={() => setTab("readiness")} title="Show readiness checks">
-          <span className={r.status === "ready" ? "pos" : r.status === "blocked" ? "neg" : ""} style={r.status === "ready_with_warnings" ? { color: "var(--warn)" } : undefined}>
-            {r.status === "ready" ? "Ready" : r.status === "blocked" ? "Blocked" : "Ready with warnings"}</span>
-          {issues > 0 && <span className="muted">· {issues} to review</span>}</button>}
-      </div>
-      <div className="ws-body">
-        <aside className="ws-side left" aria-label="Assembly tree">
-          <div className="ws-section" style={{ flex: "none" }}>
-            <div className="sec-title">Components<span className="spacer" /><span className="mono faint">{m.components.length}</span></div>
+    <div className="page">
+      <Load state={model}>{(m) => {
+        const groups = Array.from(new Set(m.components.map((c) => c.group)));
+        const sel = m.components.find((c) => c.id === selected) ?? null;
+        const joints = pose?.joints ?? [];
+        return (<>
+          <div className="page-head"><h1>Assembly workbench</h1><span className="sub">{m.name}</span>
+            {m.spec.synthetic && <Badge kind="warn" title="Generated by MotionProof for demonstration; not user hardware">synthetic reference design</Badge>}
+            <Badge>{m.spec.fidelity.replace(/_/g, " ")}</Badge><span className="spacer" />
+            {readiness.data && <Badge kind={readiness.data.status === "ready" ? "ok" : readiness.data.status === "blocked" ? "bad" : "warn"}><ShieldCheck style={{ width: 12, height: 12 }} />{readiness.data.status.replace(/_/g, " ")}</Badge>}
           </div>
-          <div style={{ flex: 1, overflow: "auto", minHeight: 0 }}>
-            {groups.map((g) => {
-              const items = m.components.filter((c) => c.group === g);
-              return (<div key={g}>
-                <div className="tree-group" style={{ textTransform: "capitalize" }}>{g} <span className="mono faint" style={{ fontWeight: 400 }}>{items.length}</span></div>
-                {items.map((c) => (
-                  <div key={c.id} className={`tree-row ${selected === c.id ? "selected" : ""} ${hidden.has(c.id) ? "dim" : ""}`}
-                    onClick={() => setSelected(c.id)} role="treeitem" aria-selected={selected === c.id} tabIndex={0}
-                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelected(c.id); } }}>
-                    <span className="name">{c.name}</span>
-                    <button className="btn ghost small act" aria-pressed={isolate === c.id} onClick={(e) => { e.stopPropagation(); setIsolate(isolate === c.id ? null : c.id); }}
-                      aria-label={`Isolate ${c.name}`} title="Isolate"><Focus /></button>
-                    <button className="btn ghost small act vis" onClick={(e) => { e.stopPropagation(); toggle(c.id); }}
-                      aria-label={hidden.has(c.id) ? `Show ${c.name}` : `Hide ${c.name}`} title={hidden.has(c.id) ? "Show" : "Hide"}>{hidden.has(c.id) ? <EyeOff /> : <Eye />}</button>
-                  </div>))}
-              </div>);
-            })}
-          </div>
-          <div className="ws-section" style={{ borderTop: "1px solid var(--border)", borderBottom: 0, flex: "none" }}>
-            <div className="sec-title">Joints<span className="spacer" /><span className="faint small">pose preview</span></div>
-            <div className="sec-body">
-              {joints.length === 0 && <span className="faint small">No joints (geometry-only model)</span>}
+          <div className="split">
+            <Panel title="Assembly" flush foot={`${m.components.length} components · ${m.joints.length} joints`}>
+              {groups.map((g) => (<div key={g}><div className="tree-group">{g}</div>
+                {m.components.filter((c) => c.group === g).map((c) => (
+                  <div key={c.id} className={`list-item ${selected === c.id ? "selected" : ""} ${hidden.has(c.id) ? "dim" : ""}`}>
+                    <button className="btn ghost small" onClick={() => toggle(c.id)} aria-label={hidden.has(c.id) ? `Show ${c.name}` : `Hide ${c.name}`}>{hidden.has(c.id) ? <EyeOff /> : <Eye />}</button>
+                    <button className="name" style={{ border: 0, background: "none", font: "inherit", color: "inherit", textAlign: "left", cursor: "pointer", padding: 0 }} onClick={() => setSelected(c.id)}>{c.name}</button>
+                    <button className="btn ghost small" aria-pressed={isolate === c.id} onClick={() => setIsolate(isolate === c.id ? null : c.id)} aria-label={`Isolate ${c.name}`} title="Isolate"><Focus /></button>
+                  </div>))}</div>))}
+              <div className="tree-group">Joints</div>
+              {joints.length === 0 && <div className="list-item dim"><span className="name">No joints (geometry-only model)</span></div>}
               {joints.map((j) => (
-                <div key={j.name} style={{ padding: "3px 0" }}>
-                  <div className="row center" style={{ gap: 6 }}><span className="grow">{j.name}{j.driven && <span className="faint small"> · driven</span>}</span>
-                    <span className="mono">{fmt(((q[j.name] ?? m.spec.held_joints[j.name] ?? 0) * 180) / Math.PI, 3)}°</span></div>
+                <div key={j.name} style={{ padding: "4px 10px" }}>
+                  <div className="row center" style={{ gap: 6 }}><span className="grow">{j.name}</span>{j.driven && <Badge kind="info">driven</Badge>}
+                    <span className="mono faint">{fmt(((q[j.name] ?? m.spec.held_joints[j.name] ?? 0) * 180) / Math.PI, 3)}°</span></div>
                   <input type="range" style={{ width: "100%" }} aria-label={`${j.name} angle`} min={j.range ? j.range[0] : -3.14} max={j.range ? j.range[1] : 3.14} step={0.01}
                     value={q[j.name] ?? m.spec.held_joints[j.name] ?? 0} onChange={(e) => setQ({ ...q, [j.name]: Number(e.target.value) })} />
                 </div>))}
+            </Panel>
+            <Viewer modelId={m.id} stamp={m.geometry_fingerprint} components={m.components} pose={pose} selected={selected}
+              onSelect={setSelected} hidden={hidden} isolate={isolate}
+              legend="Drag to orbit · right-drag to pan · wheel to zoom · click a part to inspect" />
+            <div className="col">
+              <Panel title={sel ? sel.name : "Inspector"}>{sel ? <Inspector c={sel} model={m} /> : <Empty title="Nothing selected">Click a component in the tree or the viewport.</Empty>}</Panel>
+              <Panel title="Model readiness" flush><Load state={readiness}>{(r) => <CheckList r={r} />}</Load></Panel>
             </div>
           </div>
-        </aside>
-        <Viewer modelId={m.id} stamp={m.geometry_fingerprint} components={m.components} pose={pose} selected={selected}
-          onSelect={setSelected} hidden={hidden} isolate={isolate}
-          status={<>
-            <span>{sel ? <>Selected <span className="mono">{sel.id}</span></> : "No selection"}</span>
-            <span>Visible <span className="mono">{shown}/{m.components.length}</span></span>
-            {isolate && <span>Isolated <span className="mono">{isolate}</span></span>}
-            <span className="spacer" style={{ flex: 1 }} />
-            <span className="faint">Drag orbit · right-drag pan · wheel zoom · F fit · 1/2/3 shading</span>
-          </>} />
-        <aside className="ws-side right" aria-label="Inspector">
-          <div className="ws-tabs" role="tablist">
-            <button role="tab" aria-selected={tab === "properties"} onClick={() => setTab("properties")}>Properties</button>
-            <button role="tab" aria-selected={tab === "readiness"} onClick={() => setTab("readiness")}>Readiness{issues ? ` (${issues})` : ""}</button>
-          </div>
-          {tab === "properties" ? (
-            <div style={{ padding: 12, overflow: "auto" }}>
-              {sel ? (<><h2 style={{ marginBottom: 8 }}>{sel.name}</h2><Inspector c={sel} model={m} /></>) : (<>
-                <h2 style={{ marginBottom: 8 }}>Assembly</h2>
-                <dl className="kv">
-                  <dt>Components</dt><dd>{m.components.length}</dd>
-                  <dt>Joints</dt><dd>{m.joints.length}</dd>
-                  <dt>Tolerances</dt><dd>{m.spec.tolerances.length}</dd>
-                  <dt>Features</dt><dd>{m.spec.features.length}</dd>
-                  <dt>Total mass</dt><dd>{totalMass == null ? "undefined (missing densities)" : `${fmt(totalMass * 1000, 5)} g`}</dd>
-                  <dt>Fingerprint</dt><dd>{m.fingerprint.slice(0, 12)}</dd>
-                </dl>
-                <p className="faint small" style={{ marginTop: 12 }}>Select a component in the tree or the viewport to inspect its geometry, mass properties, features and tolerances.</p>
-              </>)}
-            </div>
-          ) : (
-            <div style={{ overflow: "auto" }}>
-              <Load state={readiness}>{(rr) => (<>
-                {rr.checks.map((c, k) => (
-                  <div key={k} className="check-row"><span className={`g ${glyph[c.status][0]}`} aria-label={c.status}>{glyph[c.status][1]}</span>
-                    <span className="area">{c.area}</span><span>{c.message}</span></div>))}
-              </>)}</Load>
-            </div>
-          )}
-        </aside>
-      </div>
+        </>);
+      }}</Load>
     </div>
   );
 }
