@@ -166,3 +166,14 @@ export const adv = {
   benchmarks: () => request<AnyJson>("/benchmarks"),
   runBenchmarks: (ids?: string[]) => request<T.Job>("/benchmarks/run", json("POST", { ids: ids ?? null })),
 };
+
+// ---- external experimental validation
+export const ext = {
+  datasets: () => request<AnyJson[]>("/external/datasets"),
+  protocols: () => request<AnyJson[]>("/external/protocols"),
+  signals: (key: string) => request<AnyJson[]>(`/external/datasets/${key}/signals?limit=1`),
+  importDataset: (key: string) => request<T.Job>(`/external/datasets/${key}/import`, { method: "POST" }),
+  validate: (pid: string) => request<T.Job>(`/external/validate/${pid}`, { method: "POST" }),
+  runs: () => request<AnyJson[]>("/external/runs"),
+  run: (id: string) => request<AnyJson>(`/external/runs/${id}`),
+};

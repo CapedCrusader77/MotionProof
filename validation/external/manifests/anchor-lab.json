@@ -1,0 +1,507 @@
+{
+ "adapter_version": "1.0.0",
+ "citation": "NVIDIA Robotics, \"Anchor-Lab Dataset\", v1.0, Hugging Face, June 2026, https://huggingface.co/datasets/nvidia/Anchor-Lab (Apache License 2.0).",
+ "dataset": "anchor-lab",
+ "doi": null,
+ "files": {
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-large-position10.parquet": {
+   "bytes": 2296769,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "614ca41366cceef60b1971789c12738433fe389722073fd2a703647dddd6b8fa"
+   },
+   "retrieved_utc": "2026-11-16T10:48:12+00:00",
+   "sha256": "614ca41366cceef60b1971789c12738433fe389722073fd2a703647dddd6b8fa",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-large-position10.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-large-position11.parquet": {
+   "bytes": 2199143,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "ef96da63ff1373bf1beb8577505bb1ede9b1ceae9bf4f6f205637d12412cd422"
+   },
+   "retrieved_utc": "2026-11-16T10:48:20+00:00",
+   "sha256": "ef96da63ff1373bf1beb8577505bb1ede9b1ceae9bf4f6f205637d12412cd422",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-large-position11.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-large-position8.parquet": {
+   "bytes": 2183416,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "106179804015a682e5082822bc9cf04e3d434b5b3e0b2b46e2500e36523b54f6"
+   },
+   "retrieved_utc": "2026-11-16T10:48:29+00:00",
+   "sha256": "106179804015a682e5082822bc9cf04e3d434b5b3e0b2b46e2500e36523b54f6",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-large-position8.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-large-position9.parquet": {
+   "bytes": 2178705,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "cc9d6078bc8a54241ed7a5d4fe607741d007791995ef938d00333fca5632d979"
+   },
+   "retrieved_utc": "2026-11-16T10:48:36+00:00",
+   "sha256": "cc9d6078bc8a54241ed7a5d4fe607741d007791995ef938d00333fca5632d979",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-large-position9.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-medium-position10.parquet": {
+   "bytes": 2276971,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "55b8e54d690787866babe78cc6e435c7f577518510a8c8e937a9dca9b4231a2d"
+   },
+   "retrieved_utc": "2026-11-16T10:48:43+00:00",
+   "sha256": "55b8e54d690787866babe78cc6e435c7f577518510a8c8e937a9dca9b4231a2d",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-medium-position10.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-medium-position11.parquet": {
+   "bytes": 2253215,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "234812cb94c4d759c09bc1b1887f7f02d1500be40a55d19cbdd97c2f51770f0c"
+   },
+   "retrieved_utc": "2026-11-16T10:48:51+00:00",
+   "sha256": "234812cb94c4d759c09bc1b1887f7f02d1500be40a55d19cbdd97c2f51770f0c",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-medium-position11.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-medium-position8.parquet": {
+   "bytes": 2273825,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "1ee1ce506a58bc7c734a5e82bc545b8e033999a08370c7adaf7b55f35e362d84"
+   },
+   "retrieved_utc": "2026-11-16T10:48:57+00:00",
+   "sha256": "1ee1ce506a58bc7c734a5e82bc545b8e033999a08370c7adaf7b55f35e362d84",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-medium-position8.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-medium-position9.parquet": {
+   "bytes": 2214928,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "e8b8ac33611bf2bf54ad163d6a901e40e39bf2c98f2dc2bda73902bfed410f1b"
+   },
+   "retrieved_utc": "2026-11-16T10:49:04+00:00",
+   "sha256": "e8b8ac33611bf2bf54ad163d6a901e40e39bf2c98f2dc2bda73902bfed410f1b",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-medium-position9.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-small-position10.parquet": {
+   "bytes": 2012090,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "a17c4c744d78853d08e919d35fc583ee634d3eaff11c27e433d2a7d828af1a9a"
+   },
+   "retrieved_utc": "2026-11-16T10:49:11+00:00",
+   "sha256": "a17c4c744d78853d08e919d35fc583ee634d3eaff11c27e433d2a7d828af1a9a",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-small-position10.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-small-position11.parquet": {
+   "bytes": 2263446,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "059d4ae803a7037240df05712922a641cc2ce99577945c9e3e7bbd2c8fb1a771"
+   },
+   "retrieved_utc": "2026-11-16T10:49:20+00:00",
+   "sha256": "059d4ae803a7037240df05712922a641cc2ce99577945c9e3e7bbd2c8fb1a771",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-small-position11.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-small-position8.parquet": {
+   "bytes": 2119307,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "0e24def9d4c1b43d165cb24889f07d026fae20e011150e80ff25238f97ccbe39"
+   },
+   "retrieved_utc": "2026-11-16T10:49:27+00:00",
+   "sha256": "0e24def9d4c1b43d165cb24889f07d026fae20e011150e80ff25238f97ccbe39",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-small-position8.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-small-position9.parquet": {
+   "bytes": 2097977,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "630a72b2a04b4f2972a241434f1dd0f5b10756c8dd299b32d393716837aff317"
+   },
+   "retrieved_utc": "2026-11-16T10:49:33+00:00",
+   "sha256": "630a72b2a04b4f2972a241434f1dd0f5b10756c8dd299b32d393716837aff317",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-0p5hz-amp-small-position9.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-large-position10.parquet": {
+   "bytes": 2205619,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "2e276166f258ab5bdccb3cdaf831896c93b1d6b1072637fd5b30b1392a5ba32e"
+   },
+   "retrieved_utc": "2026-11-16T10:49:40+00:00",
+   "sha256": "2e276166f258ab5bdccb3cdaf831896c93b1d6b1072637fd5b30b1392a5ba32e",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-large-position10.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-large-position11.parquet": {
+   "bytes": 2280582,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "08f5828c847b17ed74e21f7babb47cd4169ccb2e328ad404c748cf67e6a38076"
+   },
+   "retrieved_utc": "2026-11-16T10:49:47+00:00",
+   "sha256": "08f5828c847b17ed74e21f7babb47cd4169ccb2e328ad404c748cf67e6a38076",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-large-position11.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-large-position8.parquet": {
+   "bytes": 2253809,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "eb0493ff84e35c9e038978625961b50cf7a209e1e3a347dcdb6f669476f75210"
+   },
+   "retrieved_utc": "2026-11-16T10:49:54+00:00",
+   "sha256": "eb0493ff84e35c9e038978625961b50cf7a209e1e3a347dcdb6f669476f75210",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-large-position8.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-large-position9.parquet": {
+   "bytes": 2271354,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "dec035e9dca6abd0ef69ccba3038631b8aa25fca367c30c1ece844423cb61632"
+   },
+   "retrieved_utc": "2026-11-16T10:50:04+00:00",
+   "sha256": "dec035e9dca6abd0ef69ccba3038631b8aa25fca367c30c1ece844423cb61632",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-large-position9.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-medium-position10.parquet": {
+   "bytes": 2167960,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "3bf8ddc902cb13bb528c6e3c3cf81e28438aed3feaf2b97b4daf7f25f8704946"
+   },
+   "retrieved_utc": "2026-11-16T10:50:10+00:00",
+   "sha256": "3bf8ddc902cb13bb528c6e3c3cf81e28438aed3feaf2b97b4daf7f25f8704946",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-medium-position10.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-medium-position11.parquet": {
+   "bytes": 2276399,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "0a618415ca9020400703106275e388ed69d39432615b7c6c1b0882131b36925a"
+   },
+   "retrieved_utc": "2026-11-16T10:50:18+00:00",
+   "sha256": "0a618415ca9020400703106275e388ed69d39432615b7c6c1b0882131b36925a",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-medium-position11.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-medium-position8.parquet": {
+   "bytes": 2259054,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "5e525c91251e480287a0e8cb07f51e3436741c2731158ff907adeb11d198eba2"
+   },
+   "retrieved_utc": "2026-11-16T10:50:25+00:00",
+   "sha256": "5e525c91251e480287a0e8cb07f51e3436741c2731158ff907adeb11d198eba2",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-medium-position8.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-medium-position9.parquet": {
+   "bytes": 2266789,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "bff2b6759a9f08f521634340eb4eae8c11ffce5331f71e9e1f748cfc983e1e09"
+   },
+   "retrieved_utc": "2026-11-16T10:50:32+00:00",
+   "sha256": "bff2b6759a9f08f521634340eb4eae8c11ffce5331f71e9e1f748cfc983e1e09",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-medium-position9.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-small-position10.parquet": {
+   "bytes": 2161265,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "88cb0fc0c4bb642587bd7d0a1efbe230371af0ea2e16e4b9d9f65db81a0284b0"
+   },
+   "retrieved_utc": "2026-11-16T10:50:39+00:00",
+   "sha256": "88cb0fc0c4bb642587bd7d0a1efbe230371af0ea2e16e4b9d9f65db81a0284b0",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-small-position10.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-small-position11.parquet": {
+   "bytes": 2149976,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "362f63ef29a441a40a84d9fca971f98eabdd911488c32f3d23bd782e045a7249"
+   },
+   "retrieved_utc": "2026-11-16T10:50:46+00:00",
+   "sha256": "362f63ef29a441a40a84d9fca971f98eabdd911488c32f3d23bd782e045a7249",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-small-position11.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-small-position8.parquet": {
+   "bytes": 2118766,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "aa53b47a3ef541c5a288bb5cd8bb09ba9ff397a05355a39e3fe7ff71cc0407f2"
+   },
+   "retrieved_utc": "2026-11-16T10:50:52+00:00",
+   "sha256": "aa53b47a3ef541c5a288bb5cd8bb09ba9ff397a05355a39e3fe7ff71cc0407f2",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-small-position8.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-small-position9.parquet": {
+   "bytes": 2068359,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "6bb11ff59f944e55cb3451fd4a72ae225631c158365c561beea78db801a89086"
+   },
+   "retrieved_utc": "2026-11-16T10:50:59+00:00",
+   "sha256": "6bb11ff59f944e55cb3451fd4a72ae225631c158365c561beea78db801a89086",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p0hz-amp-small-position9.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-large-position10.parquet": {
+   "bytes": 2277368,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "d6d231465839ca31938f9b93f32d1f1a2c635b43619960e90c34eac78ebacc84"
+   },
+   "retrieved_utc": "2026-11-16T10:51:06+00:00",
+   "sha256": "d6d231465839ca31938f9b93f32d1f1a2c635b43619960e90c34eac78ebacc84",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-large-position10.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-large-position11.parquet": {
+   "bytes": 2314890,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "b76cafc37a5258302a5f5c1402f6957b6e56671129d98ee35c6ce74aa2a88430"
+   },
+   "retrieved_utc": "2026-11-16T10:51:13+00:00",
+   "sha256": "b76cafc37a5258302a5f5c1402f6957b6e56671129d98ee35c6ce74aa2a88430",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-large-position11.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-large-position8.parquet": {
+   "bytes": 2296582,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "fa137e9b89ab3a811589250cd0f88265e2e957609e94ad6752c51eb61fff4af5"
+   },
+   "retrieved_utc": "2026-11-16T10:51:20+00:00",
+   "sha256": "fa137e9b89ab3a811589250cd0f88265e2e957609e94ad6752c51eb61fff4af5",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-large-position8.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-large-position9.parquet": {
+   "bytes": 1356750,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "e2ba25f777a537f9d33f176be9ca223bbfea1aef67c5d528e66ade8b1e169059"
+   },
+   "retrieved_utc": "2026-11-16T10:51:26+00:00",
+   "sha256": "e2ba25f777a537f9d33f176be9ca223bbfea1aef67c5d528e66ade8b1e169059",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-large-position9.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-medium-position10.parquet": {
+   "bytes": 2177288,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "41996fde1a069c05bc4cc90f260342263c03cd8da2a296dbe33fe20721fbf451"
+   },
+   "retrieved_utc": "2026-11-16T10:51:35+00:00",
+   "sha256": "41996fde1a069c05bc4cc90f260342263c03cd8da2a296dbe33fe20721fbf451",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-medium-position10.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-medium-position11.parquet": {
+   "bytes": 2178215,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "34360eb312e478bb9755ed5b91343f0553de1696481b76aaac07fda6529c2f2e"
+   },
+   "retrieved_utc": "2026-11-16T10:51:41+00:00",
+   "sha256": "34360eb312e478bb9755ed5b91343f0553de1696481b76aaac07fda6529c2f2e",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-medium-position11.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-medium-position8.parquet": {
+   "bytes": 2270163,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "f96ebfb933f177648790f634a2bfe80135265ef8f5a6f0c8c76110193cf6bdbe"
+   },
+   "retrieved_utc": "2026-11-16T10:51:49+00:00",
+   "sha256": "f96ebfb933f177648790f634a2bfe80135265ef8f5a6f0c8c76110193cf6bdbe",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-medium-position8.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-medium-position9.parquet": {
+   "bytes": 2217595,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "ac8ea65f93fdc2f967a6179cc5491f1fc83a0409fab3312cec2e91acca4f32b2"
+   },
+   "retrieved_utc": "2026-11-16T10:51:55+00:00",
+   "sha256": "ac8ea65f93fdc2f967a6179cc5491f1fc83a0409fab3312cec2e91acca4f32b2",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-medium-position9.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-small-position10.parquet": {
+   "bytes": 2152640,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "54e3919cba6fb112cce32e130056113944afa2445e7b440982d7345fea01cf73"
+   },
+   "retrieved_utc": "2026-11-16T10:52:03+00:00",
+   "sha256": "54e3919cba6fb112cce32e130056113944afa2445e7b440982d7345fea01cf73",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-small-position10.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-small-position11.parquet": {
+   "bytes": 2223422,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "0c22f8bfc6775bc5c7eba226ff0dbfb4d9636827843c2fc9b0eaa7567b974afb"
+   },
+   "retrieved_utc": "2026-11-16T10:52:09+00:00",
+   "sha256": "0c22f8bfc6775bc5c7eba226ff0dbfb4d9636827843c2fc9b0eaa7567b974afb",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-small-position11.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-small-position8.parquet": {
+   "bytes": 2156040,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "101d59f0035ab8b1f84346028420b8d26ac49e0ead05bfbcc57a287ddb128582"
+   },
+   "retrieved_utc": "2026-11-16T10:52:16+00:00",
+   "sha256": "101d59f0035ab8b1f84346028420b8d26ac49e0ead05bfbcc57a287ddb128582",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-small-position8.parquet"
+  },
+  "h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-small-position9.parquet": {
+   "bytes": 2252764,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "216e897e864ad700bfc2ac7b757d2c258ec02a951951c0d133557acd0bb93c12"
+   },
+   "retrieved_utc": "2026-11-16T10:52:23+00:00",
+   "sha256": "216e897e864ad700bfc2ac7b757d2c258ec02a951951c0d133557acd0bb93c12",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/h1_elbow_teststand/h1-elbow-teststand-sysid-1p5hz-amp-small-position9.parquet"
+  },
+  "so101_arm_50motion/so101-sysid-50motion-heldout-backlash-detection.parquet": {
+   "bytes": 2569627,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "6a8ef3730346e71edced7a8f6c4d7aa8257520f736f1d7d86abb562be9376ef6"
+   },
+   "retrieved_utc": "2026-11-16T10:52:32+00:00",
+   "sha256": "6a8ef3730346e71edced7a8f6c4d7aa8257520f736f1d7d86abb562be9376ef6",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/so101_arm_50motion/so101-sysid-50motion-heldout-backlash-detection.parquet"
+  },
+  "so101_arm_50motion/so101-sysid-50motion-heldout-coupled-joints.parquet": {
+   "bytes": 2563064,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "dfbf12fbfeb6d11185183d18a40573ec86051c48bbe3a12283d7b7cc6bc87e21"
+   },
+   "retrieved_utc": "2026-11-16T10:52:41+00:00",
+   "sha256": "dfbf12fbfeb6d11185183d18a40573ec86051c48bbe3a12283d7b7cc6bc87e21",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/so101_arm_50motion/so101-sysid-50motion-heldout-coupled-joints.parquet"
+  },
+  "so101_arm_50motion/so101-sysid-50motion-heldout-custom-motion.parquet": {
+   "bytes": 2148247,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "ae77c410261131e4fe12a9e9a9a80a018b3830fccbcd9014f6258d4df4afe442"
+   },
+   "retrieved_utc": "2026-11-16T10:52:47+00:00",
+   "sha256": "ae77c410261131e4fe12a9e9a9a80a018b3830fccbcd9014f6258d4df4afe442",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/so101_arm_50motion/so101-sysid-50motion-heldout-custom-motion.parquet"
+  },
+  "so101_arm_50motion/so101-sysid-50motion-heldout-diagonal-sweep.parquet": {
+   "bytes": 858765,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "efcf2d67eafb75798022c949049b059c9a3a8fab9bfd1d857a678a477c303fb8"
+   },
+   "retrieved_utc": "2026-11-16T10:52:52+00:00",
+   "sha256": "efcf2d67eafb75798022c949049b059c9a3a8fab9bfd1d857a678a477c303fb8",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/so101_arm_50motion/so101-sysid-50motion-heldout-diagonal-sweep.parquet"
+  },
+  "so101_arm_50motion/so101-sysid-50motion-heldout-frequency-sweep.parquet": {
+   "bytes": 3975038,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "2cfde5c773d1d6d2ef9d9642f4c0e5318c64b03cfce70576b5e76d52d0c8e592"
+   },
+   "retrieved_utc": "2026-11-16T10:53:03+00:00",
+   "sha256": "2cfde5c773d1d6d2ef9d9642f4c0e5318c64b03cfce70576b5e76d52d0c8e592",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/so101_arm_50motion/so101-sysid-50motion-heldout-frequency-sweep.parquet"
+  },
+  "so101_arm_50motion/so101-sysid-50motion-heldout-friction-gravity.parquet": {
+   "bytes": 2361763,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "24cca20c3656c9c1c8fb6bfd13e3311bf20155b1fc3a4694a6b054ad443cf65e"
+   },
+   "retrieved_utc": "2026-11-16T10:53:11+00:00",
+   "sha256": "24cca20c3656c9c1c8fb6bfd13e3311bf20155b1fc3a4694a6b054ad443cf65e",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/so101_arm_50motion/so101-sysid-50motion-heldout-friction-gravity.parquet"
+  },
+  "so101_arm_50motion/so101-sysid-50motion-heldout-hold-under-gravity.parquet": {
+   "bytes": 842136,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "396aafab580c049de51f41dc48952b30da2a0a911b8be9f982af54b413c946d2"
+   },
+   "retrieved_utc": "2026-11-16T10:53:14+00:00",
+   "sha256": "396aafab580c049de51f41dc48952b30da2a0a911b8be9f982af54b413c946d2",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/so101_arm_50motion/so101-sysid-50motion-heldout-hold-under-gravity.parquet"
+  },
+  "so101_arm_50motion/so101-sysid-50motion-heldout-square-pattern.parquet": {
+   "bytes": 684854,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "d79818a568d8dcfb514551d0ffa83f63c607ea48878eb0db8b22c16f1c58f238"
+   },
+   "retrieved_utc": "2026-11-16T10:53:19+00:00",
+   "sha256": "d79818a568d8dcfb514551d0ffa83f63c607ea48878eb0db8b22c16f1c58f238",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/so101_arm_50motion/so101-sysid-50motion-heldout-square-pattern.parquet"
+  },
+  "so101_arm_50motion/so101-sysid-50motion-train-single-joint-elbow.parquet": {
+   "bytes": 1281310,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "sha256",
+    "value": "de97fbbe19b47eb626f98b0dba7ace675f0ae5dcff7fc1ae415c8a8d4c7e412e"
+   },
+   "retrieved_utc": "2026-11-16T10:53:23+00:00",
+   "sha256": "de97fbbe19b47eb626f98b0dba7ace675f0ae5dcff7fc1ae415c8a8d4c7e412e",
+   "url": "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/647edd5787cd764cdc041103ad282dc59214d919/data/so101_arm_50motion/so101-sysid-50motion-train-single-joint-elbow.parquet"
+  }
+ },
+ "licence": "Apache-2.0",
+ "source": "https://huggingface.co/datasets/nvidia/Anchor-Lab",
+ "title": "Anchor-Lab: sim-to-real robot telemetry (NVIDIA Robotics)",
+ "version": "v1.0 (Hugging Face revision 647edd5787cd764cdc041103ad282dc59214d919)"
+}

@@ -1,0 +1,23 @@
+{
+ "adapter_version": "1.0.0",
+ "citation": "J. Weigand, J. Goetz, J. Ulmen, M. Ruskowski, \"Dataset and Baseline for an Industrial Robot Identification Benchmark\", 6th Workshop on Nonlinear System Identification Benchmarks, Leuven, 2022, urn:nbn:de:hbz:386-kluedo-67317; data doi:10.26204/data/5.",
+ "dataset": "kuka-kr300",
+ "doi": "10.26204/data/5",
+ "files": {
+  "Robot_Identification_Benchmark_Without_Raw_Data.rar": {
+   "bytes": 12717003,
+   "integrity": "verified against published checksum",
+   "published_checksum": {
+    "algorithm": "md5",
+    "value": "6fffa993f60d65f85100bad053888df2"
+   },
+   "retrieved_utc": "2026-11-16T10:39:27+00:00",
+   "sha256": "909523da90cc341257059faa6dd1fa18ffc64245df3191ea0014da0fb3c19bca",
+   "url": "https://fdm-fallback.uni-kl.de/TUK/FB/MV/WSKL/0001/Robot_Identification_Benchmark_Without_Raw_Data.rar"
+  }
+ },
+ "licence": "as stated by the publisher at doi:10.26204/data/5 (benchmark data for research use with citation)",
+ "source": "https://www.nonlinearbenchmark.org/benchmarks/industrial-robot",
+ "title": "Dataset and Baseline for an Industrial Robot Identification Benchmark",
+ "version": "2022 release (files dated 17-Jan-2022)"
+}

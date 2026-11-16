@@ -1,0 +1,589 @@
+"""Validation experiments. Each follows its pre-registered protocol in ``protocols.py``.
+
+Every function returns a result dictionary with the status (PASS, FAIL, NOT RUN,
+INCOMPATIBLE DATA, INSUFFICIENT DATA), the exact identification and validation trial IDs,
+fitted parameters with identifiability information, metrics on both sets, plot series, the
+transformations applied and model-trust evidence records. Validation data never enter a fit:
+models are fitted by functions that receive identification trials only.
+"""
+
+from __future__ import annotations
+
+import math
+from collections.abc import Callable
+from pathlib import Path
+from typing import Any
+
+import numpy as np
+from scipy.optimize import least_squares
+from scipy.signal import savgol_filter
+
+from motionproof.external_validation.adapters import ADAPTERS
+from motionproof.external_validation.adapters.kuka_kr300 import KukaKR300
+from motionproof.external_validation.experiments.protocols import PROTOCOLS
+from motionproof.external_validation.metrics.errors import (
+    by_group,
+    errors,
+    residual_histogram,
+    thin,
+)
+from motionproof.external_validation.provenance.store import evidence
+from motionproof.external_validation.schemas.trial import SchemaError, Trial, align
+
+EPS_COULOMB = 0.02  # rad/s, smoothing of sign(dq) in the Coulomb term (fixed by protocol)
+
+
+class LeakageError(RuntimeError):
+    pass
+
+
+def check_disjoint(ident: list[str], valid: list[str]) -> None:
+    overlap = set(ident) & set(valid)
+    if overlap:
+        raise LeakageError(f"trials in both identification and validation: {sorted(overlap)}")
+
+
+def linear_fit(X: np.ndarray, y: np.ndarray,  # noqa: N803 (matrix notation)
+               names: list[str]) -> dict[str, Any]:
+    """Least squares with identifiability diagnostics.
+
+    Standard errors assume independent residuals; time-series residuals are correlated, so
+    they are optimistic and reported as such.
+    """
+    scale = np.where(np.std(X, axis=0) > 0, np.std(X, axis=0), 1.0)
+    Xs = X / scale
+    beta_s, *_ = np.linalg.lstsq(Xs, y, rcond=None)
+    beta = beta_s / scale
+    r = y - X @ beta
+    dof = max(len(y) - len(beta), 1)
+    s2 = float(r @ r / dof)
+    cov = s2 * np.linalg.pinv(X.T @ X)
+    se = np.sqrt(np.clip(np.diag(cov), 0, None))
+    d = np.sqrt(np.clip(np.diag(cov), 1e-300, None))
+    corr = cov / np.outer(d, d)
+    high = [(names[i], names[j], float(corr[i, j])) for i in range(len(names))
+            for j in range(i + 1, len(names)) if abs(corr[i, j]) > 0.95]
+    return {"parameters": {n: float(b) for n, b in zip(names, beta, strict=True)},
+            "standard_errors": {n: float(s) for n, s in zip(names, se, strict=True)},
+            "condition_number_scaled": float(np.linalg.cond(Xs)),
+            "highly_correlated_pairs": high,
+            "note": "standard errors assume independent residuals and are optimistic for "
+                    "time series", "beta": beta}
+
+
+def _trials(dataset: str, root: Path, rels: list[str]) -> list[Trial]:
+    a = ADAPTERS[dataset]
+    return [a.load(root, r) for r in rels]
+
+
+def _status(ok: bool) -> str:
+    return "PASS" if ok else "FAIL"
+
+
+def _base(pid: str) -> dict[str, Any]:
+    p = PROTOCOLS[pid]
+    return {"protocol": pid, "benchmark": p.benchmark, "dataset": p.dataset, "title": p.title,
+            "system": p.system, "quantity": p.quantity, "baseline": p.baseline,
+            "model": p.model, "acceptance": p.acceptance, "reproduce": p.reproduce,
+            "split": {"identification": p.identification, "validation": p.validation,
+                      "unused": p.unused},
+            "scope": "external system; says nothing about the MotionProof reference "
+                     "gearbox or user hardware"}
+
+
+def _not_imported(pid: str, what: str) -> dict[str, Any]:
+    out = _base(pid)
+    out |= {"status": "NOT RUN", "reason": f"dataset not imported ({what}); run "
+            f"'motionproof external import {PROTOCOLS[pid].dataset}'"}
+    return out
+
+
+# ---- X1 transmission error ----------------------------------------------------------------
+
+def _te_orders(trials: list[Trial], n_orders: int = 30, kmax: int = 4000,
+               step: float = 1e-4, min_periods: float = 0.0) -> list[int]:
+    spec = np.zeros(kmax + 1)
+    for tr in trials:
+        q, te = tr.signals["q_set"].values, tr.signals["theta_TE"].values
+        order = np.argsort(q)
+        q, te = q[order], te[order]
+        grid = np.arange(q[0], q[-1], step)
+        if len(grid) < 64:
+            continue
+        g = np.interp(grid, q, te) - np.mean(te)
+        span = grid[-1] - grid[0]
+        f = np.abs(np.fft.rfft(g * np.hanning(len(g))))
+        k = np.fft.rfftfreq(len(g), d=step) * 2 * math.pi  # cycles per joint revolution
+        spec += np.interp(np.arange(kmax + 1), k, f) * (span > 0)
+    spec[0] = 0
+    if min_periods > 0:
+        span = min(float(np.ptp(t.signals["q_set"].values)) for t in trials)
+        spec[: int(math.ceil(min_periods * 2 * math.pi / span))] = 0
+    return sorted(int(i) for i in np.argsort(spec)[::-1][:n_orders])
+
+
+def _te_design(trials: list[Trial], orders: list[int]) -> tuple[np.ndarray, np.ndarray,
+                                                                 np.ndarray, list[str]]:
+    rows, ys, labels = [], [], []
+    for tr in trials:
+        q = tr.signals["q_set"].values
+        sgn = np.sign(tr.conditions["q_set_dot_rad_s"]) * np.ones_like(q)
+        cols = [np.ones_like(q), sgn]
+        for k in orders:
+            cols += [np.sin(k * q), np.cos(k * q)]
+        rows.append(np.column_stack(cols))
+        ys.append(tr.signals["theta_TE"].values)
+        labels += [tr.conditions["q_set_dot_rad_s"]] * len(q)
+    names = ["c0", "b_half"] + [f"{t}{k}" for k in orders for t in ("a", "c")]
+    return np.vstack(rows), np.concatenate(ys), np.asarray(labels), names
+
+
+def speed_holdout(rels: list[str]) -> tuple[list[str], list[str]]:
+    """Split recordings by velocity-setpoint rank within each sign: even rank to
+    identification, odd rank to validation. Whole files only."""
+    ident, valid = [], []
+    for sign in (-1, 1):
+        mine = [r for r in rels if np.sign(float(r.split("q_set_dot=")[1].removesuffix(
+            ".csv"))) == sign]
+        mine.sort(key=lambda r: abs(float(r.split("q_set_dot=")[1].removesuffix(".csv"))))
+        ident += mine[0::2]
+        valid += mine[1::2]
+    return sorted(ident), sorted(valid)
+
+
+def validate_transmission_error(root: Path, pid: str = "transmission-error",
+                                min_periods: float = 0.0,
+                                split: str = "published") -> dict[str, Any]:
+    out = _base(pid)
+    a = ADAPTERS["stuttgart-te"]
+    have = a.available(root)
+    if not have:
+        return _not_imported(pid, "stuttgart-te")
+    axes: dict[str, Any] = {}
+    ok_all = True
+    ev = []
+    for axis in ("axis_2", "axis_3"):
+        ident_rel = sorted(r for r in have if r.startswith(f"identification/{axis}/"))
+        valid_rel = sorted(r for r in have if r.startswith(f"validation/{axis}/"))
+        if split == "speed-holdout":
+            ident_rel, valid_rel = speed_holdout(ident_rel)
+        if not ident_rel or not valid_rel:
+            axes[axis] = {"status": "INSUFFICIENT DATA", "reason": "files missing"}
+            ok_all = False
+            continue
+        ident, valid = _trials("stuttgart-te", root, ident_rel), _trials("stuttgart-te", root,
+                                                                         valid_rel)
+        check_disjoint([t.trial_id for t in ident], [t.trial_id for t in valid])
+        orders = _te_orders(ident, min_periods=min_periods)  # identification spectrum only
+        Xi, yi, li, names = _te_design(ident, orders)
+        fit = linear_fit(Xi, yi, names)
+        Xv, yv, lv, _ = _te_design(valid, orders)
+        beta = fit.pop("beta")
+        base_i, base_v = np.full_like(yi, yi.mean()), np.full_like(yv, yi.mean())
+        m_i, m_v = Xi @ beta, Xv @ beta
+        e = {"identification": {"model": errors(yi, m_i), "baseline": errors(yi, base_i)},
+             "validation": {"model": errors(yv, m_v), "baseline": errors(yv, base_v)}}
+        rv, rb, ri = (e["validation"]["model"]["rmse"], e["validation"]["baseline"]["rmse"],
+                      e["identification"]["model"]["rmse"])
+        ok = rv <= 0.5 * rb and rv <= 1.5 * ri
+        ok_all &= ok
+        # plot: first validation trial, measured vs predicted along q
+        tr = valid[len(valid) // 2]
+        Xp, yp, _, _ = _te_design([tr], orders)
+        qx = tr.signals["q_set"].values
+        axes[axis] = {
+            "status": _status(ok), "orders": orders,
+            "identification_trials": [t.trial_id for t in ident],
+            "validation_trials": [t.trial_id for t in valid],
+            "fit": {"parameters": {"c0": fit["parameters"]["c0"],
+                                   "b_half": fit["parameters"]["b_half"]},
+                    "harmonics": len(orders),
+                    "condition_number_scaled": fit["condition_number_scaled"],
+                    "highly_correlated_pairs": fit["highly_correlated_pairs"]},
+            "metrics": e, "rmse_ratio_model_to_baseline": rv / rb,
+            "rmse_ratio_validation_to_identification": rv / ri,
+            "validation_by_speed": by_group(yv, m_v, list(lv)),
+            "residual_histogram": residual_histogram(yv, m_v),
+            "plot": dict(zip(("x", "measured", "predicted"),
+                             thin(qx, yp, Xp @ beta), strict=True))
+                    | {"x_label": "q_set (rad)", "y_label": "theta_TE (rad)",
+                       "trial": tr.trial_id},
+        }
+        ev += [evidence("EXTERNAL_CALIBRATION", "stuttgart-te", t.trial_id, "identification",
+                        "fitted TE harmonics and dead-band offset") for t in ident]
+        ev += [evidence("EXTERNAL_VALIDATION", "stuttgart-te", t.trial_id, "validation",
+                        "holdout comparison of predicted and measured theta_TE") for t in valid]
+    prefixes = ("identification/axis_2", "identification/axis_3") + (
+        ("validation/axis_2", "validation/axis_3") if split == "published" else ())
+    out["files_used"] = sorted(r for r in have if r.startswith(prefixes))
+    out |= {"status": _status(ok_all) if all("metrics" in v for v in axes.values())
+            else "INSUFFICIENT DATA", "axes": axes, "evidence": ev,
+            "transformations": ["none: theta_TE compared at the published samples",
+                                "orders chosen from identification spectrum only (uniform q "
+                                "resampling, step 1e-4 rad, Hann window)"]}
+    return out
+
+
+# ---- X2 H1 elbow friction -----------------------------------------------------------------
+
+def _h1_series(tr: Trial, dt: float = 0.002) -> dict[str, np.ndarray]:
+    tr.require("elbow/q", "elbow/dq", "elbow/tau")
+    s = tr.signals
+    lo = max(s[k].time_s[0] for k in ("elbow/q", "elbow/dq", "elbow/tau"))  # type: ignore[index]
+    hi = min(s[k].time_s[-1] for k in ("elbow/q", "elbow/dq", "elbow/tau"))  # type: ignore[index]
+    t = np.arange(lo, hi, dt)
+    q, dq, tau = (align(t, s["elbow/q"]), align(t, s["elbow/dq"]), align(t, s["elbow/tau"]))
+    ddq = savgol_filter(dq, 21, 3, deriv=1, delta=dt)
+    trim = slice(25, -25)  # derivative edge effects
+    return {"t": t[trim], "q": q[trim], "dq": dq[trim], "ddq": ddq[trim], "tau": tau[trim]}
+
+
+def _joint_design(d: dict[str, np.ndarray], friction: bool) -> tuple[np.ndarray, list[str]]:
+    cols = [d["ddq"], np.sin(d["q"]), np.cos(d["q"]), np.ones_like(d["q"])]
+    names = ["J", "g1", "g2", "tau0"]
+    if friction:
+        cols += [d["dq"], np.tanh(d["dq"] / EPS_COULOMB)]
+        names += ["c_viscous", "F_coulomb"]
+    return np.column_stack(cols), names
+
+
+def _joint_validation(ident: list[dict[str, np.ndarray]], valid: list[dict[str, np.ndarray]],
+                      labels_v: list[str]) -> dict[str, Any]:
+    res: dict[str, Any] = {}
+    yi = np.concatenate([d["tau"] for d in ident])
+    yv = np.concatenate([d["tau"] for d in valid])
+    for name, fr in (("baseline", False), ("model", True)):
+        Xi = np.vstack([_joint_design(d, fr)[0] for d in ident])
+        Xv = np.vstack([_joint_design(d, fr)[0] for d in valid])
+        fit = linear_fit(Xi, yi, _joint_design(ident[0], fr)[1])
+        beta = fit.pop("beta")
+        res[name] = {"fit": fit, "identification": errors(yi, Xi @ beta),
+                     "validation": errors(yv, Xv @ beta), "pred_v": Xv @ beta}
+    res["labels_v"] = np.repeat(labels_v, [len(d["tau"]) for d in valid])
+    res["yv"] = yv
+    return res
+
+
+def validate_h1_friction(root: Path) -> dict[str, Any]:
+    out = _base("h1-friction")
+    a = ADAPTERS["anchor-lab"]
+    have = [r for r in a.available(root) if r.startswith("h1_elbow_teststand/")]
+    if not have:
+        return _not_imported("h1-friction", "anchor-lab h1-teststand")
+    trials = _trials("anchor-lab", root, sorted(have))
+    ident = [t for t in trials if t.conditions.get("position") in (8, 9, 10)]
+    valid = [t for t in trials if t.conditions.get("position") == 11]
+    if len(ident) < 3 or not valid:
+        out |= {"status": "INSUFFICIENT DATA", "reason": f"{len(ident)} identification, "
+                f"{len(valid)} validation trials"}
+        return out
+    check_disjoint([t.trial_id for t in ident], [t.trial_id for t in valid])
+    di, dv = [_h1_series(t) for t in ident], [_h1_series(t) for t in valid]
+    labels = [f"{t.conditions['frequency_hz']} Hz {t.conditions['amplitude']}" for t in valid]
+    r = _joint_validation(di, dv, labels)
+    m, b = r["model"]["validation"], r["baseline"]["validation"]
+    ok = m["rmse"] <= 0.8 * b["rmse"] and (m["nrmse"] or 9) <= 0.35
+    k = len(dv[0]["t"])
+    out |= {
+        "status": _status(ok), "files_used": [t.source_file for t in ident + valid],
+        "identification_trials": [t.trial_id for t in ident],
+        "validation_trials": [t.trial_id for t in valid],
+        "fit": {"model": r["model"]["fit"], "baseline": r["baseline"]["fit"]},
+        "metrics": {"model": {"identification": r["model"]["identification"],
+                              "validation": m},
+                    "baseline": {"identification": r["baseline"]["identification"],
+                                 "validation": b}},
+        "rmse_ratio_model_to_baseline": m["rmse"] / b["rmse"],
+        "validation_by_condition": by_group(r["yv"], r["model"]["pred_v"],
+                                            list(r["labels_v"])),
+        "residual_histogram": residual_histogram(r["yv"], r["model"]["pred_v"]),
+        "plot": dict(zip(("x", "measured", "predicted", "baseline"),
+                         thin(dv[0]["t"], r["yv"][:k], r["model"]["pred_v"][:k],
+                              r["baseline"]["pred_v"][:k]), strict=True))
+                | {"x_label": "time (s)", "y_label": "elbow_tau (N*m)",
+                   "trial": valid[0].trial_id},
+        "transformations": ["q, dq, tau linearly interpolated onto a common uniform 2 ms "
+                            "grid inside the shared time span (no extrapolation)",
+                            "ddq: Savitzky-Golay derivative of dq (21 samples, cubic)",
+                            "25 samples trimmed at each end (derivative edge effects)"],
+        "evidence": [evidence("EXTERNAL_CALIBRATION", "anchor-lab", t.trial_id,
+                              "identification", "friction and inertia fit") for t in ident]
+                    + [evidence("EXTERNAL_VALIDATION", "anchor-lab", t.trial_id, "validation",
+                                "holdout torque prediction") for t in valid],
+    }
+    return out
+
+
+# ---- X3 SO-101 servo tracking -------------------------------------------------------------
+
+def _servo_sim(p: np.ndarray, t: np.ndarray, t_cmd: np.ndarray, cmd: np.ndarray,
+               q0: float, dt: float = 0.001) -> np.ndarray:
+    wn, zeta, vmax, b, off = p
+    tt = np.arange(t[0], t[-1] + dt, dt)
+    idx = np.clip(np.searchsorted(t_cmd, tt, side="right") - 1, 0, len(cmd) - 1)
+    u = cmd[idx] + off  # zero-order hold of the recorded command
+    x, v, q = q0, 0.0, q0
+    out = np.empty(len(tt))
+    for i, ui in enumerate(u):
+        acc = wn * wn * (ui - x) - 2 * zeta * wn * v
+        v = float(np.clip(v + acc * dt, -vmax, vmax))
+        x += v * dt
+        if x - q > b / 2:            # dead band between servo output and joint
+            q = x - b / 2
+        elif x - q < -b / 2:
+            q = x + b / 2
+        out[i] = q
+    return np.asarray(np.interp(t, tt, out), dtype=float)
+
+
+def _so101_series(tr: Trial) -> dict[str, np.ndarray]:
+    tr.require("elbow/q", "elbow/q_cmd")
+    q, c = tr.signals["elbow/q"], tr.signals["elbow/q_cmd"]
+    assert q.time_s is not None and c.time_s is not None
+    sel = (q.time_s >= c.time_s[0]) & (q.time_s <= c.time_s[-1])
+    return {"t": q.time_s[sel], "q": q.values[sel], "t_cmd": c.time_s, "cmd": c.values}
+
+
+def validate_so101_tracking(root: Path) -> dict[str, Any]:
+    out = _base("so101-tracking")
+    a = ADAPTERS["anchor-lab"]
+    have = [r for r in a.available(root) if r.startswith("so101_arm_50motion/")]
+    ident_rel = [r for r in have if r.endswith("train-single-joint-elbow.parquet")]
+    held = [r for r in have if "-heldout-" in r]
+    if not ident_rel or not held:
+        return _not_imported("so101-tracking", "anchor-lab so101")
+    ident = _trials("anchor-lab", root, ident_rel)[0]
+    valid: list[tuple[Trial, float]] = []
+    unused: list[tuple[Trial, float]] = []
+    for tr in _trials("anchor-lab", root, sorted(held)):
+        c = tr.signals.get("elbow/q_cmd")
+        span = 0.0 if c is None else float(np.ptp(c.values))
+        (valid if span >= 0.1 else unused).append((tr, span))
+    if not valid:
+        out |= {"status": "INSUFFICIENT DATA", "reason": "no heldout trial excites the elbow"}
+        return out
+    check_disjoint([ident.trial_id], [t.trial_id for t, _ in valid])
+    di = _so101_series(ident)
+
+    def resid(p: np.ndarray) -> np.ndarray:
+        return np.asarray(_servo_sim(p, di["t"], di["t_cmd"], di["cmd"], di["q"][0]) - di["q"])
+
+    fit = least_squares(resid, x0=[30.0, 0.8, 5.0, 0.01, 0.0],
+                        bounds=([1, 0.05, 0.1, 0.0, -0.2], [300, 3, 50, 0.2, 0.2]))
+    J = fit.jac
+    cov = np.linalg.pinv(J.T @ J) * float(fit.fun @ fit.fun) / max(len(fit.fun) - 5, 1)
+    names = ["wn", "zeta", "vmax", "deadband", "offset"]
+    off_b = float(np.mean(di["q"] - np.interp(di["t"], di["t_cmd"], di["cmd"])))
+
+    def baseline(d: dict[str, np.ndarray]) -> np.ndarray:
+        idx = np.clip(np.searchsorted(d["t_cmd"], d["t"], side="right") - 1, 0,
+                      len(d["cmd"]) - 1)
+        return np.asarray(d["cmd"][idx] + off_b, dtype=float)
+
+    obs, pm, pb, lab = [], [], [], []
+    per: dict[str, Any] = {}
+    first = None
+    for tr, span in valid:
+        d = _so101_series(tr)
+        m = _servo_sim(fit.x, d["t"], d["t_cmd"], d["cmd"], d["q"][0])
+        bl = baseline(d)
+        per[tr.trial_id] = {"command_span_rad": span, "model": errors(d["q"], m)["rmse"],
+                            "baseline": errors(d["q"], bl)["rmse"]}
+        obs.append(d["q"])
+        pm.append(m)
+        pb.append(bl)
+        lab += [tr.trial_id] * len(m)
+        first = first or (d, m, bl, tr.trial_id)
+    yo, ym, yb = np.concatenate(obs), np.concatenate(pm), np.concatenate(pb)
+    em, eb = errors(yo, ym), errors(yo, yb)
+    ok = em["rmse"] <= 0.6 * eb["rmse"]
+    assert first is not None
+    d, m, bl, tid = first
+    out |= {
+        "status": _status(ok),
+        "files_used": [ident.source_file] + [t.source_file for t, _ in valid + unused],
+        "identification_trials": [ident.trial_id],
+        "validation_trials": [t.trial_id for t, _ in valid],
+        "unused_trials": {t.trial_id: f"elbow command span {s:.3f} rad < 0.1 rad"
+                          for t, s in unused},
+        "fit": {"parameters": dict(zip(names, map(float, fit.x), strict=True)),
+                "standard_errors": dict(zip(names, map(float, np.sqrt(np.clip(
+                    np.diag(cov), 0, None))), strict=True)),
+                "at_bound": [n for n, am in zip(names, fit.active_mask, strict=True)
+                             if am != 0],
+                "not_identifiable": [n for n, col in zip(names, np.abs(J).sum(axis=0),
+                                                         strict=True) if col == 0],
+                "identification_rmse": float(np.sqrt(np.mean(fit.fun ** 2)))},
+        "metrics": {"model": {"validation": em}, "baseline": {"validation": eb}},
+        "rmse_ratio_model_to_baseline": em["rmse"] / eb["rmse"],
+        "validation_by_trial": per,
+        "residual_histogram": residual_histogram(yo, ym),
+        "plot": dict(zip(("x", "measured", "predicted", "baseline"),
+                         thin(d["t"], d["q"], m, bl), strict=True))
+                | {"x_label": "time (s)", "y_label": "elbow actual_q (rad)", "trial": tid},
+        "transformations": ["command held constant between its samples (zero-order hold)",
+                            "simulation at 1 ms, linearly interpolated to the actual_q "
+                            "sample instants", "only samples inside the command time span"],
+        "evidence": [evidence("EXTERNAL_CALIBRATION", "anchor-lab", ident.trial_id,
+                              "identification", "servo response and dead band fit")]
+                    + [evidence("EXTERNAL_VALIDATION", "anchor-lab", t.trial_id, "validation",
+                                "simulated response to the recorded command") for t, _ in valid],
+    }
+    return out
+
+
+# ---- X4 KUKA inverse dynamics -------------------------------------------------------------
+
+def validate_kuka_inverse(root: Path) -> dict[str, Any]:
+    out = _base("kuka-inverse")
+    a = ADAPTERS["kuka-kr300"]
+    assert isinstance(a, KukaKR300)
+    if not a.available(root):
+        return _not_imported("kuka-inverse", "kuka-kr300")
+    tr_train, tr_test = a.load(root, "train"), a.load(root, "test")
+    axes: dict[str, Any] = {}
+    ok_all = True
+    for j in range(1, 7):
+        ax = f"A{j}"
+
+        def series(tr: Trial, ax: str = ax) -> dict[str, np.ndarray]:
+            s = tr.signals
+            return {"q": s[f"{ax}/q"].values, "dq": s[f"{ax}/dq"].values,
+                    "ddq": s[f"{ax}/ddq"].values, "tau": s[f"{ax}/tau"].values,
+                    "t": s[f"{ax}/q"].time_s}  # type: ignore[dict-item]
+
+        r = _joint_validation([series(tr_train)], [series(tr_test)], ["test"])
+        m, b = r["model"]["validation"], r["baseline"]["validation"]
+        ok = m["rmse"] <= 0.8 * b["rmse"]
+        ok_all &= ok
+        axes[ax] = {"status": _status(ok), "metrics": {
+            "model": {"identification": r["model"]["identification"], "validation": m},
+            "baseline": {"identification": r["baseline"]["identification"], "validation": b}},
+            "rmse_ratio_model_to_baseline": m["rmse"] / b["rmse"],
+            "fit": {"model": r["model"]["fit"]},
+            "plot": dict(zip(("x", "measured", "predicted", "baseline"),
+                             thin(series(tr_test)["t"], r["yv"], r["model"]["pred_v"],
+                                  r["baseline"]["pred_v"]), strict=True))
+                    | {"x_label": "time (s)", "y_label": f"{ax} motor torque (N*m)",
+                       "trial": "test"}}
+    out |= {"status": _status(ok_all), "axes": axes, "files_used": a.available_files(root),
+            "identification_trials": ["train"], "validation_trials": ["test"],
+            "transformations": ["deg, deg/s, deg/s^2 converted to rad, rad/s, rad/s^2",
+                                "benchmark's filtered, down-sampled data used unchanged"],
+            "evidence": [evidence("EXTERNAL_CALIBRATION", "kuka-kr300", "train",
+                                  "identification", "per-axis friction and inertia fit"),
+                         evidence("EXTERNAL_VALIDATION", "kuka-kr300", "test", "validation",
+                                  "per-axis torque prediction")]}
+    return out
+
+
+# ---- X5 NIST joint tracking, X6 NIST TCP --------------------------------------------------
+
+def _nist_design(tr: Trial, j: int) -> tuple[np.ndarray, np.ndarray]:
+    s = tr.signals
+    e = s[f"J{j}/q_target"].values - s[f"J{j}/q"].values
+    X = np.column_stack([np.ones_like(e), s[f"J{j}/tau_target"].values,
+                         np.sign(s[f"J{j}/dq_target"].values), s[f"J{j}/dq_target"].values])
+    return X, e
+
+
+def validate_nist_tracking(root: Path) -> dict[str, Any]:
+    out = _base("nist-tracking")
+    a = ADAPTERS["nist-ur5"]
+    runs = [r for r in a.available(root) if r.endswith(".csv")]
+    if not runs:
+        return _not_imported("nist-tracking", "nist-ur5")
+    trials = _trials("nist-ur5", root, sorted(runs))
+    ident = [t for t in trials if t.conditions["repeat"] in (1, 2)]
+    valid = [t for t in trials if t.conditions["repeat"] == 3]
+    check_disjoint([t.trial_id for t in ident], [t.trial_id for t in valid])
+    joints: dict[str, Any] = {}
+    ok_all = True
+    names = ["e0", "compliance_1_over_k", "deadband_half", "lag"]
+    for j in range(1, 7):
+        Xi = np.vstack([_nist_design(t, j)[0] for t in ident])
+        yi = np.concatenate([_nist_design(t, j)[1] for t in ident])
+        fit = linear_fit(Xi, yi, names)
+        beta = fit.pop("beta")
+        Xv = [_nist_design(t, j) for t in valid]
+        yv = np.concatenate([e for _, e in Xv])
+        pm = np.concatenate([X @ beta for X, _ in Xv])
+        pb = np.full_like(yv, yi.mean())
+        em, eb = errors(yv, pm), errors(yv, pb)
+        ok = em["rmse"] <= 0.8 * eb["rmse"]
+        ok_all &= ok
+        lab_speed = np.concatenate([[t.conditions["speed"]] * len(e) for t, (_, e)
+                                    in zip(valid, Xv, strict=True)])
+        lab_load = np.concatenate([[f"{t.conditions['payload_lb']} lb"] * len(e) for t, (_, e)
+                                   in zip(valid, Xv, strict=True)])
+        temp = np.concatenate([t.signals[f"J{j}/temperature"].values for t in valid])
+        from scipy.stats import spearmanr
+
+        rho = spearmanr(np.abs(yv - pm), temp)
+        joints[f"J{j}"] = {
+            "status": _status(ok), "fit": fit,
+            "metrics": {"model": {"validation": em}, "baseline": {"validation": eb}},
+            "rmse_ratio_model_to_baseline": em["rmse"] / eb["rmse"],
+            "validation_by_speed": by_group(yv, pm, list(lab_speed)),
+            "validation_by_payload": by_group(yv, pm, list(lab_load)),
+            "residual_vs_temperature_spearman": {"rho": float(rho.statistic),
+                                                 "p_value": float(rho.pvalue),
+                                                 "note": "association only, not causation"}}
+    t0 = valid[0]
+    X0, e0 = _nist_design(t0, 2)
+    b2 = np.asarray(list(joints["J2"]["fit"]["parameters"].values()))
+    sig = t0.signals["J2/q"]
+    assert sig.time_s is not None
+    out |= {"status": _status(ok_all), "joints": joints, "files_used": sorted(runs),
+            "identification_trials": [t.trial_id for t in ident],
+            "validation_trials": [t.trial_id for t in valid],
+            "plot": dict(zip(("x", "measured", "predicted"), thin(sig.time_s, e0, X0 @ b2),
+                             strict=True))
+                    | {"x_label": "time (s)", "y_label": "J2 position error (rad)",
+                       "trial": t0.trial_id},
+            "transformations": ["joint angles deg to rad (unit inferred from values)",
+                                "error = target - actual at the same controller sample"],
+            "limitations": ["controller-reported actual position, not an external "
+                            "measurement of the joint output", "this is servo tracking "
+                            "error during motion, not TCP accuracy"],
+            "evidence": [evidence("EXTERNAL_CALIBRATION", "nist-ur5", t.trial_id,
+                                  "identification", "deflection, dead band, lag fit")
+                         for t in ident]
+                        + [evidence("EXTERNAL_VALIDATION", "nist-ur5", t.trial_id,
+                                    "validation", "holdout tracking-error prediction")
+                           for t in valid]}
+    return out
+
+
+def validate_nist_tcp(root: Path) -> dict[str, Any]:
+    out = _base("nist-tcp")
+    out |= {"status": "INSUFFICIENT DATA",
+            "reason": "the dataset publishes measured TCP deviation for 6 positions only, "
+                      "without the run, condition or trajectory they belong to; a TCP "
+                      "accuracy or degradation prediction cannot be compared with it"}
+    return out
+
+
+VALIDATIONS: dict[str, Callable[[Path], dict[str, Any]]] = {
+    "transmission-error": validate_transmission_error,
+    "transmission-error-v2": lambda root: validate_transmission_error(
+        root, "transmission-error-v2", min_periods=2.0),
+    "transmission-error-v3": lambda root: validate_transmission_error(
+        root, "transmission-error-v3", min_periods=2.0, split="speed-holdout"),
+    "h1-friction": validate_h1_friction,
+    "so101-tracking": validate_so101_tracking,
+    "kuka-inverse": validate_kuka_inverse,
+    "nist-tracking": validate_nist_tracking,
+    "nist-tcp": validate_nist_tcp,
+}
+
+
+def run(pid: str, root: Path) -> dict[str, Any]:
+    if pid not in VALIDATIONS:
+        raise KeyError(f"unknown validation {pid!r}; choose from {sorted(VALIDATIONS)}")
+    try:
+        return VALIDATIONS[pid](root)
+    except SchemaError as exc:
+        out = _base(pid)
+        out |= {"status": "INCOMPATIBLE DATA", "reason": str(exc)}
+        return out

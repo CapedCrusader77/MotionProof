@@ -5,7 +5,7 @@ export type Route =
   | "builder" | "monitor" | "robustness" | "sensitivity" | "worstcase" | "optimisation"
   | "comparison" | "calibration" | "reports" | "settings" | "asbuilt" | "process" | "hardware"
   | "adaptive" | "workspace" | "degradation" | "fidelity" | "investigate" | "challenge"
-  | "trust" | "benchmarks";
+  | "trust" | "benchmarks" | "external";
 
 export interface Toast { id: number; kind: "ok" | "error" | "info"; text: string }
 
@@ -50,7 +50,7 @@ function save(s: AppState) {
 const ROUTES: Route[] = ["projects", "import", "workbench", "features", "virtual", "tolerances",
   "mechanics", "builder", "monitor", "robustness", "sensitivity", "worstcase", "optimisation",
   "comparison", "calibration", "reports", "settings", "asbuilt", "process", "hardware", "adaptive",
-  "workspace", "degradation", "fidelity", "investigate", "challenge", "trust", "benchmarks"];
+  "workspace", "degradation", "fidelity", "investigate", "challenge", "trust", "benchmarks", "external"];
 const fromHash = (): Route => {
   const h = window.location.hash.replace("#/", "") as Route;
   return ROUTES.includes(h) ? h : "projects";

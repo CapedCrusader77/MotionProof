@@ -3,7 +3,7 @@ import {
   Activity, BarChart3, Boxes, ChevronsLeft, ChevronsRight, Cog, Command as CommandIcon, Cpu, Crosshair,
   FileText, FlaskConical, FolderOpen, Gauge, GitCompare, Hourglass, Layers, ListChecks, Map, Moon, Radar,
   Ruler, Scale, ScanLine, Search, Settings, ShieldCheck, Sun, Target, TrendingUp, Trophy, Upload,
-  Wrench, Factory,
+  Wrench, Factory, FlaskRound,
 } from "lucide-react";
 import { api } from "./lib/api";
 import { useAsync } from "./hooks/useAsync";
@@ -21,6 +21,7 @@ import { AsBuiltScreen } from "./features/asbuilt";
 import { BenchmarksScreen, ChallengeScreen, HardwareScreen, ProcessScreen, TrustScreen } from "./features/lab";
 import { AdaptiveScreen, DegradationScreen, FidelityScreen, InvestigationScreen, WorkspaceScreen } from "./features/reliability";
 import { CommandPalette } from "./components/CommandPalette";
+import { ExternalValidationScreen } from "./features/external";
 
 type Need = "project" | "model" | "experiment" | null;
 const NAV: { group: string; items: [Route, string, typeof Cog, Need][] }[] = [
@@ -32,7 +33,7 @@ const NAV: { group: string; items: [Route, string, typeof Cog, Need][] }[] = [
   { group: "Reliability", items: [["robustness", "Robustness", BarChart3, "experiment"], ["sensitivity", "Sensitivity", TrendingUp, "experiment"], ["investigate", "Failure investigation", Search, "experiment"],
     ["worstcase", "Worst case", Target, "experiment"], ["workspace", "Workspace analysis", Map, "model"], ["degradation", "Degradation", Hourglass, "model"], ["fidelity", "Model fidelity", Gauge, "model"]] },
   { group: "Optimisation", items: [["challenge", "Engineering Challenge", Trophy, "model"], ["optimisation", "Tolerance optimisation", Scale, "experiment"], ["comparison", "Design comparison", GitCompare, "experiment"]] },
-  { group: "Evidence", items: [["trust", "Model trust", ShieldCheck, "model"], ["reports", "Reports", FileText, "project"], ["benchmarks", "Benchmarks", ListChecks, null]] },
+  { group: "Evidence", items: [["trust", "Model trust", ShieldCheck, "model"], ["reports", "Reports", FileText, "project"], ["benchmarks", "Benchmarks", ListChecks, null], ["external", "External validation", FlaskRound, null]] },
 ];
 const SCREENS: Record<Route, () => React.ReactElement> = {
   projects: ProjectsScreen, import: ImportScreen, workbench: WorkbenchScreen, features: FeaturesScreen, tolerances: TolerancesScreen,
@@ -41,6 +42,7 @@ const SCREENS: Record<Route, () => React.ReactElement> = {
   calibration: CalibrationScreen, reports: ReportsScreen, settings: SettingsScreen, asbuilt: AsBuiltScreen, process: ProcessScreen,
   hardware: HardwareScreen, adaptive: AdaptiveScreen, workspace: WorkspaceScreen, degradation: DegradationScreen, fidelity: FidelityScreen,
   investigate: InvestigationScreen, challenge: ChallengeScreen, trust: TrustScreen, benchmarks: BenchmarksScreen,
+  external: ExternalValidationScreen,
 };
 
 export default function App() {

@@ -7,6 +7,7 @@ model blocked), 2 usage or input error.
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 from pathlib import Path
 from typing import Annotated, Any
@@ -471,8 +472,6 @@ def report(experiment: str, output: Annotated[Path | None, typer.Option(
         console.print(f"{kind}: {path}")
 
 
-if __name__ == "__main__":
-    app()
 
 
 @assembly_app.command("compare-poses")
@@ -1007,3 +1006,137 @@ def measurements_evaluate(data: Path, experiment_file: Annotated[Path, typer.Opt
                       f"their design value: {', '.join(unmeasured[:8])}"
                       f"{' ...' if len(unmeasured) > 8 else ''}[/yellow]")
     raise typer.Exit(1 if failed else 0)
+
+
+# ---- external experimental validation -----------------------------------------------------
+
+external_app = typer.Typer(help="External experimental validation on public datasets.",
+                           no_args_is_help=True)
+app.add_typer(external_app, name="external")
+DataOpt = Annotated[Path, typer.Option("--data", help="Directory for imported external data "
+                                       "and validation runs.")]
+DEFAULT_DATA = Path(os.environ.get("MOTIONPROOF_EXTERNAL_DATA", "external_data"))
+
+
+@external_app.command("list")
+@guard
+def external_list(data: DataOpt = DEFAULT_DATA) -> None:
+    """List the supported external datasets and their import status."""
+    from motionproof.external_validation.adapters import ADAPTERS
+    from motionproof.external_validation.experiments.protocols import PROTOCOLS
+
+    t = Table("Dataset", "System", "Licence", "Imported files", "Validations")
+    for key, a in ADAPTERS.items():
+        t.add_row(key, a.info.system, a.info.licence[:40], str(len(a.available(data))),
+                  ", ".join(f"{p.benchmark} {pid}" for pid, p in PROTOCOLS.items()
+                            if p.dataset == key))
+    console.print(t)
+
+
+@external_app.command("inspect")
+@guard
+def external_inspect(dataset: str, data: DataOpt = DEFAULT_DATA,
+                     limit: int = typer.Option(3, help="Trials to inspect.")) -> None:
+    """Show provenance and the measured signals of an imported dataset."""
+    from motionproof.external_validation.adapters import ADAPTERS
+
+    if dataset not in ADAPTERS:
+        fail(f"unknown dataset {dataset!r}; choose from {sorted(ADAPTERS)}")
+    a = ADAPTERS[dataset]
+    i = a.info
+    console.print(f"[bold]{i.title}[/bold]\n{i.url}\nversion {i.version}; licence {i.licence}\n"
+                  f"citation: {i.citation}\nmeasured: {', '.join(i.measured)}\n"
+                  f"not measured: {', '.join(i.not_measured)}")
+    files = [f for f in a.available(data) if not f.endswith(".xlsx")]
+    if not files:
+        console.print("[yellow]not imported[/yellow]: run 'motionproof external import "
+                      f"{dataset}'")
+        return
+    for rel in files[:limit]:
+        s = a.load(data, rel).summary()
+        t = Table(title=f"{s['trial']} {s['conditions']}")
+        for c in ("Signal", "Unit", "Source field", "Conversion", "Samples", "Min", "Max"):
+            t.add_column(c)
+        for k, v in s["signals"].items():
+            t.add_row(k, v["unit"], v["source_field"], v["conversion"], str(v["samples"]),
+                      f"{v['min']:.4g}", f"{v['max']:.4g}")
+        console.print(t)
+
+
+@external_app.command("import")
+@guard
+def external_import(dataset: str, data: DataOpt = DEFAULT_DATA,
+                    group: list[str] | None = typer.Option(None, help="Protocol subset(s).")
+                    ) -> None:
+    """Download and verify a dataset's protocol files (explicit network access)."""
+    from motionproof.external_validation.adapters import ADAPTERS
+
+    if dataset not in ADAPTERS:
+        fail(f"unknown dataset {dataset!r}; choose from {sorted(ADAPTERS)}")
+    console.print(f"downloading from {ADAPTERS[dataset].info.url}")
+    r = ADAPTERS[dataset].import_(data, group or None,
+                                  lambda i, n, f: console.print(f"  [{i}/{n}] {f}"))
+    console.print(f"{len(r['files'])} files, manifest {r['manifest']}")
+
+
+@external_app.command("validate")
+@guard
+def external_validate(protocol: str, data: DataOpt = DEFAULT_DATA) -> None:
+    """Run a pre-registered validation protocol ('all' runs every one) and record it."""
+    from motionproof.external_validation.experiments.runs import VALIDATIONS, run
+    from motionproof.external_validation.reports.record import save
+
+    for pid in (list(VALIDATIONS) if protocol == "all" else [protocol]):
+        if pid not in VALIDATIONS:
+            fail(f"unknown protocol {pid!r}; choose from {sorted(VALIDATIONS)} or 'all'")
+        rec = save(data, run(pid, data))
+        r = rec["result"]
+        colour = {"PASS": "green", "FAIL": "red"}.get(r["status"], "yellow")
+        line = f"{rec['id']}  {r['benchmark']} {pid}: [{colour}]{r['status']}[/{colour}]"
+        if "rmse_ratio_model_to_baseline" in r:
+            line += f"  RMSE ratio model/baseline {r['rmse_ratio_model_to_baseline']:.3f}"
+        console.print(line + (f"  ({r['reason']})" if r.get("reason") else ""))
+
+
+@external_app.command("report")
+@guard
+def external_report(run_id: str, data: DataOpt = DEFAULT_DATA) -> None:
+    """Print the report of a recorded validation run."""
+    from motionproof.external_validation.reports.record import runs_dir
+
+    p = runs_dir(data) / run_id / "report.md"
+    if not p.exists():
+        fail(f"no run {run_id} in {runs_dir(data)}")
+    console.print(p.read_text(encoding="utf-8"))
+    console.print(f"[dim]{p}[/dim]")
+
+
+@external_app.command("benchmark")
+@guard
+def external_benchmark(data: DataOpt = DEFAULT_DATA,
+                       out: Path = typer.Option(Path("EXTERNAL_VALIDATION_RESULTS.md"),
+                                                help="Results file.")) -> None:
+    """Run external benchmarks X1..X6 and write the results file."""
+    from motionproof.external_validation.benchmark import run_all, write_results
+
+    recs = run_all(data)
+    for rec in recs:
+        r = rec["result"]
+        console.print(f"{r['benchmark']} {r['protocol']}: {r['status']} ({rec['id']})")
+    console.print(f"written {write_results(recs, out, data)}")
+
+
+@external_app.command("runs")
+@guard
+def external_runs(data: DataOpt = DEFAULT_DATA) -> None:
+    """List recorded validation runs."""
+    from motionproof.external_validation.reports.record import list_runs
+
+    t = Table("Run", "Benchmark", "Protocol", "Status", "Created (UTC)")
+    for r in list_runs(data):
+        t.add_row(r["id"], r["benchmark"], r["protocol"], r["status"], r["created_utc"])
+    console.print(t)
+
+
+if __name__ == "__main__":
+    app()

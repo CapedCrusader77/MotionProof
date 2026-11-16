@@ -1,0 +1,29 @@
+{
+ "id": "VALIDATION_013",
+ "created_utc": "2026-11-16T11:07:43+00:00",
+ "motionproof_version": "0.3.0",
+ "adapter_version": "1.0.0",
+ "platform": "Windows-11-10.0.26300-SP0",
+ "result": {
+  "protocol": "nist-tcp",
+  "benchmark": "X6",
+  "dataset": "nist-ur5",
+  "title": "TCP accuracy degradation, UR5",
+  "system": "Universal Robots UR5",
+  "quantity": "TCP deviation from the 7-D measurement system",
+  "baseline": "-",
+  "model": "-",
+  "acceptance": "requires measured TCP deviation per run and condition",
+  "reproduce": "motionproof external validate nist-tcp",
+  "split": {
+   "identification": "-",
+   "validation": "-",
+   "unused": "-"
+  },
+  "scope": "external system; says nothing about the MotionProof reference gearbox or user hardware",
+  "status": "INSUFFICIENT DATA",
+  "reason": "the dataset publishes measured TCP deviation for 6 positions only, without the run, condition or trajectory they belong to; a TCP accuracy or degradation prediction cannot be compared with it"
+ },
+ "files": {},
+ "plots": []
+}

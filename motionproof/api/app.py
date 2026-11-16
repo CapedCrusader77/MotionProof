@@ -625,6 +625,10 @@ def create_app(home: str | Path | None = None) -> FastAPI:
 
     register_advanced(app, store, jobs)
 
+    from motionproof.api.external_routes import register as register_external
+
+    register_external(app, jobs)
+
     dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"
     if dist.is_dir():
         app.mount("/", StaticFiles(directory=dist, html=True), name="frontend")

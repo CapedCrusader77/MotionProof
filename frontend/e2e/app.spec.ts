@@ -7,7 +7,7 @@ import { expect, test, type Page } from "@playwright/test";
 const ROUTES = ["projects", "import", "workbench", "features", "tolerances", "process", "virtual",
   "mechanics", "asbuilt", "hardware", "calibration", "builder", "monitor", "adaptive", "robustness",
   "sensitivity", "investigate", "worstcase", "workspace", "degradation", "fidelity", "challenge",
-  "optimisation", "comparison", "trust", "reports", "benchmarks", "settings"];
+  "optimisation", "comparison", "trust", "reports", "benchmarks", "external", "settings"];
 
 function watchErrors(page: Page): string[] {
   const errors: string[] = [];

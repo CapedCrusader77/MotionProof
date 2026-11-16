@@ -1,0 +1,152 @@
+{
+ "adapter_version": "1.0.0",
+ "citation": "G. Qiao, NIST, \"Degradation Measurement of Robot Arm Position Accuracy\", 2018, doi:10.18434/M31962. Related: G. Qiao, B. A. Weiss, J. Manuf. Syst. 48 (2018), doi:10.1016/j.jmsy.2018.04.004.",
+ "dataset": "nist-ur5",
+ "doi": "10.18434/M31962",
+ "files": {
+  "UR5TestResult_header.xlsx": {
+   "bytes": 14915,
+   "integrity": "no published checksum; SHA-256 recorded at import",
+   "retrieved_utc": "2026-11-16T10:53:25+00:00",
+   "sha256": "5e2ccc1ccf58bb91469b9260dafaddef05257a5f2c24dcc511e88a3d72721e52",
+   "url": "https://www.nist.gov/document/ur5testresultheaderxlsx"
+  },
+  "calculated_deviation.xlsx": {
+   "bytes": 8289,
+   "integrity": "no published checksum; SHA-256 recorded at import",
+   "retrieved_utc": "2026-11-16T10:53:27+00:00",
+   "sha256": "b8a57454e9b0f0ccf105bbf8108b11d5718b3b4db4776f49aa188fbcd92a4fa9",
+   "url": "https://www.nist.gov/document/calculateddeviationofactualpositiontonominalpositionxlsx"
+  },
+  "coldstart_fullspeed_payload45lb_1.csv": {
+   "bytes": 9910398,
+   "integrity": "no published checksum; SHA-256 recorded at import",
+   "retrieved_utc": "2026-11-16T11:02:18+00:00",
+   "sha256": "fcda4b4747bb760dae59e27b3ed470970fc706ea5c592e797b44a7ad6f0e60d6",
+   "url": "https://www.nist.gov/document/ur5testresultcoldstartfullspeedpayload45lb1csv"
+  },
+  "coldstart_fullspeed_payload45lb_2.csv": {
+   "bytes": 9787834,
+   "integrity": "no published checksum; SHA-256 recorded at import",
+   "retrieved_utc": "2026-11-16T11:02:41+00:00",
+   "sha256": "b482f163e81214a73b27c9beaa7a15996ce685072e6f77ac428b96d2cf6388e7",
+   "url": "https://www.nist.gov/document/ur5testresultcoldstartfullspeedpayload45lb2csv"
+  },
+  "coldstart_fullspeed_payload45lb_3.csv": {
+   "bytes": 12510084,
+   "integrity": "no published checksum; SHA-256 recorded at import",
+   "retrieved_utc": "2026-11-16T11:03:16+00:00",
+   "sha256": "036efe90197d4bd8c5c44787c751dbfc4bfbdfd56575a67cb91e5a1580edf2b9",
+   "url": "https://www.nist.gov/document/ur5testresultcoldstartfullspeedpayload45lb3csv"
+  },
+  "coldstart_halfspeed_payload45lb_1.csv": {
+   "bytes": 14996879,
+   "integrity": "no published checksum; SHA-256 recorded at import",
+   "retrieved_utc": "2026-11-16T11:00:32+00:00",
+   "sha256": "aeff969d17525ba2c1f5563cf860f16688a5c3ba834c4d3cc9433054a838f01d",
+   "url": "https://www.nist.gov/document/ur5testresultcoldstarthalfspeedpayload45lb1csv"
+  },
+  "coldstart_halfspeed_payload45lb_2.csv": {
+   "bytes": 14963237,
+   "integrity": "no published checksum; SHA-256 recorded at import",
+   "retrieved_utc": "2026-11-16T11:01:13+00:00",
+   "sha256": "20c1cd5b3042161506ac1becd18cbc79e60f486a3153775a60e4d8980532737e",
+   "url": "https://www.nist.gov/document/ur5testresultcoldstarthalfspeedpayload45lb2csv"
+  },
+  "coldstart_halfspeed_payload45lb_3.csv": {
+   "bytes": 14899967,
+   "integrity": "no published checksum; SHA-256 recorded at import",
+   "retrieved_utc": "2026-11-16T11:01:53+00:00",
+   "sha256": "ebc5fa2fe3ff857ed77cc93c8a82b5191584d24e9a31d7cf36cb6a89563b83e4",
+   "url": "https://www.nist.gov/document/ur5testresultcoldstarthalfspeedpayload45lb3csv"
+  },
+  "fullspeed_payload16lb_1.csv": {
+   "bytes": 12243436,
+   "integrity": "no published checksum; SHA-256 recorded at import",
+   "retrieved_utc": "2026-11-16T10:57:33+00:00",
+   "sha256": "d4b160a0dd4ef0429e1fba627622f02c634caf9227e109fd2b51fcec3fed448d",
+   "url": "https://www.nist.gov/document/ur5testresultfullspeedpayload16lb1csv-0"
+  },
+  "fullspeed_payload16lb_2.csv": {
+   "bytes": 9568382,
+   "integrity": "no published checksum; SHA-256 recorded at import",
+   "retrieved_utc": "2026-11-16T10:57:58+00:00",
+   "sha256": "29f464afda53514de50995ab7c791537c054a19769eb596d9d63d8cf4ab0708c",
+   "url": "https://www.nist.gov/document/ur5testresultfullspeedpayload16lb2csv"
+  },
+  "fullspeed_payload16lb_3.csv": {
+   "bytes": 9862515,
+   "integrity": "no published checksum; SHA-256 recorded at import",
+   "retrieved_utc": "2026-11-16T10:58:22+00:00",
+   "sha256": "dc5dc6c0a6e093ce3bf06d39cd6a5ae310ea3d6f7afed57919fabfd82e10a482",
+   "url": "https://www.nist.gov/document/ur5testresultfullspeedpayload16lb3csv"
+  },
+  "fullspeed_payload45lb_1.csv": {
+   "bytes": 9747943,
+   "integrity": "no published checksum; SHA-256 recorded at import",
+   "retrieved_utc": "2026-11-16T10:58:50+00:00",
+   "sha256": "b33b6e0089544f29bc8ef614f7c11b582b6e756d1d6e60ec40d4bb27f98c2e15",
+   "url": "https://www.nist.gov/document/ur5testresultfullspeedpayload45lb1csv"
+  },
+  "fullspeed_payload45lb_2.csv": {
+   "bytes": 9242755,
+   "integrity": "no published checksum; SHA-256 recorded at import",
+   "retrieved_utc": "2026-11-16T10:59:19+00:00",
+   "sha256": "f533dd081cf7382ef762c6dd73e5fe3d227d6d023b2e7de0d3bddf7e56277523",
+   "url": "https://www.nist.gov/document/ur5testresultfullspeedpayload45lb2csv"
+  },
+  "fullspeed_payload45lb_3.csv": {
+   "bytes": 11909570,
+   "integrity": "no published checksum; SHA-256 recorded at import",
+   "retrieved_utc": "2026-11-16T10:59:53+00:00",
+   "sha256": "f6d0dcdfadc097492b9c97de42e130740fcbb1977470630315c4edc97d0d7d81",
+   "url": "https://www.nist.gov/document/ur5testresultfullspeedpayload45lb3csv"
+  },
+  "halfspeed_payload16lb_1.csv": {
+   "bytes": 11411094,
+   "integrity": "no published checksum; SHA-256 recorded at import",
+   "retrieved_utc": "2026-11-16T10:53:56+00:00",
+   "sha256": "646d81a7b5943b5cfbeae65cf1ea7cbcaad1044c0ab6d6b9ed039ce18814c156",
+   "url": "https://www.nist.gov/document/ur5testresulthalfspeedpayload16lb1csv"
+  },
+  "halfspeed_payload16lb_2.csv": {
+   "bytes": 10670538,
+   "integrity": "no published checksum; SHA-256 recorded at import",
+   "retrieved_utc": "2026-11-16T10:54:23+00:00",
+   "sha256": "e7901db7d6af42867eb6703a8af91fd9c6d1e0976caee509842996127663b7db",
+   "url": "https://www.nist.gov/document/ur5testresulthalfspeedpayload16lb2csv"
+  },
+  "halfspeed_payload16lb_3.csv": {
+   "bytes": 15117359,
+   "integrity": "no published checksum; SHA-256 recorded at import",
+   "retrieved_utc": "2026-11-16T10:55:01+00:00",
+   "sha256": "ff6d0480cce23b412890b9b1f36ad960de5108349214b95a7a864b603bd2fcfe",
+   "url": "https://www.nist.gov/document/ur5testresulthalfspeedpayload16lb3csv"
+  },
+  "halfspeed_payload45lb_1.csv": {
+   "bytes": 14791864,
+   "integrity": "no published checksum; SHA-256 recorded at import",
+   "retrieved_utc": "2026-11-16T10:55:41+00:00",
+   "sha256": "d62b0e8af1960dcbb7dd8cfd4b15b92dd371da12b0156b535335d369fd92b017",
+   "url": "https://www.nist.gov/document/ur5testresulthalfspeedpayload45lb1csv"
+  },
+  "halfspeed_payload45lb_2.csv": {
+   "bytes": 14373302,
+   "integrity": "no published checksum; SHA-256 recorded at import",
+   "retrieved_utc": "2026-11-16T10:56:18+00:00",
+   "sha256": "d67fca1266ab465f2edaab7df4c08f0ce4121a6b1d3c0df17d24ad9fe6e78b0e",
+   "url": "https://www.nist.gov/document/ur5testresulthalfspeedpayload45lb2csv"
+  },
+  "halfspeed_payload45lb_3.csv": {
+   "bytes": 14357748,
+   "integrity": "no published checksum; SHA-256 recorded at import",
+   "retrieved_utc": "2026-11-16T10:56:59+00:00",
+   "sha256": "41e84c0ffcda0c7b9e6c961d774cbf88fd643b45ec2b59eeb703780239c1f70c",
+   "url": "https://www.nist.gov/document/ur5testresulthalfspeedpayload45lb3csv"
+  }
+ },
+ "licence": "NIST licence statement (linked from the data.gov record): https://www.nist.gov/open/license",
+ "source": "https://www.nist.gov/el/intelligent-systems-division-73500/degradation-measurement-robot-arm-position-accuracy",
+ "title": "Degradation Measurement of Robot Arm Position Accuracy",
+ "version": "dataset last updated 2018-09-07"
+}

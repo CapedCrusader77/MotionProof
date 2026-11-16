@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased - external experimental validation
+
+* `motionproof/external_validation`: adapters for NVIDIA Anchor-Lab (Apache-2.0), Stuttgart
+  DaRUS-5760 transmission error (CC BY 4.0), NIST UR5 accuracy degradation and the KUKA KR300
+  identification benchmark; download only on explicit import, checksum verification,
+  immutable originals, SI signal schema that rejects missing samples, time alignment without
+  extrapolation.
+* Pre-registered protocols X1–X6 with fixed splits by whole trial, leakage guard, baselines and
+  acceptance criteria; run records with checksums, trial IDs, parameters, identifiability,
+  metrics, plots and reproduce commands (`validation/external/`).
+* Results: X3 PASS; X1, X2, X4, X5 FAIL; X6 INSUFFICIENT DATA (`EXTERNAL_VALIDATION_RESULTS.md`).
+* CLI `motionproof external ...`, API `/api/v1/external/*`, External validation screen,
+  optional extra `external` (pyarrow).
+
 ## Unreleased - validation and hardening
 
 Tooling for physical validation (no physical measurement has been made yet), a published

@@ -1,0 +1,121 @@
+# External experimental validation
+
+MotionProof can import public experimental robot datasets, fit compatible model components on
+identification trials, predict separate holdout trials, and report the prediction accuracy.
+This measures the model components on **external systems**. It is not a validation of the
+MotionProof reference gearbox or of any user hardware; that is benchmark J, which stays NOT RUN
+until a physical rig is tested.
+
+## Workflow
+
+```bash
+uv sync --extra external
+```
+
+```bash
+uv run motionproof external list
+```
+
+```bash
+uv run motionproof external import stuttgart-te
+```
+
+```bash
+uv run motionproof external inspect stuttgart-te
+```
+
+```bash
+uv run motionproof external validate transmission-error-v3
+```
+
+```bash
+uv run motionproof external report VALIDATION_001
+```
+
+```bash
+uv run motionproof external benchmark
+```
+
+`--data DIR` (or `MOTIONPROOF_EXTERNAL_DATA`) selects where data and runs are stored; the
+default is `external_data/`, which is git-ignored. Importing is the only step that uses the
+network, and only when you run it. The API equivalents are under `/api/v1/external/`, and the
+**External validation** screen in the web application shows datasets, signal mappings, runs,
+measured-versus-predicted plots, residuals and metrics.
+
+## Rules the framework enforces
+
+* **Integrity.** Files are downloaded once to `raw/` and never modified. The publisher's
+  checksum (SHA-256 for Anchor-Lab, MD5 for DaRUS and KUKA) is verified; a mismatch stops the
+  import. NIST publishes no checksums, so SHA-256 is recorded at import and verified later.
+* **Schema.** Every signal has an SI unit, its original field name and the conversion applied.
+  Non-finite values are rejected; missing signals are absent, never filled with zeros.
+  Unknown units stay out: SO-101 `present_load_raw` is raw servo units and is not imported.
+* **Time.** Original time stamps are kept (relative to the trial start; the absolute start is
+  stored). Alignment is linear interpolation inside the shared span; extrapolation raises.
+* **Splits.** Identification, validation and unused trials are fixed by the protocol and split
+  by whole trial. `check_disjoint` refuses any overlap. Fitting functions receive only
+  identification trials; a test changes the validation files and checks that the fitted model
+  stays identical.
+* **Acceptance.** Criteria were committed before the first run. Changing a criterion means a new
+  protocol ID; old results stay.
+* **No hidden failures.** Every run is recorded with its status, including FAIL, NOT RUN,
+  INCOMPATIBLE DATA and INSUFFICIENT DATA.
+* **Comparable quantities only.** Each protocol names the measured quantity it predicts. When
+  the dataset quantity differs from a MotionProof output (for example H1 `elbow_tau` is a
+  firmware torque estimate), the protocol says so.
+
+## Run records
+
+`external_data/runs/VALIDATION_NNN/record.json` stores dataset source, version, licence and
+citation, the checksums of every file used, adapter and MotionProof versions, the signal
+transformations, the identification and validation trial IDs, the model configuration,
+fitted parameters with identifiability diagnostics, all metrics and the reproduce command.
+`report.md` and PNG plots sit next to it. Runs are never overwritten.
+
+## Metrics
+
+Residual r = observed − predicted at the same instants. Reported: RMSE, MAE, maximum absolute
+error, mean error (bias), bias normalised by the observed standard deviation, NRMSE (RMSE / std
+of the observed signal), R², Pearson correlation, residual percentiles and histogram, and errors
+grouped by speed or operating condition where the dataset defines them.
+
+## Evidence in the model trust system
+
+Imported data are labelled `EXTERNAL_CALIBRATION` (identification trials) or
+`EXTERNAL_VALIDATION` (holdout trials), with dataset, trial, citation, licence, role and
+transformation, and the scope statement "external system; not a measurement of the MotionProof
+reference gearbox or of any user hardware". They never enter a MotionProof model as measured
+values of the user's parts.
+
+## Current results (2026-11-16)
+
+| ID | Case | Status | In one line |
+|---|---|---|---|
+| X1 | Stäubli TX2-40 transmission error | FAIL | Axis 2 passes (0.18× baseline); axis 3 0.82× (needs ≤ 0.5×). Error grows with speed, which the model has no term for. |
+| X2 | H1 elbow friction | FAIL | Rigid model and friction model both explain about 22 % of the torque-estimate variance; friction adds 1 %. |
+| X3 | SO-101 elbow response | PASS | Simulated servo with dead band: 0.32× baseline RMSE on 6 heldout trials; fitted dead band 0.056 rad. |
+| X4 | KUKA per-axis torque | FAIL | A1, A4, A6 pass; A2, A3, A5 do not (axis coupling and the A2 counterbalance are not modelled). |
+| X5 | UR5 joint tracking error | FAIL | J1 passes (0.73×); J2–J6 0.89–1.00×. No temperature association (abs(rho) ≤ 0.12). |
+| X6 | UR5 TCP accuracy | INSUFFICIENT DATA | No per-run TCP measurements are published. |
+
+What this shows: the dead-band (backlash) and servo model reproduces a real joint's response
+to unseen commands (X3), and the periodic TE term captures the position-dependent transmission
+error of a real gearbox when speed is low (X1 axis 2). It also shows where the reduced-order
+components fall short: speed-dependent transmission error, coupled multibody torque, and the
+H1 torque estimate. These are model limitations found on external hardware, not statements
+about the reference gearbox.
+
+## Limitations
+
+* Each external system is modelled on its own. A good fit on a Stäubli gearbox says nothing
+  about a 3D-printed planetary stage.
+* The model forms are MotionProof's reduced-order components (periodic TE plus dead band,
+  Coulomb plus viscous friction, static deflection plus lag). Effects outside them (coupled
+  multibody dynamics, thermal friction drift, hysteresis) appear as residual.
+* Standard errors assume independent residuals and are optimistic for time series.
+* Results depend on dataset units that are not always documented; each inferred unit is listed
+  in `docs/external-datasets.md` and in the run's transformations.
+
+See also: `docs/external-datasets.md`, `docs/transmission-error-validation.md`,
+`docs/robot-dynamics-validation.md`, `docs/position-accuracy-validation.md` and the generated
+`EXTERNAL_VALIDATION_RESULTS.md`.

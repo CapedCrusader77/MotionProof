@@ -35,7 +35,7 @@ export function CommandPalette() {
       nav("Create experiment", "builder", "action"), nav("Run adaptive experiment", "adaptive", "action"), nav("Inspect failure", "investigate", "action"),
       nav("Compare models (design comparison)", "comparison", "action"), nav("Open reliability map", "workspace", "action"),
       nav("Open hardware monitor", "hardware", "action"), nav("Generate report", "reports", "action"), nav("Launch Engineering Challenge", "challenge", "action"),
-      nav("Run benchmarks", "benchmarks", "action"), nav("Model trust panel", "trust", "action"), nav("Process batches", "process", "action"),
+      nav("Run benchmarks", "benchmarks", "action"), nav("External validation", "external", "action"), nav("Model trust panel", "trust", "action"), nav("Process batches", "process", "action"),
       nav("Lifetime degradation", "degradation", "action"), nav("Multi-fidelity comparison", "fidelity", "action"),
       nav("Assembly workbench", "workbench"), nav("Virtual assemblies", "virtual"), nav("Mechanical model", "mechanics"), nav("Robustness", "robustness"),
       nav("Sensitivity", "sensitivity"), nav("Worst case", "worstcase"), nav("Tolerance optimisation", "optimisation"), nav("Calibration", "calibration"),
