@@ -1,18 +1,23 @@
 // 3D engineering viewer. Renders the real component meshes served by the backend
 // (millimetres, body frame), posed by backend kinematics. Z is up.
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import { Bounds, GizmoHelper, GizmoViewport, Grid, Line, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { Axis3d, Eye, Layers, Maximize2, Scissors } from "lucide-react";
+import { useApp } from "../stores/app";
 import { api } from "../lib/api";
 import type { Component, GeometryRef, Pose } from "../lib/types";
 
+// Neutral engineering materials: components are told apart by value and hue family, not by
+// saturated colour. Selection uses the application accent.
 const GROUP_COLOR: Record<string, string> = {
-  housing: "#8d98a8", motor: "#4b5563", bearing: "#c9a227", gear: "#5f86b8", shaft: "#b9bec7",
-  link: "#6fa58c", imported: "#8fa3bd", body: "#8fa3bd",
+  housing: "#b3b6b1", motor: "#55595a", bearing: "#bba46a", gear: "#96a4b0", shaft: "#cfd2cf",
+  link: "#a3aea6", imported: "#a8b0b4", body: "#a8b0b4",
 };
+const SELECTED = "#c8402b";
+export type Shading = "shaded" | "edges" | "wire";
 const MM = 0.001;
 
 export interface Marker { component: string; geometry: GeometryRef; color?: string }
@@ -31,6 +36,8 @@ export interface ViewerProps {
   tint?: Record<string, string>;
   height?: number | string;
   legend?: string;
+  /** Content of the status bar along the bottom edge of the viewport. */
+  status?: ReactNode;
 }
 
 function centreOf(c: Component): THREE.Vector3 {
@@ -70,18 +77,28 @@ function magnified(nominal: Pose | null, variant: Pose, body: string, k: number)
 }
 
 function Part(props: { url: string; matrix: THREE.Matrix4; offset: THREE.Vector3; color: string; opacity: number;
-  selected: boolean; clip: THREE.Plane[]; onClick?: () => void; wire?: boolean }) {
+  selected: boolean; clip: THREE.Plane[]; onClick?: () => void; wire?: boolean; shading?: Shading; edgeColor?: string }) {
   const geometry = useLoader(STLLoader, props.url);
   useMemo(() => { geometry.computeVertexNormals(); }, [geometry]);
+  const edges = useMemo(() => (props.shading === "edges" || (props.selected && props.shading !== "wire")
+    ? new THREE.EdgesGeometry(geometry, 28) : null), [geometry, props.shading, props.selected]);
+  const wire = props.wire || props.shading === "wire";
   return (
     <group position={props.offset}>
       <group matrix={props.matrix} matrixAutoUpdate={false}>
         <mesh geometry={geometry} scale={MM}
           onClick={props.onClick ? (e) => { e.stopPropagation(); props.onClick?.(); } : undefined}>
-          <meshStandardMaterial color={props.selected ? "#e0842a" : props.color} metalness={0.25} roughness={0.6}
+          <meshStandardMaterial color={wire && props.selected ? SELECTED : props.color} metalness={0.15} roughness={0.55}
+            emissive={props.selected ? SELECTED : "#000000"} emissiveIntensity={props.selected ? 0.22 : 0}
             transparent={props.opacity < 1} opacity={props.opacity} depthWrite={props.opacity >= 1}
-            wireframe={props.wire} clippingPlanes={props.clip} side={THREE.DoubleSide} />
+            wireframe={wire} clippingPlanes={props.clip} side={THREE.DoubleSide}
+            polygonOffset={!!edges} polygonOffsetFactor={1} polygonOffsetUnits={1} />
         </mesh>
+        {edges && (
+          <lineSegments geometry={edges} scale={MM}>
+            <lineBasicMaterial color={props.selected ? SELECTED : props.edgeColor ?? "#2b2f2d"} clippingPlanes={props.clip}
+              transparent={props.opacity < 1} opacity={Math.max(props.opacity, 0.35)} />
+          </lineSegments>)}
       </group>
     </group>
   );
@@ -136,6 +153,22 @@ export function Viewer(props: ViewerProps) {
   const [xray, setXray] = useState(true);
   const [section, setSection] = useState(false);
   const [fitKey, setFitKey] = useState(0);
+  const [shading, setShading] = useState<Shading>("edges");
+  const dark = useApp((st) => st.theme) === "dark";
+  const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
+    if ((e.target as HTMLElement).tagName === "INPUT") return;
+    const k = e.key.toLowerCase();
+    if (k === "f") setFitKey((x) => x + 1);
+    else if (k === "1") setShading("shaded");
+    else if (k === "2") setShading("edges");
+    else if (k === "3") setShading("wire");
+    else if (k === "a") setAxes((v) => !v);
+    else if (k === "x") setXray((v) => !v);
+    else if (k === "s") setSection((v) => !v);
+    else if (k === "escape") props.onSelect?.(null);
+    else return;
+    e.preventDefault();
+  };
   const drawable = props.components.filter((c) => c.mesh);
   const centre = useMemo(() => {
     const c = new THREE.Vector3();
@@ -153,26 +186,32 @@ export function Viewer(props: ViewerProps) {
     return <div className="viewport" style={{ height: props.height ?? "100%" }}><div className="empty">This model has no drawable geometry.</div></div>;
   }
   return (
-    <div className="viewport" style={{ height: props.height ?? "100%" }}>
-      <div className="hud">
-        <button className="btn small" onClick={() => setFitKey((k) => k + 1)} title="Fit view"><Maximize2 />Fit</button>
-        <button className="btn small" aria-pressed={axes} onClick={() => setAxes(!axes)} title="Joint axes and world frame"><Axis3d />Axes</button>
-        <button className="btn small" aria-pressed={xray} onClick={() => setXray(!xray)} title="Translucent housing"><Eye />X-ray</button>
-        <button className="btn small" aria-pressed={section} onClick={() => setSection(!section)} title="Section through the assembly centre"><Scissors />Section</button>
+    <div className="viewport" style={{ height: props.height ?? "100%" }} tabIndex={0} onKeyDown={onKey}
+      aria-label="3D viewport. Keys: F fit, 1 shaded, 2 shaded with edges, 3 wireframe, A axes, X x-ray, S section, Esc clear selection">
+      <div className="hud" role="toolbar" aria-label="Viewport">
+        <button className="btn small" onClick={() => setFitKey((k) => k + 1)} title="Fit view (F)"><Maximize2 />Fit</button>
+        <span className="hud-sep" />
+        {(["shaded", "edges", "wire"] as Shading[]).map((m, i) => (
+          <button key={m} className="btn small" aria-pressed={shading === m} onClick={() => setShading(m)} title={`${m === "edges" ? "Shaded with edges" : m === "wire" ? "Wireframe" : "Shaded"} (${i + 1})`}>
+            {m === "shaded" ? "Shaded" : m === "edges" ? "Edges" : "Wire"}</button>))}
+        <span className="hud-sep" />
+        <button className="btn small" aria-pressed={axes} onClick={() => setAxes(!axes)} title="Joint axes and world frame (A)"><Axis3d />Axes</button>
+        <button className="btn small" aria-pressed={xray} onClick={() => setXray(!xray)} title="Translucent housing (X)"><Eye />X-ray</button>
+        <button className="btn small" aria-pressed={section} onClick={() => setSection(!section)} title="Section through the assembly centre (S)"><Scissors />Section</button>
         <label className="btn small" title="Exploded view"><Layers />
           <input type="range" min={0} max={2} step={0.05} value={explode} aria-label="Explode"
             onChange={(e) => setExplode(Number(e.target.value))} style={{ width: 70 }} /></label>
       </div>
-      {props.legend && <div className="legend">{props.legend}</div>}
+      {(props.status || props.legend) && <div className="statusbar">{props.status ?? props.legend}</div>}
       <div className="canvas-wrap">
       <Canvas camera={{ position: [0.35, -0.45, 0.3], up: [0, 0, 1], fov: 38, near: 0.001, far: 50 }}
         onPointerMissed={() => props.onSelect?.(null)} dpr={[1, 2]}>
         <Clipping enabled={section} />
-        <ambientLight intensity={0.75} />
-        <directionalLight position={[2, -3, 4]} intensity={1.3} />
-        <directionalLight position={[-3, 2, 1]} intensity={0.5} />
+        <hemisphereLight args={["#ffffff", "#b8bab4", 0.95]} />
+        <directionalLight position={[2, -3, 4]} intensity={1.15} />
+        <directionalLight position={[-3, 2, 1]} intensity={0.35} />
         <Suspense fallback={null}>
-          <Bounds key={`${props.modelId}-${fitKey}-${drawable.length}-${props.pose ? "posed" : "rest"}`} fit clip observe margin={1.25}>
+          <Bounds key={`${props.modelId}-${fitKey}-${drawable.length}-${props.pose ? "posed" : "rest"}-${props.isolate ?? "all"}`} fit clip observe margin={1.1}>
             <group>
               {drawable.filter(visible).map((c) => {
                 const offset = centreOf(c).sub(centre).multiplyScalar(explode);
@@ -181,7 +220,7 @@ export function Viewer(props: ViewerProps) {
                 return (
                   <Part key={c.id} url={api.meshUrl(props.modelId, c.id, props.stamp)} matrix={bodyMatrix(props.pose, c.body)}
                     offset={offset} color={base} opacity={translucent ? 0.22 : props.overlay ? 0.55 : 1}
-                    selected={props.selected === c.id} clip={clip}
+                    selected={props.selected === c.id} clip={clip} shading={shading} edgeColor={dark ? "#141716" : "#2b2f2d"}
                     onClick={props.onSelect ? () => props.onSelect?.(c.id) : undefined} />
                 );
               })}
@@ -205,10 +244,10 @@ export function Viewer(props: ViewerProps) {
         })}
         {axes && <axesHelper args={[0.05]} />}
         <Grid args={[2, 2]} rotation={[Math.PI / 2, 0, 0]} position={[0, 0, -0.08]} cellSize={0.01} sectionSize={0.05}
-          cellColor="#b8c0cc" sectionColor="#8e98a8" fadeDistance={1.6} infiniteGrid />
+          cellColor={dark ? "#262a28" : "#d2d4ce"} sectionColor={dark ? "#3a3f3c" : "#b2b5ae"} fadeDistance={1.6} infiniteGrid />
         <OrbitControls makeDefault enableDamping dampingFactor={0.15} />
         <GizmoHelper alignment="bottom-right" margin={[52, 52]}>
-          <GizmoViewport axisColors={["#c0392b", "#2e8b57", "#2c6fbb"]} labelColor="#fff" />
+          <GizmoViewport axisColors={["#b8473a", "#4b8a5c", "#3f6f9e"]} labelColor="#fff" />
         </GizmoHelper>
       </Canvas>
       </div>

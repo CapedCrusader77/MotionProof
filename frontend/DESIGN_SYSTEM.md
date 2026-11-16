@@ -23,7 +23,7 @@ style themselves.
 | `--mp-info` | `#285a8c` | `#8bb5e3` | information |
 | `--mp-unknown` | `#5c625e` | `#a3a9a4` | unknown, unavailable |
 | `--mp-data` / `--mp-data-2` | `#34505f` / `#8a7a52` | `#8fb3c6` / `#cbb889` | chart data ink; never a status, never the brand colour |
-| `--mp-viewport-top/bottom` | `#f7f7f4` → `#dfe0da` | `#232724` → `#141716` | 3D viewport gradient |
+| `--mp-viewport-top/bottom` | `#f7f7f4` | `#141716` | flat 3D viewport ground (no gradient) |
 | `--mp-radius` / `-sm` | 3 px / 2 px | | all corners |
 | `--mp-fast` / `--mp-med` | 120 ms / 200 ms, `cubic-bezier(0.2, 0, 0, 1)` | | hover / page, drawer, toast |
 
@@ -37,14 +37,16 @@ existing component follows them.
 * **IBM Plex Mono** 400/500/600 (self-hosted via `@fontsource/ibm-plex-mono`): measured values,
   identifiers and engineering metadata. Tabular numerals everywhere a number is shown
   (`font-variant-numeric: tabular-nums`).
-* Uppercase only for compact metadata labels: navigation groups, table headers, metric labels,
-  status words. Mono 10–10.5 px with 0.05–0.08 em tracking.
+* Sentence case everywhere: navigation groups, table headers, metric labels and status words
+  are sans-serif. Monospace is used only where it helps reading: measured values, identifiers,
+  counts and units in tables and inspectors.
 
 ## Status language
 
-Status is colour **plus a glyph plus a word**, never colour alone. `Badge` renders the word; CSS
-adds the glyph: ✓ pass, ✕ fail, ! warning, i information. Badges are square-cornered mono
-labels outlined in their status colour. The brand vermilion is never used for a status.
+Status is colour **plus a glyph plus a word**, never colour alone. Badges (tinted, no outline,
+sentence case) are reserved for states that need attention; inside dense tables status is a
+coloured glyph followed by a plain word (`.evidence`, `.check-row`). Evidence levels use ■
+specified, ● measured, ◐ estimated, ○ assumed. The brand vermilion is never used for a status.
 
 ## Primitives
 
@@ -64,6 +66,21 @@ labels outlined in their status colour. The brand vermilion is never used for a 
 | Chart | `charts.tsx` | data ink `--mp-data`, failures in `--mp-fail`, mono axis text |
 | 3D viewport | `.viewport`, `Viewer` | gradient ground, grouped toolbar, refit on load |
 | Toast, modal, command palette | existing components | pop shadow, 200 ms entry |
+
+## Workspaces
+
+Screens are built around their workflow, not one template.
+
+* `.ws` (workbench, virtual assemblies, tolerances): fills the window under a thin header
+  (`.ws-head`: title, model, inline controls, primary action). Sidebars (`.ws-side`) are docked
+  and flush, separated by hairlines, not cards.
+* Viewport (`Viewer`): docked toolbar along the top edge (fit; shaded, edges, wire; axes;
+  x-ray; section; explode), status bar along the bottom edge, keyboard shortcuts (F, 1, 2, 3,
+  A, X, S, Esc), refit on load and on isolation, neutral materials, selection as a faint
+  accent tint plus accent edges.
+* Inspector: tabs where a selection has distinct aspects (properties and readiness; validity,
+  geometry and deviations), sections separated by rules, numbers rounded to their engineering
+  precision (floating-point noise below 1e-9 of the scale shown as 0).
 
 ## Motion
 

@@ -1,5 +1,29 @@
 # Redesign changelog
 
+## 2026-11-16, restraint pass and the three gate screens
+
+* System: removed uppercase mono labels from tables, navigation, metrics, badges and section
+  headings; monospace now only for values and identifiers. Flat viewport ground. Smaller page
+  titles inside workspaces.
+* Viewer: shaded, shaded with edges and wireframe modes; keyboard shortcuts; docked toolbar
+  and status bar; neutral materials and even lighting in both themes; refit on isolation;
+  selection tint with accent edges.
+* Assembly workbench: viewport-first workspace; flush component tree with counts and hover
+  actions; joint sliders; inspector with Properties and Readiness tabs; assembly summary with
+  total mass; inertia and centre of mass free of floating-point noise.
+* Tolerances: full-height engineering table with a per-row distribution strip drawn from the
+  backend's density curve and limits; evidence as glyph and word; findings, fits and
+  correlations in a bottom dock; inspector leads with the distribution against LSL and USL,
+  statistics, then specification, distribution model, provenance, correlations and the mapped
+  feature; Component column hidden below 1500 px.
+* Virtual assemblies: generation controls in the header; variant list with set summary;
+  Nominal / Variant / Overlay comparison; inspector tabs Validity (violations, fits, gear
+  meshes), Geometry (Level A measurements, interfaces, changed components) and Deviations
+  (each value placed inside its tolerance zone).
+* Favicon added (missing file caused a 404 on every page).
+* E2E: 13 tests, adding workbench select, isolate and keyboard shading; tolerance inspector and
+  fits dock; virtual assembly generation, overlay and deviations.
+
 ## 2026-11-16, stages 1, 2, 8 and 9 (system and shell)
 
 * New design system in `src/styles.css`: Swiss-industrial tokens for light and dark, brand
