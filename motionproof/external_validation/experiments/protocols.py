@@ -54,7 +54,7 @@ PROTOCOLS: dict[str, Protocol] = {
     # identifiable from the data. v2 changes only the order selection rule; data split and
     # acceptance thresholds are identical to v1. v1 and its result stay on record.
     "transmission-error-v2": Protocol(
-        id="transmission-error-v2", benchmark="X1", dataset="stuttgart-te",
+        id="transmission-error-v2", benchmark="X1-v2", dataset="stuttgart-te",
         title="Gearbox transmission error, Staubli TX2-40 axes 2 and 3 (identifiable orders)",
         system="Staubli TX2-40 gearboxes on an experimental setup",
         quantity="theta_TE (rad), as published, at every published sample",
@@ -71,6 +71,33 @@ PROTOCOLS: dict[str, Protocol] = {
         motionproof_components=("simulation.engine drive gap equation: TE(theta) term "
                                 "sum a sin(c theta + phi)", "backlash dead band b/2"),
         reproduce="motionproof external validate transmission-error-v2"),
+    # v3 added after v1 (VALIDATION_001) and v2 (VALIDATION_003) failed. Reason: the dataset's
+    # own plot_figures.m shows that the validation recordings were made with the authors'
+    # Fourier compensation active ("excluding ramp-up of compensation"); their theta_TE is the
+    # residual after compensation, about 6.5x smaller than the uncompensated identification
+    # TE. Comparing a predicted uncompensated TE with it compares different physical
+    # quantities, so v1 and v2 are invalid comparisons (kept on record). v3 holds out whole
+    # uncompensated recordings at alternate velocity setpoints. Orders and acceptance
+    # thresholds as v2.
+    "transmission-error-v3": Protocol(
+        id="transmission-error-v3", benchmark="X1", dataset="stuttgart-te",
+        title="Gearbox transmission error, Staubli TX2-40 axes 2 and 3 (speed holdout)",
+        system="Staubli TX2-40 gearboxes on an experimental setup",
+        quantity="theta_TE (rad) without compensation, at every published sample",
+        identification="identification/axis_k files whose velocity setpoint has an even rank "
+                       "(0, 2, 4, ...) when the setpoints of each sign are sorted by magnitude",
+        validation="identification/axis_k files with odd rank (whole recordings, never mixed)",
+        unused="validation/ folder: residual TE with the authors' compensation active (a "
+               "different quantity); identification/axis_1",
+        baseline="B0: constant transmission error equal to the identification mean, per axis",
+        model="as transmission-error-v2 (orders with >= 2 periods over the shortest "
+              "identification recording, 30 largest up to 4000)",
+        acceptance="per axis: validation RMSE(model) <= 0.5 x validation RMSE(B0) and "
+                   "validation RMSE(model) <= 1.5 x identification RMSE(model); X1 passes "
+                   "only if both axes pass (unchanged)",
+        motionproof_components=("simulation.engine drive gap equation: TE(theta) term "
+                                "sum a sin(c theta + phi)", "backlash dead band b/2"),
+        reproduce="motionproof external validate transmission-error-v3"),
     "h1-friction": Protocol(
         id="h1-friction", benchmark="X2", dataset="anchor-lab",
         title="Joint friction and dynamics, Unitree H1 elbow test stand",
@@ -149,3 +176,12 @@ PROTOCOLS: dict[str, Protocol] = {
         motionproof_components=("workspace accuracy, degradation",),
         reproduce="motionproof external validate nist-tcp"),
 }
+
+# Protocols whose comparison was found invalid after running; their records stay unchanged.
+SUPERSEDED = {
+    "transmission-error": "superseded by v2 (unidentifiable low orders) and v3; also compared "
+                          "against compensated validation recordings (different quantity)",
+    "transmission-error-v2": "superseded by v3: validation recordings contain the residual "
+                             "after the authors' compensation, a different quantity",
+}
+
