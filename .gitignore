@@ -19,3 +19,4 @@ MUJOCO_LOG.TXT
 examples/
 frontend/e2e-results/
 /demo/
+/external_data/
