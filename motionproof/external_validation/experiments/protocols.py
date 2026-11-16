@@ -30,7 +30,7 @@ class Protocol:
 
 PROTOCOLS: dict[str, Protocol] = {
     "transmission-error": Protocol(
-        id="transmission-error", benchmark="X1", dataset="stuttgart-te",
+        id="transmission-error", benchmark="X1-v1", dataset="stuttgart-te",
         title="Gearbox transmission error, Staubli TX2-40 axes 2 and 3",
         system="Staubli TX2-40 gearboxes on an experimental setup",
         quantity="theta_TE (rad), as published, at every published sample",
@@ -48,6 +48,29 @@ PROTOCOLS: dict[str, Protocol] = {
         motionproof_components=("simulation.engine drive gap equation: TE(theta) term "
                                 "sum a sin(c theta + phi)", "backlash dead band b/2"),
         reproduce="motionproof external validate transmission-error"),
+    # v2 added after v1 was run (VALIDATION_001, FAIL). Reason: v1 allowed orders that complete
+    # less than about one period over the measured joint range (about 3.4 rad); those columns
+    # are nearly collinear with the offset (scaled condition number about 4e11) and are not
+    # identifiable from the data. v2 changes only the order selection rule; data split and
+    # acceptance thresholds are identical to v1. v1 and its result stay on record.
+    "transmission-error-v2": Protocol(
+        id="transmission-error-v2", benchmark="X1", dataset="stuttgart-te",
+        title="Gearbox transmission error, Staubli TX2-40 axes 2 and 3 (identifiable orders)",
+        system="Staubli TX2-40 gearboxes on an experimental setup",
+        quantity="theta_TE (rad), as published, at every published sample",
+        identification="all files in identification/axis_2 and identification/axis_3",
+        validation="all files in validation/axis_2 and validation/axis_3 (published split)",
+        unused="identification/axis_1 (no validation recordings exist for axis 1)",
+        baseline="B0: constant transmission error equal to the identification mean, per axis",
+        model="as transmission-error (v1), but orders k are restricted to those completing at "
+              "least 2 full periods over the shortest identification recording of the axis "
+              "(k >= ceil(4 pi / span)); the 30 largest such orders up to 4000 are used",
+        acceptance="per axis: validation RMSE(model) <= 0.5 x validation RMSE(B0) and "
+                   "validation RMSE(model) <= 1.5 x identification RMSE(model); X1 passes "
+                   "only if both axes pass (unchanged from v1)",
+        motionproof_components=("simulation.engine drive gap equation: TE(theta) term "
+                                "sum a sin(c theta + phi)", "backlash dead band b/2"),
+        reproduce="motionproof external validate transmission-error-v2"),
     "h1-friction": Protocol(
         id="h1-friction", benchmark="X2", dataset="anchor-lab",
         title="Joint friction and dynamics, Unitree H1 elbow test stand",
