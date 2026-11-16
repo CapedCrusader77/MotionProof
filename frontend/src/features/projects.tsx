@@ -60,7 +60,7 @@ export function ProjectsScreen() {
         <h1>Projects</h1><span className="sub">Engineering projects in this workspace</span><span className="spacer" />
         <button className="btn primary" onClick={() => setCreating(true)}><FolderPlus />New project</button>
       </div>
-      <div className="row" style={{ flex: 1, alignItems: "stretch" }}>
+      <div className="row project-layout" style={{ flex: 1, alignItems: "stretch" }}>
         <Panel title="All projects" flush style={{ width: 300, flex: "none" }}>
           <Load state={projects}>{(list) => list.length === 0 ? (
             <Empty title="No projects yet" action={<button className="btn primary" onClick={() => setCreating(true)}>Create the first project</button>}>

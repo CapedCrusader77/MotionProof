@@ -52,7 +52,7 @@ function DensityChart({ row, t }: { row: ToleranceReviewRow; t: Tolerance }) {
         <XAxis dataKey="x" type="number" domain={["dataMin", "dataMax"]} tickFormatter={(v: number) => fmt(v, 6)} label={{ value: t.unit, position: "insideBottom", offset: -6 }} />
         <YAxis width={10} tick={false} />
         <Tooltip formatter={(v) => fmt(Number(v))} labelFormatter={(v) => `${fmt(Number(v), 7)} ${t.unit}`} contentStyle={{ background: "var(--surface)", border: "1px solid var(--border-strong)", fontSize: 12 }} />
-        <Area dataKey="density" stroke="var(--accent)" fill="var(--accent-weak)" isAnimationActive={false} />
+        <Area dataKey="density" stroke="var(--mp-data)" fill="color-mix(in srgb, var(--mp-data) 18%, transparent)" isAnimationActive={false} />
         <ReferenceLine x={row.lower_limit} stroke="var(--bad)" strokeDasharray="4 3" label={{ value: "LSL", fontSize: 10, fill: "var(--bad)", position: "top" }} />
         <ReferenceLine x={row.upper_limit} stroke="var(--bad)" strokeDasharray="4 3" label={{ value: "USL", fontSize: 10, fill: "var(--bad)", position: "top" }} />
         <ReferenceLine x={row.design_value} stroke="var(--ok)" label={{ value: "design", fontSize: 10, fill: "var(--ok)", position: "top" }} />

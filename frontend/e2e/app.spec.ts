@@ -90,3 +90,33 @@ test("layout has no horizontal overflow at phone width", async ({ page }) => {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(1);
 });
+
+test("phone width: navigation is a drawer behind the menu button", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/#/projects");
+  const nav = page.getByRole("navigation", { name: "Main navigation" });
+  const menu = page.getByRole("button", { name: "Open navigation" });
+  await expect(menu).toBeVisible();
+  await expect(nav).not.toBeInViewport();
+  await menu.click();
+  await expect(nav).toBeInViewport();
+  await nav.getByRole("button", { name: "Benchmarks" }).click();
+  await expect(page).toHaveURL(/#\/benchmarks/);
+  await expect(nav).not.toBeInViewport();
+});
+
+test("skip link is the first tab stop and backend status is shown", async ({ page }) => {
+  await page.goto("/#/projects");
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused();
+  await expect(page.getByRole("status").filter({ hasText: /backend ready|job running/ }).first()).toBeVisible();
+});
+
+test("external validation lists the four datasets with citations", async ({ page }) => {
+  await page.goto("/#/external");
+  for (const key of ["anchor-lab", "stuttgart-te", "nist-ur5", "kuka-kr300"]) {
+    await expect(page.getByText(key, { exact: true })).toBeVisible();
+  }
+  await page.getByText("stuttgart-te", { exact: true }).click();
+  await expect(page.getByText(/doi:10\.18419\/DARUS-5760/).first()).toBeVisible();
+});

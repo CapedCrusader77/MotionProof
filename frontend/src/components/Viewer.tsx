@@ -172,7 +172,7 @@ export function Viewer(props: ViewerProps) {
         <directionalLight position={[2, -3, 4]} intensity={1.3} />
         <directionalLight position={[-3, 2, 1]} intensity={0.5} />
         <Suspense fallback={null}>
-          <Bounds key={`${props.modelId}-${fitKey}`} fit clip margin={1.25}>
+          <Bounds key={`${props.modelId}-${fitKey}-${drawable.length}-${props.pose ? "posed" : "rest"}`} fit clip observe margin={1.25}>
             <group>
               {drawable.filter(visible).map((c) => {
                 const offset = centreOf(c).sub(centre).multiplyScalar(explode);

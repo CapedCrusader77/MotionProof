@@ -66,6 +66,16 @@ export const Spinner = ({ label }: { label?: string }) => (
   <span className="row center" style={{ gap: 7 }} role="status"><span className="spinner" />{label && <span className="muted">{label}</span>}</span>
 );
 
+/** Layout-holding placeholder while backend data load; announces its label to screen readers. */
+export function Skeleton({ label }: { label: string }) {
+  return (
+    <div className="loading" role="status" aria-live="polite">
+      <span className="label"><span className="spinner" />{label}</span>
+      <div className="bar" /><div className="bar" /><div className="bar" />
+    </div>
+  );
+}
+
 /** Renders loading / error / empty states for an async resource, then the content. */
 export function Load<T>(props: { state: Async<T>; children: (data: T) => ReactNode; label?: string }) {
   const { state } = props;
@@ -76,7 +86,7 @@ export function Load<T>(props: { state: Async<T>; children: (data: T) => ReactNo
       </Alert>
     );
   }
-  if (state.data === null) return <div className="empty"><Spinner label={props.label ?? "Loading"} /></div>;
+  if (state.data === null) return <Skeleton label={props.label ?? "Loading"} />;
   return <>{props.children(state.data)}</>;
 }
 
