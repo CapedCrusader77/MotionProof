@@ -74,8 +74,8 @@ export default function App() {
           <div key={g.group}>
             <div className="nav-group">{g.group}</div>
             {g.items.map(([route, text, Icon, need]) => (
-              <button key={route} className={`nav-item ${s.route === route ? "active" : ""}`} onClick={() => s.go(route)} disabled={need !== null && !has[need]}
-                title={need !== null && !has[need] ? `${text} — select a ${need} first` : text} aria-current={s.route === route ? "page" : undefined}>
+              <button key={route} className={`nav-item ${s.route === route ? "active" : ""}`} onClick={() => s.go(route)} data-needs={need !== null && !has[need] ? need : undefined}
+                title={need !== null && !has[need] ? `${text} (opens a ${need} chooser)` : text} aria-current={s.route === route ? "page" : undefined}>
                 <Icon /><span className="nav-label">{text}</span></button>))}
           </div>))}
         <div className="nav-foot">

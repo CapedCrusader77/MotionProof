@@ -5,7 +5,7 @@ import {
 import type { Hist } from "../lib/types";
 import { fmt } from "./ui";
 
-const C = { main: "var(--accent)", ok: "var(--ok)", bad: "var(--bad)", alt: "var(--warn)", muted: "var(--faint)" };
+const C = { main: "var(--data)", ok: "var(--ok)", bad: "var(--bad)", alt: "var(--data-2)", muted: "var(--faint)" };
 const tip = {
   contentStyle: { background: "var(--surface)", border: "1px solid var(--border-strong)", borderRadius: 4, fontSize: 12, color: "var(--text)" },
   formatter: (v: unknown) => (typeof v === "number" ? fmt(v) : String(v)),

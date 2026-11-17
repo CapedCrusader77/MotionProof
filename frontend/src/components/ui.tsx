@@ -1,6 +1,7 @@
 import { Component, type ReactNode } from "react";
 import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
 import type { Async } from "../hooks/useAsync";
+import { Chooser } from "./Chooser";
 
 export function Panel(props: { title?: ReactNode; actions?: ReactNode; foot?: ReactNode; flush?: boolean;
   children: ReactNode; className?: string; style?: React.CSSProperties }) {
@@ -114,9 +115,10 @@ export function Modal(props: { title: string; onClose: () => void; children: Rea
   );
 }
 
+/** A screen that needs a selection shows a chooser of what exists, never a dead end. */
 export function NeedSelection(props: { what: string; action?: ReactNode }) {
-  return <div className="page"><div className="panel" style={{ flex: 1 }}><Empty title={`No ${props.what} selected`} action={props.action}>
-    Select or create one to use this workspace.</Empty></div></div>;
+  const what = (["project", "model", "experiment"].includes(props.what) ? props.what : "model") as "project" | "model" | "experiment";
+  return <Chooser what={what} />;
 }
 
 export class ErrorBoundary extends Component<{ children: ReactNode; name: string }, { error: string | null }> {

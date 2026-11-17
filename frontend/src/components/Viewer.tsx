@@ -10,8 +10,8 @@ import { api } from "../lib/api";
 import type { Component, GeometryRef, Pose } from "../lib/types";
 
 const GROUP_COLOR: Record<string, string> = {
-  housing: "#8d98a8", motor: "#4b5563", bearing: "#c9a227", gear: "#5f86b8", shaft: "#b9bec7",
-  link: "#6fa58c", imported: "#8fa3bd", body: "#8fa3bd",
+  housing: "#8f9890", motor: "#3f4642", bearing: "#b88a2c", gear: "#6f8f96", shaft: "#bcc1bb",
+  link: "#7c9a86", imported: "#97a29a", body: "#97a29a",
 };
 const MM = 0.001;
 
@@ -78,7 +78,7 @@ function Part(props: { url: string; matrix: THREE.Matrix4; offset: THREE.Vector3
       <group matrix={props.matrix} matrixAutoUpdate={false}>
         <mesh geometry={geometry} scale={MM}
           onClick={props.onClick ? (e) => { e.stopPropagation(); props.onClick?.(); } : undefined}>
-          <meshStandardMaterial color={props.selected ? "#e0842a" : props.color} metalness={0.25} roughness={0.6}
+          <meshStandardMaterial color={props.selected ? "#c7791a" : props.color} metalness={0.25} roughness={0.6}
             transparent={props.opacity < 1} opacity={props.opacity} depthWrite={props.opacity >= 1}
             wireframe={props.wire} clippingPlanes={props.clip} side={THREE.DoubleSide} />
         </mesh>
@@ -89,7 +89,7 @@ function Part(props: { url: string; matrix: THREE.Matrix4; offset: THREE.Vector3
 
 function FeatureMarker({ marker, matrix }: { marker: Marker; matrix: THREE.Matrix4 }) {
   const g = marker.geometry;
-  const color = marker.color ?? "#d9462f";
+  const color = marker.color ?? "#ab3628";
   if (!g.point) return null;
   const p = new THREE.Vector3(g.point[0], g.point[1], g.point[2]).multiplyScalar(MM);
   const d = g.direction ? new THREE.Vector3(g.direction[0], g.direction[1], g.direction[2]).normalize() : new THREE.Vector3(0, 0, 1);
@@ -176,7 +176,7 @@ export function Viewer(props: ViewerProps) {
             <group>
               {drawable.filter(visible).map((c) => {
                 const offset = centreOf(c).sub(centre).multiplyScalar(explode);
-                const base = props.tint?.[c.id] ?? GROUP_COLOR[c.group] ?? "#8fa3bd";
+                const base = props.tint?.[c.id] ?? GROUP_COLOR[c.group] ?? "#97a29a";
                 const translucent = xray && c.group === "housing" && props.selected !== c.id;
                 return (
                   <Part key={c.id} url={api.meshUrl(props.modelId, c.id, props.stamp)} matrix={bodyMatrix(props.pose, c.body)}
@@ -189,7 +189,7 @@ export function Viewer(props: ViewerProps) {
                 <Part key={`ov-${c.id}`} url={api.meshUrl(props.modelId, c.id, props.stamp)}
                   matrix={magnified(props.pose, props.overlay!.pose, c.body, props.overlay!.magnify)}
                   offset={centreOf(c).sub(centre).multiplyScalar(explode)}
-                  color={props.overlay!.changed.has(c.id) ? "#d9462f" : "#c9773a"} opacity={0.5} selected={false} clip={clip} wire />
+                  color={props.overlay!.changed.has(c.id) ? "#ab3628" : "#c7791a"} opacity={0.5} selected={false} clip={clip} wire />
               ))}
             </group>
           </Bounds>
@@ -201,7 +201,7 @@ export function Viewer(props: ViewerProps) {
         {axes && (props.pose?.joints ?? []).map((j) => {
           const a = new THREE.Vector3(...(j.anchor as [number, number, number]));
           const d = new THREE.Vector3(...(j.axis as [number, number, number])).multiplyScalar(0.07);
-          return <Line key={j.name} points={[a.clone().sub(d), a.clone().add(d)]} color={j.driven ? "#d9462f" : "#3a7bd5"} lineWidth={2.5} depthTest={false} />;
+          return <Line key={j.name} points={[a.clone().sub(d), a.clone().add(d)]} color={j.driven ? "#ab3628" : "#0f6a73"} lineWidth={2.5} depthTest={false} />;
         })}
         {axes && <axesHelper args={[0.05]} />}
         <Grid args={[2, 2]} rotation={[Math.PI / 2, 0, 0]} position={[0, 0, -0.08]} cellSize={0.01} sectionSize={0.05}

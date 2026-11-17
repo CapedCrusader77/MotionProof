@@ -21,15 +21,15 @@ const seqUrl = (i: number) => `/home/seq/s${String(i).padStart(3, "0")}.webp`;
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 // caption windows in scroll progress: [fade-in start, full, full end, fade-out end]
 const CAPS: { id: string; w: [number, number, number, number]; eyebrow: string; title: string; body: string; cta?: boolean }[] = [
-  { id: "c1", w: [-0.02, 0.0, 0.06, 0.09], eyebrow: "Tolerance-to-dynamics engineering lab", title: "A fraction of a millimetre. A completely different machine.", body: "MotionProof connects manufacturing variation to mechanical performance, from CAD geometry and tolerances to dynamic simulation and reliability.", cta: true },
-  { id: "c2", w: [0.100, 0.115, 0.175, 0.198], eyebrow: "The machine reveal", title: "Every movement begins with a mechanism.", body: "A motor, a planetary gearbox and a robotic link: the chain that turns electrical input into positioned motion." },
-  { id: "c3", w: [0.208, 0.223, 0.283, 0.306], eyebrow: "The exploded assembly", title: "A machine is more than its assembled form.", body: "Motor, shafts, bearings, both gear stages and the link, drawn apart so each part can be read on its own." },
-  { id: "c4", w: [0.309, 0.324, 0.384, 0.407], eyebrow: "Inside the gearbox", title: "Two stages. Three planets each.", body: "Sun gear, three planets, a fixed ring and a carrier per stage. In this film: 20T sun and planets, 60T ring, 4 : 1 per stage." },
-  { id: "c5", w: [0.409, 0.424, 0.484, 0.507], eyebrow: "Precision and manufacturing", title: "The drawing is nominal. The manufactured part is not.", body: "Shaft diameter, bearing clearance, hole position and backlash all vary from part to part. Each gets a tolerance in MotionProof." },
-  { id: "c6", w: [0.510, 0.525, 0.585, 0.608], eyebrow: "Nominal against variation", title: "Every manufactured assembly is slightly different.", body: "MotionProof builds virtual as-manufactured copies of an assembly from its tolerance definitions." },
-  { id: "c7", w: [0.611, 0.626, 0.686, 0.709], eyebrow: "The mechanism in motion", title: "Now see what those differences do.", body: "Ideal reduction kinematics: the sun turns four times for every turn of the carrier. No tooth contact is solved in this film." },
-  { id: "c8", w: [0.729, 0.744, 0.804, 0.827], eyebrow: "A population of assemblies", title: "Engineering one assembly is not enough.", body: "Run a thousand virtual copies and count how many still meet the requirement. The next section does exactly that." },
-  { id: "c9", w: [0.845, 0.865, 1.0, 1.02], eyebrow: "The final reveal", title: "Design for the machine you will actually manufacture.", body: "This film shows an illustrative assembly. The results below come from MotionProof’s own reference design.", cta: true },
+  { id: "c1", w: [-0.02, 0.0, 0.05, 0.08], eyebrow: "Overview", title: "See how manufacturing tolerances change the way a mechanism moves.", body: "MotionProof connects manufacturing variation to mechanical performance, from CAD geometry and tolerances to dynamic simulation and reliability.", cta: true },
+  { id: "c2", w: [0.14, 0.165, 0.23, 0.26], eyebrow: "Mechanism", title: "Motor, planetary gearbox and link.", body: "A motor, a planetary gearbox and a robotic link: the chain that turns electrical input into positioned motion." },
+  { id: "c3", w: [0.28, 0.31, 0.40, 0.43], eyebrow: "Parts", title: "The assembly, taken apart.", body: "Motor, shafts, bearings, both gear stages and the link, drawn apart so each part can be read on its own." },
+  { id: "c4", w: [0.44, 0.465, 0.55, 0.58], eyebrow: "Gearbox", title: "Two planetary stages, three planets each.", body: "Sun gear, three planets, a fixed ring and a carrier per stage. In this film: 20T sun and planets, 60T ring, 4 : 1 per stage." },
+  { id: "c5", w: [0.59, 0.61, 0.67, 0.695], eyebrow: "Tolerances", title: "Every dimension varies from part to part.", body: "Shaft diameter, bearing clearance, hole position and backlash all vary from part to part. Each gets a tolerance in MotionProof." },
+  { id: "c6", w: [0.70, 0.72, 0.76, 0.78], eyebrow: "Variants", title: "Virtual copies built from the tolerances.", body: "MotionProof builds virtual as-manufactured copies of an assembly from its tolerance definitions." },
+  { id: "c7", w: [0.79, 0.81, 0.85, 0.87], eyebrow: "Motion", title: "The gear train under load.", body: "Ideal reduction kinematics: the sun turns four times for every turn of the carrier. No tooth contact is solved in this film." },
+  { id: "c8", w: [0.875, 0.89, 0.92, 0.935], eyebrow: "Population", title: "One assembly tells you little. A thousand give a pass rate.", body: "Run a thousand virtual copies and count how many still meet the requirement." },
+  { id: "c9", w: [0.94, 0.955, 1.0, 1.02], eyebrow: "Results", title: "Results from the reference design follow below.", body: "This film shows an illustrative assembly. The results below come from MotionProof’s own reference design.", cta: true },
 ];
 const capOpacity = (p: number, w: [number, number, number, number]) => p < w[0] || p > w[3] ? 0 : p < w[1] ? (p - w[0]) / (w[1] - w[0]) : p <= w[2] ? 1 : (w[3] - p) / (w[3] - w[2]);
 
@@ -93,7 +93,6 @@ function ScrollHero() {
         <div className="sq-shade" aria-hidden="true" />
         {CAPS.map((c, i) => (
           <div key={c.id} className={`sq-cap ${i === 0 ? "first" : ""}`} style={{ opacity: capOpacity(p, c.w), transform: `translateY(${(1 - capOpacity(p, c.w)) * 14}px)`, pointerEvents: capOpacity(p, c.w) > 0.5 ? "auto" : "none" }} aria-hidden={capOpacity(p, c.w) < 0.5}>
-            <p className="hm-eyebrow">{c.eyebrow}</p>
             {i === 0 ? <h1>{c.title}</h1> : <h2>{c.title}</h2>}
             <p className="hm-lede">{c.body}</p>
             {c.cta && <div className="hm-cta">
@@ -102,7 +101,6 @@ function ScrollHero() {
             </div>}
           </div>
         ))}
-        <div className="sq-hint" style={{ opacity: clamp(1 - p * 14) }} aria-hidden="true"><i /><span>Scroll</span></div>
         <nav className="sq-dots" aria-label="Film chapters">
           {CAPS.map((c, i) => <button key={c.id} className={i === active ? "on" : ""} onClick={() => jump((c.w[1] + c.w[2]) / 2)} aria-label={`Go to: ${c.title}`} aria-current={i === active}><span>{c.eyebrow}</span></button>)}
         </nav>
@@ -143,8 +141,7 @@ function Evidence() {
   return (
     <section className="hm-sec hm-sim" id="evidence" aria-labelledby="h-sim">
       <div className="hm-wrap">
-        <p className="hm-eyebrow">Results from the reference design</p>
-        <h2 id="h-sim">1000 virtual assemblies. Real results, not a mock-up.</h2>
+        <h2 id="h-sim">Results: 1000 virtual assemblies of the reference design</h2>
         {err && <p className="hm-lede">The results file could not be loaded. Start the MotionProof server or rebuild the web app to include it.</p>}
         {data && view && (() => {
           const e = data.provenance.experiment, [lo, hi] = wilson(e.passed, e.valid), v = data.variants[vi];
@@ -212,8 +209,7 @@ function Pipeline() {
   return (
     <section className="hm-sec hm-pipe" id="how" aria-labelledby="h-how">
       <div className="hm-wrap">
-        <p className="hm-eyebrow">The workflow</p>
-        <h2 id="h-how">From a CAD file to a tolerance set you can defend.</h2>
+        <h2 id="h-how">Workflow: from a CAD file to a tolerance specification</h2>
         <ol className="hm-steps">
           {STEPS.map(([t, d], i) => (
             <li key={t} className={i === on ? "on" : ""}>
@@ -244,7 +240,7 @@ function App() {
     <section className="hm-sec hm-app" id="app" aria-labelledby="h-app">
       <div className="hm-wrap">
         <div className="hm-apphead">
-          <div><p className="hm-eyebrow">The application</p><h2 id="h-app">Twenty-eight screens, built around the work.</h2></div>
+          <div><h2 id="h-app">The application</h2></div>
           <div className="hm-tabs" role="tablist" aria-label="Screens">
             {SHOTS.map(([k, label], n) => <button key={k} role="tab" aria-selected={n === i} className={n === i ? "on" : ""} onClick={() => setI(n)}>{label}</button>)}
           </div>
@@ -274,9 +270,6 @@ function Home() {
 
       <main id="hm-main">
         <ScrollHero />
-        <ul className="hm-proof hm-proofbar" aria-label="Project facts">
-          <li><b>225</b> tests passing</li><li><b>13 / 14</b> benchmarks pass</li><li><b>66</b> API routes</li><li><b>47</b> CLI commands</li>
-        </ul>
 
         <Evidence />
         <Pipeline />
