@@ -17,6 +17,18 @@ function watchErrors(page: Page): string[] {
 
 test.describe.configure({ mode: "serial" });
 
+// The app shows the public homepage until someone signs in. Sign-in is a local session, so the
+// tests start signed in and keep whatever other UI state a test sets.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    try {
+      const key = "motionproof.ui";
+      const state = JSON.parse(localStorage.getItem(key) ?? "{}");
+      if (!state.user) { state.user = "e2e@lab.org"; localStorage.setItem(key, JSON.stringify(state)); }
+    } catch { /* storage unavailable */ }
+  });
+});
+
 test("shell loads and reports the backend healthy", async ({ page }) => {
   const errors = watchErrors(page);
   await page.goto("/");
