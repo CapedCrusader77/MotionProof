@@ -4,8 +4,13 @@
     uv run python scripts/render_home_scroll.py --blender E:/Blender/blender.exe --work E:/mp_scroll \
         [--frames 120] [--samples 48] [--only 0,30,60] [--size 1600x900]
 """
-import argparse, json, math, subprocess, sys
+import argparse
+import json
+import math
+import subprocess
+import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent))
 import make_hero_render as m
 

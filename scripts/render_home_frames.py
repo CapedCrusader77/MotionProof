@@ -4,8 +4,12 @@
 
 Reuses scripts/make_hero_render.py geometry and kinematics; writes <dir>/frames/NNN.png.
 """
-import argparse, json, subprocess, sys
+import argparse
+import json
+import subprocess
+import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent))
 import make_hero_render as m
 

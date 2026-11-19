@@ -73,7 +73,7 @@
 .lg-scope .cur line { stroke: #e9ebe6; stroke-width: 1; vector-effect: non-scaling-stroke; opacity: 0.5; }
 .lg-scope .cur line.gap { stroke: var(--p-accent); stroke-width: 3; opacity: 1; }
 .lg-caps { font-style: normal; font-size: 12px; color: var(--warn); }
-.lg-go:active:not(:disabled) { transform: translateY(1px); }
+.btn.lg-go:active:not(:disabled) { transform: translateY(1px); }
 .lg-plate-top { padding-bottom: 14px; border-bottom: 1px solid var(--p-line); }
 @media (max-height: 760px) { .lg-claim { font-size: clamp(30px, 3.6vw, 46px); } .lg-scope svg { height: 140px; } }
 
@@ -98,3 +98,32 @@
 .lg-sub { color: #c5cbc6; }
 .lx-layer { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 div.lg-photo { background: #050608; }
+
+/* form side: actions in a top bar, the form on a fixed column, plain facts under it */
+.lg-side { padding: 22px 48px 26px; }
+.lg-top { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.lg-top-q { font-size: 13px; color: var(--muted); }
+.lg-switch { height: 32px; }
+.lg-form { margin: auto 0; margin-left: clamp(0px, 8vw, 120px); max-width: 380px; gap: 16px; }
+.lg-form h1 { font-size: 32px; }
+.lg-foot a { color: var(--faint); text-decoration: none; }
+.lg-foot a:hover { color: var(--text); text-decoration: underline; }
+@media (max-width: 900px) { .lg-form { margin-left: auto; margin-right: auto; } .lg-top-q { display: none; } .lg-side { padding: 18px 20px; } }
+
+/* form refinement */
+.lg-form { margin: auto; max-width: 360px; gap: 18px; }
+.lg-form h1 { font-size: 34px; letter-spacing: -0.035em; }
+.lg-lede { font-size: 14.5px; line-height: 1.5; margin-top: -10px; }
+.lg-f > span { font-size: 13px; color: var(--text); }
+.lg-f .input { height: 44px; font-size: 14.5px; padding: 0 14px; border-radius: 6px; background: var(--surface);
+  transition: border-color var(--mp-fast) var(--mp-ease), box-shadow var(--mp-fast) var(--mp-ease); }
+.lg-f .input:hover { border-color: var(--border-strong); }
+.lg-f .input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-weak); }
+.lg-pw .btn { top: 5px; right: 5px; }
+.btn.lg-go { height: 44px; border-radius: 6px; font-size: 14.5px; font-weight: 600; margin-top: 6px;
+  transition: transform var(--mp-fast) var(--mp-ease), background var(--mp-fast) var(--mp-ease); }
+.btn.lg-go:hover:not(:disabled) { transform: translateY(-1px); }
+.btn.lg-go:active:not(:disabled) { transform: translateY(1px); }
+.lg-switch { border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) { .lg-go, .lg-f .input { transition: none; } }
+.lg { color: var(--text); color-scheme: dark; }

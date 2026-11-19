@@ -67,7 +67,7 @@ export const useApp = create<AppState>((set, get) => ({
   projectId: saved.projectId ?? null,
   modelId: saved.modelId ?? null,
   experimentId: saved.experimentId ?? null,
-  theme: saved.theme ?? "light",
+  theme: saved.theme ?? "dark",
   navCollapsed: saved.navCollapsed ?? false,
   toasts: [],
   user: saved.user ?? null,

@@ -1,11 +1,16 @@
 # API reference
 
 Base path `/api/v1`. Interactive documentation: `/docs` on the running server. Errors are JSON
-`{"error": "message"}` with status 404, 409, 413 or 422.
+`{"error": "message"}` with status 401, 404, 409, 413, 422 or 429.
+
+Every route except `GET /health` and the `/auth/*` routes needs a session: sign in with
+`POST /auth/login` (`{"email", "password"}`) and send the returned `mp_session` cookie. Each
+account works in its own workspace and sees only its own jobs.
 
 | Area | Endpoints |
 |---|---|
-| System | `GET /health`, `GET /jobs/{id}`, `POST /jobs/{id}/cancel` |
+| Accounts | `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, `GET /auth/me` |
+| System | `GET /health` (public, status only), `GET /system` (versions, workspace, jobs, AI), `GET /jobs/{id}`, `POST /jobs/{id}/cancel` |
 | Projects | `POST /projects`, `GET /projects`, `GET /projects/{id}`, `DELETE /projects/{id}?confirm={id}` |
 | Models | `POST /models/import` (multipart), `POST /models/reference`, `GET /models`, `GET /models/{id}`, `PUT /models/{id}/spec`, `POST /models/{id}/validate`, `GET /models/{id}/components`, `GET /models/{id}/meshes/{component}`, `POST /models/{id}/pose` |
 | Features | `GET`/`POST /models/{id}/features`, `DELETE /models/{id}/features/{feature}`, `GET /models/{id}/feature-suggestions` |

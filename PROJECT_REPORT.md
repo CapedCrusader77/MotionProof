@@ -27,12 +27,12 @@ Around that core it now has:
 
 | Size | |
 |---|---|
-| Python engine | 12,463 lines in 26 subpackages |
-| React application | 4,292 lines, 28 screens |
-| Tests | 2,906 lines, 225 tests, all passing |
-| REST API | 66 routes |
-| CLI | 47 commands |
-| Documentation | 43 topic documents in `docs/` plus top-level guides |
+| Python engine | 14,875 lines in 28 subpackages |
+| React application | 5,385 lines, 29 screens |
+| Tests | 3,267 lines, 255 tests plus 9 browser end-to-end, all passing |
+| REST API | 78 routes |
+| CLI | 55 commands |
+| Documentation | 48 topic documents in `docs/` plus top-level guides |
 
 Everything has been verified in software against closed forms, separate methods or synthetic
 data with known ground truth. **Nothing has yet been compared with a physical measurement.** The
@@ -278,32 +278,35 @@ On top of the results:
 
 ## 5. Interfaces
 
-* **CLI** (Typer, 47 commands in 19 top-level groups): `doctor`, `inspect`, `serve`, `model`,
+* **CLI** (Typer, 55 commands in 20 top-level groups): `doctor`, `inspect`, `serve`, `model`,
   `tolerance`, `assembly`, `manufacturing`, `experiment`, `optimise`, `calibration`, `report`,
   `reference`, `scan`, `workspace`, `degradation`, `hardware`, `measurements`, `challenge`,
-  `benchmark`. Invalid configuration files are reported field by
+  `benchmark`, `external`. Invalid configuration files are reported field by
   field.
-* **REST API** (FastAPI, 66 routes under `/api/v1`): long jobs run in the background with
-  progress and cancellation. The OpenAPI schema is generated.
+* **REST API** (FastAPI, 78 routes under `/api/v1`): long jobs run in the background with
+  progress and cancellation. The OpenAPI schema is generated. Every route except the public
+  health check and sign-in needs a session; each account has its own workspace and jobs
+  (scrypt password hashes, HttpOnly session cookie; see `SECURITY.md`).
 * **Python SDK**: `motionproof.ManufacturingExperiment`. The README example is executed as a
   test.
-* **Web application** (React 19, three.js, Recharts), 28 screens grouped as Models,
+* **Web application** (React 19, three.js, Recharts), 29 screens grouped as Models,
   Manufacturing, Inspection and test, Experiments, Reliability, Optimisation and Evidence. It
   includes a 3D assembly workbench, a scan viewer, a live monitor, a command palette (Ctrl+K), a
-  model trust panel showing which values are assumed, and light and dark themes. It is served
+  model trust panel showing which values are assumed, a chooser that lists the workspace's real projects, models and experiments when a screen needs one, a sign-in and account page, and dark (default) and light themes. It is served
   by `motionproof serve`.
 
 ## 6. Verification
 
 | Check | Result |
 |---|---|
-| `pytest`: unit, analytic physics, integration, end to end, API and CLI contracts, benchmark package | 225 passed |
-| `mypy --strict` (engine and benchmark scripts) | clean, 78 files |
+| `pytest`: unit, analytic physics, integration, end to end, API and CLI contracts, benchmark package | 255 passed |
+| `mypy --strict` (engine and benchmark scripts) | clean, 99 files |
 | `ruff` | clean |
 | Frontend `tsc` (application and E2E sources) and `vite build` | clean |
-| Playwright E2E against the real backend and a fresh workspace | 7 passed: shell, project and reference design created through the UI, all 28 screens render, command palette, theme persistence, bad input rejected, no horizontal overflow at 390 px |
+| Playwright E2E against the real backend and a fresh workspace | 9 passed: sign-in checked against the server, shell, project and reference design created through the UI, all 29 screens render, the chooser opens a screen from a pick, command palette, theme persistence, bad input rejected, no horizontal overflow at 390 px |
 | API contract | no route answers 5xx to invalid input; collection routes succeed on an empty workspace |
-| CLI contract | every one of the 47 commands answers `--help` |
+| CLI contract | every one of the 55 commands answers `--help` |
+| Accounts | 10 tests: sessions required, wrong password and unknown email answer alike, throttling, no clear-text passwords or tokens stored, per-account workspaces and jobs |
 | Benchmark suite | 13 PASS, J (hardware) NOT RUN |
 | Independent cross-check | 57/57 quantities agree |
 

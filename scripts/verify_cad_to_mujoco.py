@@ -1,8 +1,11 @@
-import tempfile, pathlib, sys
-import numpy as np
+import pathlib
+import sys
+import tempfile
+
 import cadquery as cq
-import trimesh
 import mujoco
+import numpy as np
+import trimesh
 
 DENSITY = 2700.0  # kg/m3 (aluminium)
 res = {}

@@ -1,7 +1,19 @@
 # Security
 
-MotionProof is a local, single-user engineering tool. It has no authentication; run it bound to
-`127.0.0.1` (the default) and do not expose it to a network.
+MotionProof is a local engineering tool. Run it bound to `127.0.0.1` (the default); to share it
+on a network, put it behind HTTPS.
+
+* **Accounts.** Every `/api/v1` route except `GET /health` and the sign-in routes needs a
+  session. Passwords are stored as scrypt hashes with a random salt per account (`auth.db` in
+  the workspace); only a SHA-256 of each session token is stored. The token travels in an
+  HttpOnly, SameSite=Strict cookie, marked Secure when the server is reached over HTTPS.
+  Sessions last 14 days; signing out deletes the session on the server.
+* **Isolation.** Each account has its own workspace (the first account keeps the workspace root,
+  later accounts get `users/<id>/`) and sees only its own jobs.
+* **Throttling.** Five failed sign-ins for one email lock it for 60 s. The counter is in memory
+  and resets when the server restarts.
+* **Public health check.** `GET /health` answers only `{"status": "ok"}`; versions, paths and job
+  counts are at `GET /system`, behind sign-in.
 
 * Uploads are limited to 300 MB (CAD) and 50 MB (measurements), stored under sanitised names,
   and never executed. No CAD macros or scripts are run.
@@ -10,6 +22,10 @@ MotionProof is a local, single-user engineering tool. It has no authentication; 
 * Project deletion requires the project id as explicit confirmation.
 * The optional AI assistant talks only to a local Ollama server and receives a digest of stored
   results; disable it with `MOTIONPROOF_AI=off`.
-* MotionProof does not connect to actuators or other hardware.
+* MotionProof does not connect to actuators or other hardware except through the hardware
+  module, which needs an explicit confirmation before it moves anything.
+
+Not provided: password reset, email verification, an administrator role, or deleting an
+account. Remove an account by deleting its row from `auth.db` with the server stopped.
 
 Report problems to the project owner privately before publishing details.

@@ -2,6 +2,18 @@
 
 Updated 2026-11-15. Version 0.3.0 (advanced upgrade; audit in ADVANCED_UPGRADE_AUDIT.md).
 
+## Accounts, interface and reproducibility round (unreleased)
+
+| Item | State | Evidence | Limits |
+|---|---|---|---|
+| Accounts and sessions | Done | `motionproof/api/auth.py`; tests/integration/test_auth.py (10): 401 without a session, register/sign-out/sign-in, same answer for wrong password and unknown email, throttling, no clear-text password or token in `auth.db`, forged cookie refused; E2E sign-in against the server | no password reset, email verification, admin role or account deletion; throttle counter is in memory |
+| Per-account workspaces and jobs | Done | `UserStores` resolves the signed-in user's `Store`; jobs carry an owner and run in the submitting request's context; test_auth.py checks that a second account sees no projects or jobs of the first | first account keeps the existing workspace root |
+| Public health check | Done | `GET /health` returns only the status; details moved to `GET /system` behind sign-in | |
+| Screens that need a selection | Done | `Chooser` lists the workspace's real projects, models and experiments; E2E opens Tolerances from a pick | |
+| Reproducible benchmark publication | Done | `publish.py` writes no timings or dates; two runs give byte-identical `BENCHMARK_RESULTS.md`, `MANIFEST.json` and `assembly.step` | timings are printed, not published |
+| Sobol intervals | Done | BCa falls back to percentile intervals when the bootstrap is degenerate (an index of exactly zero) | |
+| First load of the web app | Done | 3D screens load three.js on demand; first-load JavaScript about 0.9 MB instead of 1.9 MB | |
+
 ## External experimental validation (unreleased)
 
 Public experimental robot datasets used to test MotionProof's model components on other
@@ -24,7 +36,7 @@ KUKA model; per-run TCP data (does not exist in the NIST release).
 | 1. Test the real NEMA 17 planetary gearbox | **Tooling ready, not run** | serial device, firmware sketch, rig test files, `hardware analyse`; tests/integration/test_hardware.py (15) incl. serial path with a fake port and model-independent analysis | build the rig (`docs/rig-build-and-test.md`), compile the firmware, run the tests; no physical measurement exists |
 | 2. Validate against real manufacturing measurements | **Tooling ready, no data** | measurement CSV import, summary, apply, per-part evaluation; test_measurements.py (4); as-built scan path from 0.3.0 | measured dimensions or a real scan of the parts |
 | 3. Reproducible benchmarks | **Done (synthetic)** | `benchmarks/`: inputs, raw data, references, hashes; 13 PASS, J NOT RUN; cross-check 57/57 agree; test_benchmark_package.py (3) | physical benchmark J needs item 1 |
-| 4. Software hardening | **Done** | full pytest 225 passed; mypy strict clean (78 files); ruff clean; test_contracts.py (CLI help for every command, every API route); 7 Playwright E2E tests passed against the real backend with installed Chrome; CI workflow for Windows and Linux | CI first run on GitHub to be checked |
+| 4. Software hardening | **Done** | full pytest 255 passed; mypy strict clean (99 files); ruff clean (engine, tests, benchmarks); test_contracts.py (CLI help for every command, every API route); 9 Playwright E2E tests passed against the real backend with installed Chrome; CI workflow for Windows and Linux | CI first run on GitHub to be checked |
 | 5. Engineering Challenge with a defensible cost model | **Method verified, defensible run waits for data** | yield cost model, closed-form test, benchmark M; template refuses placeholder values | real unit cost, inspection cost and measured process spread (item 2) |
 
 ## Advanced upgrade: verified

@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased - accounts, interface and reproducibility
+
+* Accounts: `POST /api/v1/auth/register|login|logout`, `GET /auth/me`; scrypt password hashes,
+  random session tokens stored only as SHA-256, HttpOnly SameSite=Strict cookie (Secure over
+  HTTPS), 14-day sessions, sign-in throttling. Every other route needs a session.
+* Per-account workspaces (the first account keeps the workspace root, later accounts use
+  `users/<id>/`) and private background jobs.
+* `GET /health` answers only `{"status": "ok"}`; versions, workspace path, job count and AI
+  status moved to `GET /system`, behind sign-in.
+* Web app: sign-in and account creation against the server, a chooser instead of disabled
+  navigation (lists the workspace's projects, models and experiments), dark theme by default,
+  3D screens loaded on demand, and a live long-exposure of the reference gearbox's planet
+  motion on the sign-in page.
+* Benchmarks: `publish.py --help`; published results contain no timings or run date, so two
+  runs give byte-identical files; the reference STEP file has a fixed header timestamp.
+* Sobol sensitivity: percentile bootstrap intervals when BCa is undefined.
+* README rebuilt around a real 1000-assembly run (`scripts/make_title_anim.py`,
+  `scripts/make_result_figures.py`).
+
 ## Unreleased - external experimental validation
 
 * `motionproof/external_validation`: adapters for NVIDIA Anchor-Lab (Apache-2.0), Stuttgart

@@ -24,7 +24,7 @@ experiments.runner (manifest, results.jsonl, replay)
         ├─ sensitivity.analysis       ├─ calibration.fit
         └─ reporting.report
                 │
-services.py ──> api.app (FastAPI, api.jobs) ──> frontend (React, three.js)
+services.py ──> api.app (FastAPI, api.auth, api.jobs) ──> frontend (React, three.js)
             └─> cli.main (Typer)
 ```
 
@@ -43,6 +43,7 @@ services.py ──> api.app (FastAPI, api.jobs) ──> frontend (React, three.j
 | `statistics`, `sensitivity`, `optimisation`, `calibration`, `reporting` | Analyses on stored results |
 | `persistence` | Workspace folders and the SQLite index |
 | `api`, `cli`, `services` | Interfaces; `services` holds logic shared by both |
+| `api.auth` | Accounts, sessions and the middleware that requires one; hands each request the signed-in account's own `Store` and tags background jobs with their owner |
 | `ai` | Optional Ollama client that only sees a digest of stored results |
 
 ## Decisions

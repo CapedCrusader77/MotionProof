@@ -10,10 +10,15 @@ engine (CadQuery, same call as the application) and writes:
     uv run python scripts/export_homepage_data.py
 """
 from __future__ import annotations
-import json, shutil, sys
+
+import json
+import shutil
+import sys
 from datetime import date
 from pathlib import Path
-import numpy as np, yaml
+
+import numpy as np
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))

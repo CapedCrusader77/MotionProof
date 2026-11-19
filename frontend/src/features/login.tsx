@@ -1,5 +1,5 @@
 import { useState, type FormEvent, type KeyboardEvent } from "react";
-import { ArrowRight, Eye, EyeOff, Moon, Sun } from "lucide-react";
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useApp } from "../stores/app";
 import { ApiError, auth } from "../lib/api";
 import "./login.css";
@@ -24,8 +24,6 @@ function Plate() {
 
 export function LoginScreen() {
   const login = useApp((s) => s.login);
-  const theme = useApp((s) => s.theme);
-  const toggleTheme = useApp((s) => s.toggleTheme);
   const [mode, setMode] = useState<"signin" | "register">("signin");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -62,12 +60,14 @@ export function LoginScreen() {
   }
 
   return (
-    <div className="lg">
+    // the sign-in page is always dark, so the form matches the dark picture beside it
+    <div className="lg" data-theme="dark">
       <Plate />
       <main className="lg-side" id="main-content">
-        <button className="btn ghost lg-theme" onClick={toggleTheme} aria-label={`Switch to ${theme === "light" ? "dark" : "light"} theme`}>
-          {theme === "light" ? <Moon /> : <Sun />}
-        </button>
+        <div className="lg-top">
+          <span className="lg-top-q">{register ? "Have an account?" : "New to this server?"}</span>
+          <button type="button" className="btn lg-switch" onClick={switchMode}>{register ? "Sign in" : "Create an account"}</button>
+        </div>
         <form className="lg-form" onSubmit={submit} noValidate>
           <a className="lg-brand sm" href="#/"><i className="mark" />MotionProof</a>
           <h1>{register ? "Create an account" : "Sign in"}</h1>
@@ -108,12 +108,8 @@ export function LoginScreen() {
             {busy ? (register ? "Creating account…" : "Signing in…") : <>{register ? "Create account" : "Sign in"} <ArrowRight /></>}
           </button>
 
-          <p className="lg-note">
-            {register ? "Already have an account? " : "New to this server? "}
-            <button type="button" className="lg-link" onClick={switchMode}>{register ? "Sign in" : "Create an account"}</button>
-          </p>
         </form>
-        <footer className="lg-foot"><span>MotionProof</span><span>Evidence for mechanical motion</span></footer>
+        <footer className="lg-foot"><span>MotionProof</span><a href="#/">About MotionProof</a></footer>
       </main>
     </div>
   );
