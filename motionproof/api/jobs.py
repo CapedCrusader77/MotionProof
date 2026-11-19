@@ -6,6 +6,7 @@ the target machine has 16 GB of RAM and the engine is CPU bound.
 
 from __future__ import annotations
 
+import contextvars
 import threading
 import time
 import traceback
@@ -25,11 +26,13 @@ class JobManager:
         self._lock = threading.Lock()
 
     def submit(self, kind: str, subject: str, fn: JobFn) -> dict[str, Any]:
+        from motionproof.api.auth import current_user
+
         jid = uuid.uuid4().hex[:12]
         cancel = threading.Event()
         job: dict[str, Any] = {"id": jid, "kind": kind, "subject": subject, "status": "queued",
                "progress": {}, "result": None, "error": None, "submitted": time.time(),
-               "started": None, "finished": None}
+               "started": None, "finished": None, "owner": current_user.get()}
         with self._lock:
             self._jobs[jid] = job
             self._cancel[jid] = cancel
@@ -50,14 +53,23 @@ class JobManager:
             finally:
                 job["finished"] = time.time()
 
-        self._pool.submit(run)
+        # run in the submitting request's context, so the job works in that user's workspace
+        self._pool.submit(contextvars.copy_context().run, run)
         return self.get(jid)
+
+    @staticmethod
+    def _visible(job: dict[str, Any]) -> bool:
+        """A signed-in user sees only their own jobs; code outside a request sees all."""
+        from motionproof.api.auth import current_user
+
+        uid = current_user.get()
+        return uid is None or job.get("owner") == uid
 
     def get(self, jid: str) -> dict[str, Any]:
         job = self._jobs.get(jid)
-        if job is None:
+        if job is None or not self._visible(job):
             raise KeyError(jid)
-        out = {k: v for k, v in job.items() if k != "traceback"}
+        out = {k: v for k, v in job.items() if k not in ("traceback", "owner")}
         if job["started"]:
             out["elapsed"] = (job["finished"] or time.time()) - job["started"]
         return out
@@ -65,14 +77,16 @@ class JobManager:
     def cancel(self, jid: str) -> dict[str, Any]:
         if jid not in self._cancel:
             raise KeyError(jid)
+        self.get(jid)  # not found for another user's job
         self._cancel[jid].set()
         return self.get(jid)
 
     def latest(self, subject: str, kind: str | None = None) -> dict[str, Any] | None:
         match = [j for j in self._jobs.values()
-                 if j["subject"] == subject and (kind is None or j["kind"] == kind)]
+                 if j["subject"] == subject and (kind is None or j["kind"] == kind)
+                 and self._visible(j)]
         return self.get(max(match, key=lambda j: j["submitted"])["id"]) if match else None
 
     def active(self) -> list[dict[str, Any]]:
         return [self.get(j["id"]) for j in self._jobs.values()
-                if j["status"] in ("queued", "running")]
+                if j["status"] in ("queued", "running") and self._visible(j)]

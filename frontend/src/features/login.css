@@ -80,3 +80,9 @@
 .lg-list { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 8px; }
 .lg-list li { padding-left: 14px; position: relative; color: var(--p-mut); }
 .lg-list li::before { content: ""; position: absolute; left: 0; top: 0.6em; width: 6px; height: 1px; background: var(--p-mut); }
+
+/* real sign-in: server errors, mode switch */
+.lg-form-err { margin: -4px 0 0; padding: 9px 12px; border-left: 3px solid var(--bad); background: var(--bad-weak); color: var(--text); }
+.lg-opt { font-style: normal; font-weight: 400; color: var(--faint); }
+.lg-link { background: none; border: 0; padding: 0; font: inherit; color: var(--accent); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.lg-link:hover { color: var(--accent-hover); }

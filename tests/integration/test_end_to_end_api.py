@@ -14,6 +14,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from motionproof.api.app import create_app
+from tests.conftest import signed_in
 
 API = "/api/v1"
 # reversal about the vertical pose: gravity changes sign there, so backlash is exposed
@@ -29,7 +30,7 @@ CONSTRAINTS = [
 
 @pytest.fixture(scope="module")
 def client(tmp_path_factory: pytest.TempPathFactory) -> TestClient:
-    return TestClient(create_app(tmp_path_factory.mktemp("workspace")))
+    return signed_in(TestClient(create_app(tmp_path_factory.mktemp("workspace"))))
 
 
 def wait(client: TestClient, job: dict[str, Any], timeout: float = 600.0) -> dict[str, Any]:

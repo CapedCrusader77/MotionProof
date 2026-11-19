@@ -17,16 +17,34 @@ function watchErrors(page: Page): string[] {
 
 test.describe.configure({ mode: "serial" });
 
-// The app shows the public homepage until someone signs in. Sign-in is a local session, so the
-// tests start signed in and keep whatever other UI state a test sets.
+// The app shows the public homepage until someone signs in. Each test opens a real server
+// session for the test account (registered once) and marks the browser as signed in.
+const ACCOUNT = { email: "e2e@lab.org", password: "e2e-password-1" };
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
+  const r = await page.request.post("/api/v1/auth/register", { data: ACCOUNT });
+  if (r.status() === 409) expect((await page.request.post("/api/v1/auth/login", { data: ACCOUNT })).ok()).toBe(true);
+  else expect(r.status()).toBe(201);
+  await page.addInitScript((email) => {
     try {
       const key = "motionproof.ui";
       const state = JSON.parse(localStorage.getItem(key) ?? "{}");
-      if (!state.user) { state.user = "e2e@lab.org"; localStorage.setItem(key, JSON.stringify(state)); }
+      if (!state.user) { state.user = email; localStorage.setItem(key, JSON.stringify(state)); }
     } catch { /* storage unavailable */ }
-  });
+  }, ACCOUNT.email);
+});
+
+test("sign-in checks the password against the server", async ({ browser }) => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto("/#/signin");
+  await page.getByLabel("Email").fill(ACCOUNT.email);
+  await page.getByLabel("Password", { exact: true }).fill("not-the-password");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText("not correct");
+  await page.getByLabel("Password", { exact: true }).fill(ACCOUNT.password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeVisible();
+  await context.close();
 });
 
 test("shell loads and reports the backend healthy", async ({ page }) => {
@@ -51,7 +69,8 @@ test("create a project and add the reference design through the UI", async ({ pa
   expect(errors).toEqual([]);
 });
 
-test("every screen renders with a project and model selected", async ({ page, request }) => {
+test("every screen renders with a project and model selected", async ({ page }) => {
+  const request = page.request;
   const projects = await (await request.get("/api/v1/projects")).json();
   const project = projects.find((p: { name: string }) => p.name === "E2E project");
   expect(project, "project created by the previous test").toBeTruthy();
@@ -87,6 +106,8 @@ test("a screen that needs a model offers the workspace's models and opens on a p
 
 test("command palette navigates", async ({ page }) => {
   await page.goto("/#/projects");
+  // the shell (and its shortcut) mounts once the server has confirmed the session
+  await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeVisible();
   await page.keyboard.press("Control+k");
   const box = page.getByRole("dialog").getByRole("textbox").first();
   await expect(box).toBeVisible();
@@ -105,8 +126,8 @@ test("theme toggle switches and persists", async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe(after);
 });
 
-test("invalid tolerance input is reported, not accepted", async ({ request }) => {
-  const r = await request.post("/api/v1/tolerances", { data: { not_a_field: 1 } });
+test("invalid tolerance input is reported, not accepted", async ({ page }) => {
+  const r = await page.request.post("/api/v1/tolerances", { data: { not_a_field: 1 } });
   expect(r.status()).toBeGreaterThanOrEqual(400);
   expect(r.status()).toBeLessThan(500);
 });

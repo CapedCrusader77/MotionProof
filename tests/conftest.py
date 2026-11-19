@@ -70,3 +70,14 @@ def reference_model(tmp_path_factory: pytest.TempPathFactory) -> MechanicalModel
 
     root = tmp_path_factory.mktemp("reference")
     return MechanicalModel.load(write_reference_project(root))
+
+
+def signed_in(client):  # type: ignore[no-untyped-def]
+    """Sign a test account in on an API client (registering it the first time); the session
+    cookie stays on the client."""
+    creds = {"email": "tester@lab.org", "password": "test-password-1"}
+    r = client.post("/api/v1/auth/register", json=creds)
+    if r.status_code == 409:
+        r = client.post("/api/v1/auth/login", json=creds)
+    assert r.status_code in (200, 201), r.text
+    return client

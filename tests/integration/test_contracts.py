@@ -19,6 +19,7 @@ from typer.testing import CliRunner
 
 from motionproof.api.app import create_app
 from motionproof.cli.main import app as cli_app
+from tests.conftest import signed_in
 
 
 def _commands(cmd: Any, path: tuple[str, ...] = ()) -> list[tuple[str, ...]]:
@@ -46,8 +47,8 @@ def test_cli_help(path: tuple[str, ...]) -> None:
 
 @pytest.fixture(scope="module")
 def client(tmp_path_factory: pytest.TempPathFactory) -> TestClient:
-    return TestClient(create_app(tmp_path_factory.mktemp("contract_ws")),
-                      raise_server_exceptions=False)
+    return signed_in(TestClient(create_app(tmp_path_factory.mktemp("contract_ws")),
+                      raise_server_exceptions=False))
 
 
 def _routes(client: TestClient) -> list[tuple[str, str, dict[str, Any]]]:
@@ -87,6 +88,7 @@ def test_delete_unknown_is_client_error(client: TestClient) -> None:
 
 
 def test_collection_gets_succeed_on_empty_workspace(client: TestClient) -> None:
+    signed_in(client)  # the bad-input sweep above also called /auth/logout
     failures = []
     for method, path, op in _routes(client):
         required = [p for p in op.get("parameters", []) if p.get("required")]

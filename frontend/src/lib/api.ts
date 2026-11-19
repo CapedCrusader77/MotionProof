@@ -1,5 +1,6 @@
 // Centralised API client. Every screen reads real backend data through these functions.
 import type * as T from "./types";
+import { useApp } from "../stores/app";
 
 const BASE = "/api/v1";
 
@@ -28,6 +29,8 @@ async function request<R>(path: string, init?: RequestInit): Promise<R> {
         message = (body.detail as { loc: (string | number)[]; msg: string }[])
           .map((d) => `${d.loc.slice(1).join(".")}: ${d.msg}`).join("; ");
     } catch { /* keep the status text */ }
+    // the session expired or was closed elsewhere: back to the sign-in page
+    if (res.status === 401 && !path.startsWith("/auth/")) useApp.getState().logout();
     throw new ApiError(res.status, message);
   }
   return (await res.json()) as R;
@@ -36,6 +39,15 @@ async function request<R>(path: string, init?: RequestInit): Promise<R> {
 const json = (method: string, body: unknown): RequestInit => ({
   method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
 });
+export interface User { id: number; email: string; name: string }
+export const auth = {
+  me: () => request<{ user: User }>("/auth/me"),
+  login: (email: string, password: string) => request<{ user: User }>("/auth/login", json("POST", { email, password })),
+  register: (email: string, password: string, name: string) =>
+    request<{ user: User }>("/auth/register", json("POST", { email, password, name })),
+  logout: () => request<{ ok: boolean }>("/auth/logout", { method: "POST" }),
+};
+
 const qs = (params: Record<string, string | number | undefined | null>) => {
   const p = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== null && v !== "") p.set(k, String(v));
@@ -44,7 +56,8 @@ const qs = (params: Record<string, string | number | undefined | null>) => {
 };
 
 export const api = {
-  health: () => request<T.Health>("/health"),
+  // server details (versions, workspace, jobs); needs a session. The public /health says only "ok".
+  health: () => request<T.Health>("/system"),
   job: (id: string) => request<T.Job>(`/jobs/${id}`),
   cancelJob: (id: string) => request<T.Job>(`/jobs/${id}/cancel`, { method: "POST" }),
 

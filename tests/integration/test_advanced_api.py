@@ -18,13 +18,14 @@ from fastapi.testclient import TestClient
 
 from motionproof.api.app import create_app
 from motionproof.scans import synthetic as S
+from tests.conftest import signed_in
 
 API = "/api/v1"
 
 
 @pytest.fixture(scope="module")
 def client(tmp_path_factory: pytest.TempPathFactory) -> TestClient:
-    return TestClient(create_app(tmp_path_factory.mktemp("ws")))
+    return signed_in(TestClient(create_app(tmp_path_factory.mktemp("ws"))))
 
 
 @pytest.fixture(scope="module")

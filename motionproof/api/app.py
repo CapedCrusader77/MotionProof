@@ -40,7 +40,7 @@ from motionproof.experiments.runner import (
 from motionproof.model import ModelError
 from motionproof.optimisation import allocation as alloc
 from motionproof.optimisation import worst_case
-from motionproof.persistence.store import NotFound, Store
+from motionproof.persistence.store import NotFound, Store, default_home
 from motionproof.reporting import report as reporting
 from motionproof.sensitivity import analysis as sens
 from motionproof.simulation.engine import SimulationError
@@ -138,14 +138,22 @@ class AiIn(_Body):
 
 
 def create_app(home: str | Path | None = None) -> FastAPI:
-    store = Store(home)
+    from motionproof.api.auth import UserStores
+    from motionproof.api.auth import install as install_auth
+
+    root = Path(home).resolve() if home else default_home()
+    root.mkdir(parents=True, exist_ok=True)
+    # every route sees the signed-in user's own workspace through this stand-in
+    store: Store = UserStores(root)  # type: ignore[assignment]
     jobs = JobManager(workers=1)
     app = FastAPI(title="MotionProof", version=motionproof.__version__,
                   description="Tolerance-to-dynamics engineering lab API")
     app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173",
                                                       "http://127.0.0.1:5173"],
-                       allow_methods=["*"], allow_headers=["*"])
+                       allow_methods=["*"], allow_headers=["*"], allow_credentials=True)
     app.state.store, app.state.jobs = store, jobs
+
+    install_auth(app, root, API)
 
     def problem(status: int, message: str) -> JSONResponse:
         return JSONResponse(status_code=status, content={"error": message})
@@ -173,6 +181,11 @@ def create_app(home: str | Path | None = None) -> FastAPI:
 
     @app.get(f"{API}/health")
     def health() -> dict[str, Any]:
+        # public: says only that the server is up
+        return {"status": "ok"}
+
+    @app.get(f"{API}/system")
+    def system() -> dict[str, Any]:
         return {"status": "ok", "versions": versions(), "workspace": str(store.home),
                 "active_jobs": len(jobs.active()), "ai": ai_status()}
 
