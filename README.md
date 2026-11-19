@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/images/banner.jpg" alt="MotionProof. Tolerances in. Motion out. A long exposure of the reference gearbox's planet gears, traced from its exact kinematics" width="100%">
+  <img src="docs/images/banner.webp" alt="MotionProof. Tolerances in. Motion out. Light trails drawn by points on the reference gearbox's planet gears, from its exact kinematics" width="100%">
 </p>
 
 <p align="center">
