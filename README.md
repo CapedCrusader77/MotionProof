@@ -1,10 +1,9 @@
 <p align="center">
-  <img src="docs/images/banner.webp" alt="MotionProof. Tolerances in. Motion out. Light trails drawn by points on the reference gearbox's planet gears, from its exact kinematics" width="100%">
+  <img src="docs/images/title.gif" alt="MotionProof replaying a real 1000-assembly experiment: each virtual assembly lands on a backlash versus direction-error plot, failures in red, while the pass rate and its 95 % interval settle" width="100%">
 </p>
 
 <p align="center">
-  <b>Tolerance-to-dynamics engineering lab.</b><br>
-  What happens to your mechanism's motion when the parts come off the machine slightly wrong?
+  <b>What happens to your mechanism's motion when the parts come off the machine slightly wrong?</b>
 </p>
 
 <p align="center">
@@ -16,23 +15,22 @@
 </p>
 
 <p align="center">
+  <a href="#what-a-run-tells-you">Results</a> ·
   <a href="#how-it-works">How it works</a> ·
-  <a href="#a-look-inside">A look inside</a> ·
-  <a href="#whats-in-the-box">What's in the box</a> ·
+  <a href="#the-app">The app</a> ·
+  <a href="#whats-in-the-box">Features</a> ·
   <a href="#quick-start">Quick start</a> ·
-  <a href="#python-sdk">Python SDK</a> ·
   <a href="#trust-but-verify">Trust, but verify</a>
 </p>
 
-<p align="center">
-  <img src="docs/images/hero.gif" alt="Blender Cycles render of the reference two-stage 33:1 planetary gearbox, rings cut away, gears turning in step with the output shaft" width="900">
-</p>
+---
 
-MotionProof takes a CAD assembly and its tolerance specification, builds **virtual
-as-manufactured copies** of it, simulates each copy doing its job on MuJoCo with a gearbox model
-that includes backlash, stiffness and friction, and tells you **which copies fail, how often,
-and which tolerances are to blame**. Then it searches for the cheapest tolerance set that still
-meets the requirement, and checks the answer on fresh scenarios.
+MotionProof is a tolerance-to-dynamics lab. Give it a CAD assembly and its tolerance
+specification and it builds **virtual as-manufactured copies**, simulates each copy doing its
+job on MuJoCo with a drive train that has backlash, stiffness and friction, and reports
+**which copies fail, how often, and which tolerances are to blame**. It then searches for the
+cheapest tolerance set that still meets the requirement and checks that answer on fresh
+scenarios.
 
 <table align="center">
   <tr>
@@ -43,9 +41,31 @@ meets the requirement, and checks the answer on fresh scenarios.
   </tr>
 </table>
 
+> [!NOTE]
 > Results are model predictions, conditional on the geometry, tolerances and drive-train values
 > you supply. Nothing here certifies real-world reliability. Every value carries its provenance
 > (`specified`, `assumed` or `measured`) and the app shows which is which.
+
+## What a run tells you
+
+<p align="center"><img src="docs/images/results.png" alt="Results of a 1000-assembly reversal experiment: scatter of backlash against direction error with failures in red, input sensitivity ranking, and the error distribution against its 2 mm limit" width="100%"></p>
+
+One experiment on the reference elbow, a NEMA 17 motor driving a two-stage 33:1 planetary
+gearbox: 1000 virtual assemblies reverse the joint and **201 miss a requirement** (79.9 % pass,
+95 % interval 77.3 to 82.3 %). Most failures are a direction error above 2 mm; the few red
+points below the line failed a different requirement (lost motion or gear mesh clearance).
+Output friction and the stage 2 planet bearing clearance drive the error most.
+
+The title animation replays the same run in order. Both figures come straight from the run's
+`results.jsonl`:
+
+```bash
+uv run python scripts/make_result_figures.py workspace/projects/PRJ_001/experiments/EXP_001
+```
+
+```bash
+uv run python scripts/make_title_anim.py workspace/projects/PRJ_001/experiments/EXP_001
+```
 
 ## How it works
 
@@ -62,10 +82,10 @@ flowchart LR
 ```
 
 <details>
-<summary><b>The physics in one block</b> (drive-train model)</summary>
+<summary><b>The drive-train model in one block</b></summary>
 
-Each driven joint has a rotor coupled to the output through a dead
-band of width *b* and a torsional spring *k*,
+Each driven joint has a rotor coupled to the output through a dead band of width *b* and a
+torsional spring *k*,
 
 ```
 gap = θ_rotor + TE(θ_rotor) − θ_output
@@ -77,7 +97,7 @@ and the backlash *b* is computed per variant from the gear stages:
 
 </details>
 
-## A look inside
+## The app
 
 <p align="center"><img src="docs/images/workflow-tour.gif" alt="Tour of the MotionProof application: project, assembly workbench, tolerances, virtual assemblies, robustness, sensitivity, model trust and benchmarks" width="860"></p>
 
@@ -87,7 +107,7 @@ and the backlash *b* is computed per variant from the gear stages:
     <td width="50%"><img src="docs/images/sensitivity.png" alt="Sensitivity explorer ranking tolerances by their effect on direction error"></td>
   </tr>
   <tr>
-    <td><b>Robustness.</b> 200 virtual assemblies of a two-stage 33:1 planetary elbow, reversing about the vertical. Pass rate with its confidence interval, the failures in red.</td>
+    <td><b>Robustness.</b> Pass rate with its confidence interval, every metric's distribution, the failures in red.</td>
     <td><b>Sensitivity.</b> Which tolerances drive the error, with 95 % intervals and the raw scatter behind each ranking.</td>
   </tr>
   <tr>
@@ -108,7 +128,7 @@ and the backlash *b* is computed per variant from the gear stages:
   </tr>
 </table>
 
-The screenshots come from the synthetic reference design. Its tolerances are illustrative
+The screenshots use the synthetic reference design. Its tolerances are illustrative
 assumptions, not anyone's hardware.
 
 ## What's in the box
@@ -144,8 +164,8 @@ cd frontend && npm ci && npm run build && cd ..
 uv run motionproof serve --home workspace
 ```
 
-Open http://127.0.0.1:8000, create a project and click **Add reference design**. Or from the
-command line:
+Open http://127.0.0.1:8000, create an account (the first account keeps the existing
+workspace), create a project and click **Add reference design**. From the command line:
 
 ```bash
 uv run motionproof reference create demo
@@ -155,7 +175,8 @@ uv run motionproof reference create demo
 uv run motionproof doctor
 ```
 
-## Python SDK
+<details>
+<summary><b>Python SDK</b></summary>
 
 ```python
 from motionproof import MechanicalModel
@@ -176,14 +197,18 @@ print(results.failure_estimate)
 print(results.sensitivity("lost_motion")[:5])
 ```
 
+</details>
+
 ## Trust, but verify
 
 * **Benchmarks.** `uv run python benchmarks/publish.py` regenerates the inputs and raw data,
   runs the suite, and re-checks 57 quantities with
   [`reference_calculations.py`](benchmarks/reference_calculations.py), which uses only NumPy
-  and SciPy and never imports MotionProof. Results: [`BENCHMARK_RESULTS.md`](BENCHMARK_RESULTS.md).
+  and SciPy and never imports MotionProof. Published outputs are reproducible byte for byte.
+  Results: [`BENCHMARK_RESULTS.md`](BENCHMARK_RESULTS.md).
 * **Tests.** 255 backend tests, including analytic physics checks, an API contract that no route
-  answers 5xx to bad input, and Playwright end-to-end tests against the real backend.
+  answers 5xx to bad input, account isolation, and 9 Playwright end-to-end tests against the
+  real backend.
 * **External experimental validation.** Public measurements of other robots (Stäubli TX2-40,
   Unitree H1, SO-101, KUKA KR300, UR5) test MotionProof's model components on unseen trials,
   under acceptance criteria committed before the runs. Current result: 1 PASS, 4 FAIL, 1
@@ -213,7 +238,9 @@ cd frontend && npm run typecheck && npm run build && npm run e2e
 ```
 
 `npm run e2e` starts its own backend on port 8765 with a fresh workspace. Set
-`MP_E2E_CHANNEL=chrome` to use an installed Chrome instead of Playwright's Chromium.
+`MP_E2E_CHANNEL=chrome` to use an installed Chrome instead of Playwright's Chromium. On
+Windows, stop `motionproof serve` before `uv run pytest` (see
+[`CONTRIBUTING.md`](CONTRIBUTING.md)).
 
 ## Documentation
 
