@@ -3,10 +3,13 @@ import { ArrowRight, Eye, EyeOff, Moon, Sun } from "lucide-react";
 import { useApp } from "../stores/app";
 import { ApiError, auth } from "../lib/api";
 import "./login.css";
+import { LongExposure } from "./LongExposure";
 
 function Plate() {
   return (
-    <aside className="lg-plate" aria-hidden="true">
+    <aside className="lg-plate">
+      {/* live long exposure of the reference gearbox planets; still: scripts/make_signin_art.py */}
+      <LongExposure className="lg-photo" />
       <div className="lg-plate-top">
         <a className="lg-brand" href="#/" style={{ color: "inherit", textDecoration: "none" }}><i className="mark" />MotionProof</a>
       </div>
@@ -14,12 +17,6 @@ function Plate() {
         <h2 className="lg-claim">Tolerances in.<br />Motion out.</h2>
         <p className="lg-sub">MotionProof turns a CAD assembly and its tolerance specification into virtual
           as-manufactured copies, simulates each one and reports which fail, how often and why.</p>
-        <ul className="lg-list">
-          <li>Import STEP, STL, URDF or MJCF</li>
-          <li>Specify limits, distributions and fits</li>
-          <li>Simulate thousands of assembly variants</li>
-          <li>Find the tolerances that drive failures</li>
-        </ul>
       </div>
     </aside>
   );
