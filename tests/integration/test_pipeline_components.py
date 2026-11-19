@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import json
 import threading
+import time
 from pathlib import Path
 
 import cadquery as cq
@@ -190,6 +191,31 @@ def test_experiment_resume_and_determinism(reference_model: MechanicalModel,
     a = [r["metrics"] for r in full.results()]
     b = [r["metrics"] for r in part.results()]
     assert a == b  # resumed run is identical to the uninterrupted one
+
+
+def test_parallel_run_matches_serial_and_cancels(reference_model: MechanicalModel,
+                                                tmp_path: Path,
+                                                monkeypatch: pytest.MonkeyPatch) -> None:
+    """Scenarios evaluated in worker processes give the same records, in the same order."""
+    import motionproof.experiments.runner as runner_mod
+    monkeypatch.setattr(runner_mod, "MIN_PARALLEL", 2)  # exercise the pool on a small run
+    serial = Experiment.create(reference_model, _config(20), tmp_path / "serial")
+    serial.run(reference_model, workers=1)
+    par = Experiment.create(reference_model, _config(20), tmp_path / "par")
+    t0 = time.perf_counter()
+    out = par.run(reference_model, workers=2)
+    assert out["status"] == "completed" and out["done"] == 20
+    assert time.perf_counter() - t0 < 600
+    assert [r["id"] for r in par.results()] == [f"S{i:06d}" for i in range(1, 21)]
+    assert [(r["metrics"], r["passed"]) for r in par.results()] ==         [(r["metrics"], r["passed"]) for r in serial.results()]
+    # cancelling stops between batches and leaves a complete, resumable prefix
+    cut = Experiment.create(reference_model, _config(20), tmp_path / "cut")
+    stop = threading.Event()
+    res = cut.run(reference_model, workers=2, cancel=stop,
+                  progress=lambda p: stop.set() if p["done"] >= 3 else None)
+    assert res["status"] == "cancelled" and 3 <= res["done"] < 20
+    assert Experiment.open(tmp_path / "cut").run(reference_model, workers=2)["done"] == 20
+    assert [r["metrics"] for r in cut.results()] == [r["metrics"] for r in serial.results()]
 
 
 def test_manifest_is_immutable_and_model_changes_are_refused(

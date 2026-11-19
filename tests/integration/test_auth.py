@@ -30,7 +30,8 @@ def test_register_sign_out_sign_in(client: TestClient) -> None:
     r = client.post("/api/v1/auth/register", json={"email": EMAIL, "password": PASSWORD,
                                                    "name": "Ada"})
     assert r.status_code == 201
-    assert r.json()["user"] == {"id": 1, "email": "engineer@lab.org", "name": "Ada"}
+    assert r.json()["user"] == {"id": 1, "email": "engineer@lab.org", "name": "Ada",
+                                "admin": True}
     cookie = r.headers["set-cookie"].lower()
     assert "httponly" in cookie and "samesite=strict" in cookie
     assert client.get("/api/v1/projects").status_code == 200
@@ -132,3 +133,82 @@ def test_jobs_are_private_to_their_owner(tmp_path) -> None:  # type: ignore[no-u
     assert a.get(f"/api/v1/jobs/{job['id']}").status_code == 200
     assert b.get(f"/api/v1/jobs/{job['id']}").status_code == 404
     assert b.post(f"/api/v1/jobs/{job['id']}/cancel").status_code == 404
+
+
+def _two(tmp_path):  # type: ignore[no-untyped-def]
+    app = create_app(tmp_path)
+    a, b = TestClient(app), TestClient(app)
+    a.post("/api/v1/auth/register", json={"email": "a@lab.org", "password": PASSWORD})
+    b.post("/api/v1/auth/register", json={"email": "b@lab.org", "password": PASSWORD})
+    return app, a, b
+
+
+def test_first_account_is_the_only_admin(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    _, a, b = _two(tmp_path)
+    assert a.get("/api/v1/auth/me").json()["user"]["admin"] is True
+    assert b.get("/api/v1/auth/me").json()["user"]["admin"] is False
+    assert [u["email"] for u in a.get("/api/v1/admin/users").json()] == ["a@lab.org", "b@lab.org"]
+    assert b.get("/api/v1/admin/users").status_code == 403
+
+
+def test_change_password_signs_out_other_sessions(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    app, a, _ = _two(tmp_path)
+    other = TestClient(app)
+    other.post("/api/v1/auth/login", json={"email": "a@lab.org", "password": PASSWORD})
+    assert other.get("/api/v1/projects").status_code == 200
+    bad = a.post("/api/v1/account/password", json={"current": "wrong-one", "new": "new-pass-123"})
+    assert bad.status_code == 403
+    assert a.post("/api/v1/account/password",
+                  json={"current": PASSWORD, "new": "short"}).status_code == 422
+    assert a.post("/api/v1/account/password",
+                  json={"current": PASSWORD, "new": "new-pass-123"}).status_code == 200
+    assert a.get("/api/v1/projects").status_code == 200          # this session stays
+    assert other.get("/api/v1/projects").status_code == 401      # the other one ends
+    fresh = TestClient(app)
+    assert fresh.post("/api/v1/auth/login",
+                      json={"email": "a@lab.org", "password": PASSWORD}).status_code == 401
+    assert fresh.post("/api/v1/auth/login",
+                      json={"email": "a@lab.org", "password": "new-pass-123"}).status_code == 200
+
+
+def test_admin_resets_a_password_and_deletes_an_account(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    app, a, b = _two(tmp_path)
+    assert b.post("/api/v1/admin/users/1/password", json={"new": "taken-over-1"}).status_code == 403
+    assert a.post("/api/v1/admin/users/2/password", json={"new": "reset-pass-1"}).status_code == 200
+    assert b.get("/api/v1/projects").status_code == 401           # b's sessions ended
+    c = TestClient(app)
+    assert c.post("/api/v1/auth/login",
+                  json={"email": "b@lab.org", "password": "reset-pass-1"}).status_code == 200
+    assert a.delete("/api/v1/admin/users/1").status_code == 409   # not yourself here
+    assert a.delete("/api/v1/admin/users/2").status_code == 200
+    assert c.get("/api/v1/projects").status_code == 401
+    assert a.delete("/api/v1/admin/users/2").status_code == 404
+
+
+def test_delete_own_account_needs_the_password(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    _, a, b = _two(tmp_path)
+    assert b.post("/api/v1/account/delete", json={"password": "wrong-one"}).status_code == 403
+    assert b.post("/api/v1/account/delete", json={"password": PASSWORD}).status_code == 200
+    assert b.get("/api/v1/projects").status_code == 401
+    # the last administrator cannot remove itself
+    assert a.post("/api/v1/account/delete", json={"password": PASSWORD}).status_code == 409
+
+
+def test_throttle_survives_a_restart(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    c = TestClient(create_app(tmp_path))
+    c.post("/api/v1/auth/register", json={"email": EMAIL, "password": PASSWORD})
+    for _ in range(auth_mod.MAX_FAILURES):
+        c.post("/api/v1/auth/login", json={"email": EMAIL, "password": "wrong-pass"})
+    restarted = TestClient(create_app(tmp_path))
+    assert restarted.post("/api/v1/auth/login",
+                          json={"email": EMAIL, "password": PASSWORD}).status_code == 429
+
+
+def test_accounts_from_before_the_admin_role_get_one(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    c = TestClient(create_app(tmp_path))
+    c.post("/api/v1/auth/register", json={"email": EMAIL, "password": PASSWORD})
+    with sqlite3.connect(tmp_path / "auth.db") as db:   # simulate the old schema
+        db.execute("ALTER TABLE users DROP COLUMN is_admin")
+    c2 = TestClient(create_app(tmp_path))
+    c2.post("/api/v1/auth/login", json={"email": EMAIL, "password": PASSWORD})
+    assert c2.get("/api/v1/auth/me").json()["user"]["admin"] is True

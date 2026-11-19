@@ -104,6 +104,75 @@ test("a screen that needs a model offers the workspace's models and opens on a p
   expect(errors).toEqual([]);
 });
 
+async function selectReferenceModel(page: Page) {
+  const projects = await (await page.request.get("/api/v1/projects")).json();
+  const project = projects.find((p: { name: string }) => p.name === "E2E project");
+  const detail = await (await page.request.get(`/api/v1/projects/${project.id}`)).json();
+  await page.addInitScript(([p, m]) => {
+    localStorage.setItem("motionproof.ui", JSON.stringify({ projectId: p, modelId: m, theme: "dark", user: "e2e@lab.org" }));
+  }, [project.id, detail.models[0].id]);
+}
+
+// Launch real runs from the screens and wait for their results (small budgets keep them short).
+test("process batch runs from the UI", async ({ page }) => {
+  const errors = watchErrors(page);
+  await selectReferenceModel(page);
+  await page.goto("/#/process");
+  const add = page.getByLabel("Add feature");
+  await add.selectOption({ index: 1 });
+  await page.getByPlaceholder("e.g. CNC turning").fill("CNC turning");
+  await page.getByLabel("Standard deviation").fill("0.003");
+  await page.getByRole("button", { name: "Generate" }).click();
+  await expect(page.getByText(/variance|Cpk|batch/i).last()).toBeVisible({ timeout: 120_000 });
+  await expect(page.locator(".toast.error, .toasts .error")).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test("adaptive experiment runs from the UI", async ({ page }) => {
+  test.setTimeout(300_000);
+  const errors = watchErrors(page);
+  await selectReferenceModel(page);
+  await page.goto("/#/adaptive");
+  await page.getByLabel("Limit (SI)").fill("0.005");
+  await page.getByLabel("Initial simulations").fill("6");
+  await page.getByLabel("Simulation budget").fill("8");
+  await page.getByLabel("Population").fill("200");
+  await page.getByRole("button", { name: "Run", exact: true }).click();
+  await expect(page.getByText(/^Result /)).toBeVisible({ timeout: 280_000 });
+  await expect(page.getByText("Surrogate PREDICTION").first()).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("degradation projection runs from the UI", async ({ page }) => {
+  test.setTimeout(300_000);
+  const errors = watchErrors(page);
+  await selectReferenceModel(page);
+  await page.goto("/#/degradation");
+  await page.getByLabel("Add mechanism").selectOption("backlash");
+  await page.getByLabel("Rate per cycle").fill("0.000000001");
+  await page.getByLabel("≤ limit (SI)").fill("0.01");
+  await page.getByLabel("Cycles", { exact: true }).fill("0, 500000, 1000000");
+  await page.getByRole("button", { name: "Project", exact: true }).click();
+  await expect(page.getByText(/MODEL-BASED PROJECTION/).first()).toBeVisible({ timeout: 280_000 });
+  expect(errors).toEqual([]);
+});
+
+test("account panel changes the password", async ({ page }) => {
+  await page.goto("/#/settings");
+  await expect(page.getByText("Administrator").first()).toBeVisible();
+  await page.getByLabel("Current password").fill(ACCOUNT.password);
+  await page.getByLabel("New password", { exact: true }).fill("e2e-password-2");
+  await page.getByLabel("New password again").fill("e2e-password-2");
+  await page.getByRole("button", { name: "Change password" }).click();
+  await expect(page.getByText(/Password changed/)).toBeVisible();
+  // put it back so later tests can sign in
+  await page.getByLabel("Current password").fill("e2e-password-2");
+  await page.getByLabel("New password", { exact: true }).fill(ACCOUNT.password);
+  await page.getByLabel("New password again").fill(ACCOUNT.password);
+  await page.getByRole("button", { name: "Change password" }).click();
+  await expect(page.getByText(/Password changed/).first()).toBeVisible();
+});
+
 test("command palette navigates", async ({ page }) => {
   await page.goto("/#/projects");
   // the shell (and its shortcut) mounts once the server has confirmed the session

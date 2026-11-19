@@ -11,10 +11,12 @@ An experiment directory contains
 from __future__ import annotations
 
 import json
+import os
 import platform
 import threading
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from concurrent.futures import ProcessPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
@@ -154,6 +156,30 @@ def evaluate_scenario(model: MechanicalModel, config: ExperimentConfig,
     return out
 
 
+def default_workers() -> int:
+    """Worker processes for an experiment: ``MOTIONPROOF_WORKERS`` if set, otherwise half the
+    CPU cores, at most 4 (each worker holds its own MuJoCo model, a few hundred MB)."""
+    env = os.environ.get("MOTIONPROOF_WORKERS", "").strip()
+    if env:
+        return max(1, int(env))
+    return max(1, min(4, (os.cpu_count() or 2) // 2))
+
+
+MIN_PARALLEL = 100  # scenarios left before a run uses worker processes
+
+# --- process-pool workers: each process rebuilds the snapshotted model once
+_WORKER: dict[str, Any] = {}
+
+
+def _worker_init(spec: dict[str, Any], directory: str, config: dict[str, Any]) -> None:
+    _WORKER["model"] = MechanicalModel(MechanicalModelSpec.model_validate(spec), Path(directory))
+    _WORKER["config"] = ExperimentConfig.model_validate(config)
+
+
+def _worker_eval(row: dict[str, float]) -> dict[str, Any]:
+    return evaluate_scenario(_WORKER["model"], _WORKER["config"], row)
+
+
 def versions() -> dict[str, str]:
     return {"motionproof": motionproof.__version__, "mujoco": mujoco.__version__,
             "numpy": np.__version__, "scipy": scipy.__version__,
@@ -264,8 +290,13 @@ class Experiment:
 
     def run(self, model: MechanicalModel | None = None,
             progress: Callable[[dict[str, Any]], None] | None = None,
-            cancel: threading.Event | None = None) -> dict[str, Any]:
+            cancel: threading.Event | None = None,
+            workers: int | None = None) -> dict[str, Any]:
+        """Run the remaining scenarios. ``workers`` > 1 evaluates them in that many processes;
+        results are written in scenario order and are identical to a one-process run, because
+        every scenario is fully determined by its design row."""
         model = model or self.model()
+        workers = default_workers() if workers is None else max(1, workers)
         if model.fingerprint != self.manifest["model"]["fingerprint"]:
             raise ExperimentError(
                 "the model differs from the one this experiment was created with; results of "
@@ -281,12 +312,12 @@ class Experiment:
                   "invalid": sum(not r["valid"] for r in done)}
         started = time.perf_counter()
         status = "completed"
+        todo = list(range(len(done), self.total))
         with self.results_path.open("a", encoding="utf-8") as f:
-            for index in range(len(done), self.total):
-                if cancel is not None and cancel.is_set():
+            for index, res in self._evaluate(model, todo, workers, cancel):
+                if res is None:
                     status = "cancelled"
                     break
-                res = evaluate_scenario(model, self.config, self.row(index))
                 res["id"] = f"S{index + 1:06d}"
                 res["index"] = index
                 res["replicate"] = self.manifest["design"]["replicate"][index]
@@ -300,6 +331,34 @@ class Experiment:
                               "elapsed": time.perf_counter() - started})
         return {"status": status, "done": sum(counts.values()), "total": self.total, **counts,
                 "elapsed": time.perf_counter() - started}
+
+    def _evaluate(self, model: MechanicalModel, todo: list[int], workers: int,
+                  cancel: threading.Event | None
+                  ) -> Iterator[tuple[int, dict[str, Any] | None]]:
+        """Yield ``(index, result)`` in scenario order; ``(index, None)`` once cancelled."""
+        # each worker process needs about 8 s to start on Windows; below ~100 scenarios a single
+        # process finishes first (measured: 64 scenarios 24 s serial, 67 s with 4 workers;
+        # 400 scenarios 215 s serial, 105 s with 4 workers)
+        if workers <= 1 or len(todo) < MIN_PARALLEL:
+            for index in todo:
+                if cancel is not None and cancel.is_set():
+                    yield index, None
+                    return
+                yield index, evaluate_scenario(model, self.config, self.row(index))
+            return
+        snap = self.manifest["model"]
+        batch = workers * 4  # check for cancellation between batches
+        with ProcessPoolExecutor(max_workers=workers, initializer=_worker_init,
+                                 initargs=(snap["spec"], snap["directory"],
+                                           self.manifest["config"])) as pool:
+            for start in range(0, len(todo), batch):
+                if cancel is not None and cancel.is_set():
+                    yield todo[start], None
+                    return
+                chunk = todo[start:start + batch]
+                for index, res in zip(chunk, pool.map(_worker_eval, [self.row(i) for i in chunk]),
+                                      strict=True):
+                    yield index, res
 
     def replay(self, scenario_id: str, model: MechanicalModel | None = None) -> dict[str, Any]:
         """Re-run one stored scenario with traces and compare against the stored metrics."""

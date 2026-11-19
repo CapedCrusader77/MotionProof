@@ -404,3 +404,9 @@ table.grid tr.selected td:first-child { box-shadow: inset 3px 0 0 var(--accent);
 [data-theme="dark"] table.grid th { border-bottom-color: var(--border-strong); }
 [data-theme="dark"] .page { gap: 18px; }
 @media (prefers-reduced-motion: reduce) { .pick-list button::before, .pick-go { transition: none; } }
+
+/* account settings */
+.acct-form { display: flex; flex-direction: column; gap: 10px; max-width: 360px; }
+.acct-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); }
+.acct-h { margin: 16px 0 8px; }
+.acct-actions { white-space: nowrap; text-align: right; }

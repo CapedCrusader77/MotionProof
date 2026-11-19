@@ -27,10 +27,10 @@ Around that core it now has:
 
 | Size | |
 |---|---|
-| Python engine | 14,875 lines in 28 subpackages |
-| React application | 5,385 lines, 29 screens |
-| Tests | 3,267 lines, 255 tests plus 9 browser end-to-end, all passing |
-| REST API | 78 routes |
+| Python engine | 15,055 lines in 28 subpackages |
+| React application | 5,496 lines, 29 screens |
+| Tests | 3,373 lines, 262 tests plus 13 browser end-to-end, all passing |
+| REST API | 83 routes |
 | CLI | 55 commands |
 | Documentation | 48 topic documents in `docs/` plus top-level guides |
 
@@ -283,7 +283,7 @@ On top of the results:
   `reference`, `scan`, `workspace`, `degradation`, `hardware`, `measurements`, `challenge`,
   `benchmark`, `external`. Invalid configuration files are reported field by
   field.
-* **REST API** (FastAPI, 78 routes under `/api/v1`): long jobs run in the background with
+* **REST API** (FastAPI, 83 routes under `/api/v1`): long jobs run in the background with
   progress and cancellation. The OpenAPI schema is generated. Every route except the public
   health check and sign-in needs a session; each account has its own workspace and jobs
   (scrypt password hashes, HttpOnly session cookie; see `SECURITY.md`).
@@ -299,11 +299,11 @@ On top of the results:
 
 | Check | Result |
 |---|---|
-| `pytest`: unit, analytic physics, integration, end to end, API and CLI contracts, benchmark package | 255 passed |
+| `pytest`: unit, analytic physics, integration, end to end, API and CLI contracts, benchmark package | 262 passed |
 | `mypy --strict` (engine and benchmark scripts) | clean, 99 files |
 | `ruff` | clean |
 | Frontend `tsc` (application and E2E sources) and `vite build` | clean |
-| Playwright E2E against the real backend and a fresh workspace | 9 passed: sign-in checked against the server, shell, project and reference design created through the UI, all 29 screens render, the chooser opens a screen from a pick, command palette, theme persistence, bad input rejected, no horizontal overflow at 390 px |
+| Playwright E2E against the real backend and a fresh workspace | 13 passed: sign-in checked against the server, a process batch, an adaptive experiment and a degradation projection launched from their screens, a password changed in Settings, shell, project and reference design created through the UI, all 29 screens render, the chooser opens a screen from a pick, command palette, theme persistence, bad input rejected, no horizontal overflow at 390 px |
 | API contract | no route answers 5xx to invalid input; collection routes succeed on an empty workspace |
 | CLI contract | every one of the 55 commands answers `--help` |
 | Accounts | 10 tests: sessions required, wrong password and unknown email answer alike, throttling, no clear-text passwords or tokens stored, per-account workspaces and jobs |

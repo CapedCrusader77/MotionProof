@@ -39,13 +39,18 @@ async function request<R>(path: string, init?: RequestInit): Promise<R> {
 const json = (method: string, body: unknown): RequestInit => ({
   method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
 });
-export interface User { id: number; email: string; name: string }
+export interface User { id: number; email: string; name: string; admin: boolean }
 export const auth = {
   me: () => request<{ user: User }>("/auth/me"),
   login: (email: string, password: string) => request<{ user: User }>("/auth/login", json("POST", { email, password })),
   register: (email: string, password: string, name: string) =>
     request<{ user: User }>("/auth/register", json("POST", { email, password, name })),
   logout: () => request<{ ok: boolean }>("/auth/logout", { method: "POST" }),
+  changePassword: (current: string, next: string) => request<{ ok: boolean }>("/account/password", json("POST", { current, new: next })),
+  deleteAccount: (password: string) => request<{ ok: boolean }>("/account/delete", json("POST", { password })),
+  users: () => request<(User & { created: number })[]>("/admin/users"),
+  resetPassword: (id: number, next: string) => request<{ ok: boolean }>(`/admin/users/${id}/password`, json("POST", { new: next })),
+  deleteUser: (id: number) => request<{ ok: boolean }>(`/admin/users/${id}`, { method: "DELETE" }),
 };
 
 const qs = (params: Record<string, string | number | undefined | null>) => {

@@ -249,7 +249,10 @@ def assembly_generate(model_file: Path, samples: int = 10, seed: int = 0,
 
 @experiment_app.command("run")
 @guard
-def experiment_run(experiment_file: Path, home: HomeOpt = None) -> None:
+def experiment_run(experiment_file: Path, home: HomeOpt = None,
+                   workers: Annotated[int | None, typer.Option(
+                       help="worker processes (default: MOTIONPROOF_WORKERS, else half the "
+                            "cores, at most 4; small runs always use one)")] = None) -> None:
     """Run an experiment defined in YAML (keys: model, plus the experiment configuration)."""
     from motionproof.experiments.runner import Experiment, ExperimentConfig
     from motionproof.statistics.robustness import summarise
@@ -274,7 +277,7 @@ def experiment_run(experiment_file: Path, home: HomeOpt = None) -> None:
     console.print(f"experiment [bold]{eid}[/bold]: {exp.total} scenarios "
                   f"({config.sampling.method}, seed {config.sampling.seed})")
     with console.status("running") as status:
-        out = exp.run(model, progress=lambda p: status.update(
+        out = exp.run(model, workers=workers, progress=lambda p: status.update(
             f"{p['done']}/{p['total']}  passed {p['passed']}  failed {p['failed']}  "
             f"invalid {p['invalid']}"))
     summary = summarise(exp.manifest, exp.results())

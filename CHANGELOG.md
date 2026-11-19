@@ -16,6 +16,14 @@
 * Benchmarks: `publish.py --help`; published results contain no timings or run date, so two
   runs give byte-identical files; the reference STEP file has a fixed header timestamp.
 * Sobol sensitivity: percentile bootstrap intervals when BCa is undefined.
+* Accounts: change password (other sessions signed out), delete own account, administrator
+  (first account) lists accounts, sets passwords and deletes accounts; sign-in throttle kept in
+  `auth.db` across restarts. Account panels in Settings.
+* Experiments of 100 scenarios or more run in worker processes (`--workers`,
+  `MOTIONPROOF_WORKERS`, default half the cores, at most 4) with records identical to a
+  one-process run; 400 reference scenarios took 105 s instead of 215 s on the development laptop.
+* E2E: process batch, adaptive experiment and degradation projection launched from the UI, and
+  the account panel (13 tests).
 * README rebuilt around a real 1000-assembly run (`scripts/make_title_anim.py`,
   `scripts/make_result_figures.py`).
 

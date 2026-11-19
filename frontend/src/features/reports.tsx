@@ -6,6 +6,7 @@ import { useApp } from "../stores/app";
 import { Alert, Badge, Empty, Field, Load, NeedSelection, Panel, pct } from "../components/ui";
 import { statusBadge } from "./projects";
 import { ScenarioReplay } from "./analysis";
+import { AccountPanels } from "./account";
 
 export function ReportsScreen() {
   const { projectId, experimentId, setExperiment, setModel, go } = useApp();
@@ -79,6 +80,7 @@ export function SettingsScreen() {
     <div className="page">
       <div className="page-head"><h1>Settings</h1></div>
       <div className="grid2">
+        <AccountPanels />
         <Panel title="Appearance">
           <div className="row center"><span className="grow">Theme</span>
             <button className="btn" onClick={toggleTheme}>Switch to {theme === "light" ? "dark" : "light"} theme</button></div>
@@ -90,7 +92,7 @@ export function SettingsScreen() {
         </Panel>
         <Panel title="Execution policy">
           <ul className="muted" style={{ margin: 0, paddingLeft: 18 }}>
-            <li>One simulation worker at a time (CPU, 16 GB RAM machine).</li>
+            <li>Runs of 100 scenarios or more use several worker processes (MOTIONPROOF_WORKERS, default half the cores, at most 4); results are identical to a one-process run.</li>
             <li>Results are appended scenario by scenario; interrupted runs resume.</li>
             <li>Experiments keep an immutable snapshot of the model and tolerances.</li>
             <li>The AI assistant is disabled completely with the environment variable MOTIONPROOF_AI=off.</li>
