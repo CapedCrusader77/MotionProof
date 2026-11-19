@@ -212,3 +212,16 @@ def test_accounts_from_before_the_admin_role_get_one(tmp_path) -> None:  # type:
     c2 = TestClient(create_app(tmp_path))
     c2.post("/api/v1/auth/login", json={"email": EMAIL, "password": PASSWORD})
     assert c2.get("/api/v1/auth/me").json()["user"]["admin"] is True
+
+
+def test_rename_and_sign_out_other_sessions(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    app, a, _ = _two(tmp_path)
+    other = TestClient(app)
+    other.post("/api/v1/auth/login", json={"email": "a@lab.org", "password": PASSWORD})
+    assert a.get("/api/v1/account").json()["sessions"] == 2
+    assert a.post("/api/v1/account/name", json={"name": "  Gokul  "}).status_code == 200
+    assert a.get("/api/v1/auth/me").json()["user"]["name"] == "Gokul"
+    assert a.post("/api/v1/account/name", json={"name": ""}).status_code == 422
+    assert a.post("/api/v1/account/sessions/end-others").json() == {"ended": 1}
+    assert other.get("/api/v1/projects").status_code == 401
+    assert a.get("/api/v1/account").json()["sessions"] == 1

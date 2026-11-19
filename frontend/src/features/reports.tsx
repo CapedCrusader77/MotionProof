@@ -6,7 +6,7 @@ import { useApp } from "../stores/app";
 import { Alert, Badge, Empty, Field, Load, NeedSelection, Panel, pct } from "../components/ui";
 import { statusBadge } from "./projects";
 import { ScenarioReplay } from "./analysis";
-import { AccountPanels } from "./account";
+import { SettingsPage } from "./account";
 
 export function ReportsScreen() {
   const { projectId, experimentId, setExperiment, setModel, go } = useApp();
@@ -74,34 +74,5 @@ export function ReportsScreen() {
 }
 
 export function SettingsScreen() {
-  const { theme, toggleTheme } = useApp();
-  const health = useAsync(() => api.health(), []);
-  return (
-    <div className="page">
-      <div className="page-head"><h1>Settings</h1></div>
-      <div className="grid2">
-        <AccountPanels />
-        <Panel title="Appearance">
-          <div className="row center"><span className="grow">Theme</span>
-            <button className="btn" onClick={toggleTheme}>Switch to {theme === "light" ? "dark" : "light"} theme</button></div>
-        </Panel>
-        <Panel title="Backend">
-          <Load state={health}>{(h) => (<dl className="kv"><dt>Status</dt><dd>{h.status}</dd><dt>Workspace</dt><dd>{h.workspace}</dd><dt>Active jobs</dt><dd>{h.active_jobs}</dd>
-            {Object.entries(h.versions).map(([k, v]) => <><dt key={k}>{k}</dt><dd key={`${k}v`}>{v}</dd></>)}
-            <dt>Optional AI</dt><dd>{h.ai.available ? `available (${h.ai.model})` : `off — ${h.ai.reason}`}</dd></dl>)}</Load>
-        </Panel>
-        <Panel title="Execution policy">
-          <ul className="muted" style={{ margin: 0, paddingLeft: 18 }}>
-            <li>Runs of 100 scenarios or more use several worker processes (MOTIONPROOF_WORKERS, default half the cores, at most 4); results are identical to a one-process run.</li>
-            <li>Results are appended scenario by scenario; interrupted runs resume.</li>
-            <li>Experiments keep an immutable snapshot of the model and tolerances.</li>
-            <li>The AI assistant is disabled completely with the environment variable MOTIONPROOF_AI=off.</li>
-          </ul>
-        </Panel>
-        <Panel title="Scope of the results">
-          <p className="muted">MotionProof reports model predictions conditional on the supplied geometry, tolerance distributions and drive-train parameters. It does not certify strength, fatigue life, thermal behaviour or real-world reliability.</p>
-        </Panel>
-      </div>
-    </div>
-  );
+  return <SettingsPage />;
 }

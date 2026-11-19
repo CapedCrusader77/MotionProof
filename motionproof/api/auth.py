@@ -128,6 +128,11 @@ class PasswordReset(BaseModel):
     new: str = Field(min_length=1, max_length=1024)
 
 
+class Rename(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    name: str = Field(min_length=1, max_length=120)
+
+
 class Confirm(BaseModel):
     model_config = ConfigDict(extra="forbid")
     password: str = Field(min_length=1, max_length=1024)
@@ -199,6 +204,23 @@ class AuthStore:
             keep = _token_hash(keep_token) if keep_token else ""
             c.execute("DELETE FROM sessions WHERE user_id = ? AND token_hash != ?",
                       (user_id, keep))
+
+    def rename(self, user_id: int, name: str) -> None:
+        if not name.strip():
+            raise ValueError("enter a name")
+        with self._lock, closing(self._conn()) as c, c:
+            c.execute("UPDATE users SET name = ? WHERE id = ?", (name.strip(), user_id))
+
+    def sessions(self, user_id: int) -> int:
+        with closing(self._conn()) as c:
+            return int(c.execute("SELECT COUNT(*) FROM sessions WHERE user_id = ? AND expires > ?",
+                                 (user_id, time.time())).fetchone()[0])
+
+    def end_other_sessions(self, user_id: int, keep_token: str | None) -> int:
+        keep = _token_hash(keep_token) if keep_token else ""
+        with self._lock, closing(self._conn()) as c, c:
+            return c.execute("DELETE FROM sessions WHERE user_id = ? AND token_hash != ?",
+                             (user_id, keep)).rowcount
 
     def users(self) -> list[dict[str, Any]]:
         with closing(self._conn()) as c:
@@ -328,6 +350,21 @@ def install(app: FastAPI, home: Path, api: str) -> AuthStore:
         auth._verify(uid, body.current)
         auth.set_password(uid, body.new, keep_token=request.cookies.get(COOKIE))
         return {"ok": True}
+
+    @app.get(f"{api}/account")
+    def account(request: Request) -> dict[str, Any]:
+        user = dict(request.state.user)
+        return user | {"sessions": auth.sessions(user["id"])}
+
+    @app.post(f"{api}/account/name")
+    def rename(body: Rename, request: Request) -> dict[str, Any]:
+        auth.rename(request.state.user["id"], body.name)
+        return {"ok": True}
+
+    @app.post(f"{api}/account/sessions/end-others")
+    def end_others(request: Request) -> dict[str, Any]:
+        n = auth.end_other_sessions(request.state.user["id"], request.cookies.get(COOKIE))
+        return {"ended": n}
 
     @app.post(f"{api}/account/delete")
     def delete_self(body: Confirm, request: Request, response: Response) -> dict[str, Any]:

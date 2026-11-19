@@ -46,6 +46,9 @@ export const auth = {
   register: (email: string, password: string, name: string) =>
     request<{ user: User }>("/auth/register", json("POST", { email, password, name })),
   logout: () => request<{ ok: boolean }>("/auth/logout", { method: "POST" }),
+  account: () => request<User & { sessions: number }>("/account"),
+  rename: (name: string) => request<{ ok: boolean }>("/account/name", json("POST", { name })),
+  endOtherSessions: () => request<{ ended: number }>("/account/sessions/end-others", { method: "POST" }),
   changePassword: (current: string, next: string) => request<{ ok: boolean }>("/account/password", json("POST", { current, new: next })),
   deleteAccount: (password: string) => request<{ ok: boolean }>("/account/delete", json("POST", { password })),
   users: () => request<(User & { created: number })[]>("/admin/users"),

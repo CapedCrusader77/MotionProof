@@ -9,7 +9,7 @@ account works in its own workspace and sees only its own jobs.
 
 | Area | Endpoints |
 |---|---|
-| Accounts | `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`, `POST /account/password` (`{current, new}`), `POST /account/delete` (`{password}`) |
+| Accounts | `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`, `GET /account` (with the number of active sessions), `POST /account/name` (`{name}`), `POST /account/sessions/end-others`, `POST /account/password` (`{current, new}`), `POST /account/delete` (`{password}`) |
 | Administration (first account) | `GET /admin/users`, `POST /admin/users/{id}/password` (`{new}`), `DELETE /admin/users/{id}` |
 | System | `GET /health` (public, status only), `GET /system` (versions, workspace, jobs, AI), `GET /jobs/{id}`, `POST /jobs/{id}/cancel` |
 | Projects | `POST /projects`, `GET /projects`, `GET /projects/{id}`, `DELETE /projects/{id}?confirm={id}` |
