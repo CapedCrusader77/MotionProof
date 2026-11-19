@@ -16,8 +16,6 @@ export function PublicSite() {
 }
 
 /* ------------------------------------------------------------------ hero: scroll-scrubbed Blender sequence */
-const SEQ_FRAMES = 180;
-const seqUrl = (i: number) => `/home/seq/s${String(i).padStart(3, "0")}.webp`;
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 // caption windows in scroll progress: [fade-in start, full, full end, fade-out end]
 const CAPS: { id: string; w: [number, number, number, number]; eyebrow: string; title: string; body: string; cta?: boolean }[] = [
@@ -33,7 +31,9 @@ const CAPS: { id: string; w: [number, number, number, number]; eyebrow: string; 
 ];
 const capOpacity = (p: number, w: [number, number, number, number]) => p < w[0] || p > w[3] ? 0 : p < w[1] ? (p - w[0]) / (w[1] - w[0]) : p <= w[2] ? 1 : (w[3] - p) / (w[3] - w[2]);
 
-function ScrollHero() {
+type Cap = (typeof CAPS)[number];
+interface FilmProps { caps: Cap[]; frames: number; url: (i: number) => string; label: string; alt: string; note: string; hero?: boolean }
+function ScrollFilm({ caps: CAPSx, frames: SEQ_FRAMES, url: seqUrl, label, alt, note, hero }: FilmProps) {
   const wrap = useRef<HTMLElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [p, setP] = useState(0);
@@ -45,34 +45,40 @@ function ScrollHero() {
     const ctx = cv.getContext("2d")!;
     const small = window.matchMedia("(max-width: 760px)").matches;
     const stride = small ? 2 : 1;                                    // phones fetch every second frame
-    const imgs: (HTMLImageElement | null)[] = Array(SEQ_FRAMES).fill(null);
-    let count = 0, cur = 0, target = reduce ? SEQ_FRAMES - 1 : 0, raf = 0, shown = -1, dead = false;
+    const imgs: (ImageBitmap | HTMLImageElement | null)[] = Array(SEQ_FRAMES).fill(null);
+    let count = 0, cur = 0, target = reduce ? SEQ_FRAMES - 1 : 0, raf = 0, dead = false;
     const order: number[] = [0, SEQ_FRAMES - 1];
     for (let step = 16; step >= stride; step = Math.max(stride, Math.floor(step / 2))) { for (let i = 0; i < SEQ_FRAMES; i += step * stride) order.push(i); if (step === stride) break; }
     for (let i = 0; i < SEQ_FRAMES; i += stride) order.push(i);
     const queue = [...new Set(order)].filter((i) => i % stride === 0 || i === SEQ_FRAMES - 1);
     let active = 0;
     const pump = () => {
-      while (active < 4 && queue.length && !dead) {
+      while (active < 8 && queue.length && !dead) {
         const i = queue.shift()!; active++;
         const im = new Image(); im.decoding = "async"; im.src = seqUrl(i);
-        im.onload = () => { imgs[i] = im; count++; active--; setLoaded(count); pump(); };
+        // pre-decode to an ImageBitmap so drawing never waits on decoding; re-render React only every 24 loads
+        const done = (b: ImageBitmap | HTMLImageElement) => { if (dead) return; imgs[i] = b; count++; active--; if (count % 24 === 0 || !queue.length) setLoaded(count); pump(); };
+        im.onload = () => { ("createImageBitmap" in window ? createImageBitmap(im) : Promise.reject()).then(done, () => done(im)); };
         im.onerror = () => { active--; pump(); };
       }
     };
     pump();
     const nearest = (i: number) => { for (let d = 0; d < SEQ_FRAMES; d++) { const a = imgs[i - d], b = imgs[i + d]; if (a) return a; if (b) return b; } return null; };
+    // draw the nearest loaded frame; frames are dense enough that no blending (and no ghosting) is needed
     const draw = (i: number) => {
       const im = nearest(i); if (!im) return;
-      if (cv.width !== im.naturalWidth) { cv.width = im.naturalWidth; cv.height = im.naturalHeight; }
+      const w = "naturalWidth" in im ? im.naturalWidth : im.width, h = "naturalHeight" in im ? im.naturalHeight : im.height;
+      if (cv.width !== w) { cv.width = w; cv.height = h; }
       ctx.drawImage(im, 0, 0);
     };
     const progress = () => { const r = el.getBoundingClientRect(); return clamp(-r.top / (r.height - window.innerHeight)); };
     const onScroll = () => { const pr = progress(); target = pr * (SEQ_FRAMES - 1); setP(pr); };
+    let shown = -1, drawnWith = -1;
     const tick = () => {
-      cur += (target - cur) * (reduce ? 1 : 0.14);                   // damped follow: smooth, fully reversible
+      cur += (target - cur) * (reduce ? 1 : 0.12);                  // damped follow: smooth, fully reversible
+      if (Math.abs(target - cur) < 0.02) cur = target;
       const i = Math.round(cur);
-      if (i !== shown || count % 5 === 0) { draw(i); shown = i; }
+      if (i !== shown || drawnWith !== count) { draw(i); shown = i; drawnWith = count; }   // redraw only on change
       raf = requestAnimationFrame(tick);
     };
     onScroll(); window.addEventListener("scroll", onScroll, { passive: true }); window.addEventListener("resize", onScroll);
@@ -84,16 +90,18 @@ function ScrollHero() {
     const el = wrap.current!; const top = el.getBoundingClientRect().top + window.scrollY;
     window.scrollTo({ top: top + q * (el.offsetHeight - window.innerHeight), behavior: reduce ? "auto" : "smooth" });
   };
-  const active = CAPS.findIndex((c) => capOpacity(p, c.w) > 0.5);
+  const active = CAPSx.findIndex((c) => capOpacity(p, c.w) > 0.5);
 
   return (
-    <section className="sq" ref={wrap} aria-label="Reference design, shown as a scroll-driven film">
+    <section className={hero ? "sq" : "sq sq-b"} ref={wrap} aria-label={label}>
       <div className="sq-stick">
-        <canvas ref={canvas} width={1600} height={900} className={loaded > 0 ? "on" : ""} role="img" aria-label="Rendered two-stage planetary gearbox and arm, filmed from a close-up to a wide shot as you scroll." />
+        <canvas ref={canvas} width={1600} height={900} className={loaded > 0 ? "on" : ""} role="img" aria-label={alt} />
         <div className="sq-shade" aria-hidden="true" />
-        {CAPS.map((c, i) => (
+        <div className="sq-grain" aria-hidden="true" />
+        {CAPSx.map((c, i) => (
           <div key={c.id} className={`sq-cap ${i === 0 ? "first" : ""}`} style={{ opacity: capOpacity(p, c.w), transform: `translateY(${(1 - capOpacity(p, c.w)) * 14}px)`, pointerEvents: capOpacity(p, c.w) > 0.5 ? "auto" : "none" }} aria-hidden={capOpacity(p, c.w) < 0.5}>
-            {i === 0 ? <h1>{c.title}</h1> : <h2>{c.title}</h2>}
+            <p className="sq-eyebrow"><b>{String(i + 1).padStart(2, "0")}</b><i />{c.eyebrow}</p>
+            {hero && i === 0 ? <h1>{c.title}</h1> : <h2>{c.title}</h2>}
             <p className="hm-lede">{c.body}</p>
             {c.cta && <div className="hm-cta">
               <a className="btn primary" href="#evidence" onClick={(e) => { e.preventDefault(); document.getElementById("evidence")?.scrollIntoView({ behavior: "smooth" }); }}>Explore the evidence <ArrowRight /></a>
@@ -102,15 +110,32 @@ function ScrollHero() {
           </div>
         ))}
         <nav className="sq-dots" aria-label="Film chapters">
-          {CAPS.map((c, i) => <button key={c.id} className={i === active ? "on" : ""} onClick={() => jump((c.w[1] + c.w[2]) / 2)} aria-label={`Go to: ${c.title}`} aria-current={i === active}><span>{c.eyebrow}</span></button>)}
+          {CAPSx.map((c, i) => <button key={c.id} className={i === active ? "on" : ""} onClick={() => jump((c.w[1] + c.w[2]) / 2)} aria-label={`Go to: ${c.title}`} aria-current={i === active}><span>{c.eyebrow}</span></button>)}
         </nav>
         <div className="sq-load" style={{ opacity: loaded >= SEQ_FRAMES / 2 ? 0 : 1 }} aria-hidden="true"><i style={{ width: `${(loaded / (SEQ_FRAMES / 2)) * 100}%` }} /></div>
-        <p className="sq-note">Illustrative assembly (20T / 60T, 16 : 1). Not the reference design behind the results below. No tooth contact is simulated.</p>
+        <p className="sq-note">{note}</p>
+        <div className="sq-prog" aria-hidden="true"><i style={{ transform: `scaleX(${p})` }} /><span>{String(Math.round(p * 100)).padStart(3, "0")}</span></div>
       </div>
     </section>
   );
 }
 
+function ScrollHero() {
+  return <ScrollFilm hero caps={ENG_CAPS} frames={ENG_FRAMES} url={engUrl} label="Turbocharged engine, shown as a scroll-driven film"
+    alt="Rendered turbocharged four-cylinder engine: from inside a cylinder, out past the turbocharger, exploded, and a final low-angle hero shot as you scroll."
+    note="Illustrative engine, modelled in Blender. Not a real manufacturer's design, not a MotionProof result, not a validated simulation." />;
+}
+
+/* ------------------------------------------------------------------ hero film: engine (short cinematic cut) */
+const ENG_FRAMES = 480;
+const engUrl = (i: number) => `/home/engine/f${String(i).padStart(4, "0")}.webp`;
+const ENG_CAPS: Cap[] = [
+  { id: "e1", w: [-0.02, 0.0, 0.08, 0.10], eyebrow: "Inside", title: "See how manufacturing tolerances change the way a mechanism moves.", body: "MotionProof connects manufacturing variation to mechanical performance, from CAD geometry and tolerances to dynamic simulation and reliability.", cta: true },
+  { id: "e2", w: [0.11, 0.13, 0.21, 0.25], eyebrow: "Motion", title: "Every bore, pin and journal has a tolerance.", body: "Pistons, rods and crank follow slider-crank geometry. Each dimension can vary from part to part." },
+  { id: "e3", w: [0.46, 0.49, 0.58, 0.61], eyebrow: "Turbo", title: "Stack-ups decide how it fits.", body: "Small deviations add up across flanges, housings and shafts." },
+  { id: "e4", w: [0.63, 0.67, 0.88, 0.91], eyebrow: "Parts", title: "Taken apart, part by part.", body: "Each part pulled out along the axis it assembles on." },
+  { id: "e5", w: [0.94, 0.96, 1.0, 1.02], eyebrow: "Results", title: "Results from the reference design follow below.", body: "This film shows an illustrative engine. The results below come from MotionProof's own reference design.", cta: true },
+];
 /* ------------------------------------------------------------------ real results */
 interface Variant { id: string; scenario: string; passed: boolean; metrics: Record<string, number>; failures: { constraint: string; value: number; limit: number }[]; values: Record<string, number> }
 interface Data {
@@ -226,30 +251,87 @@ function Pipeline() {
   );
 }
 
-/* ------------------------------------------------------------------ the application */
-const SHOTS = [
-  ["robustness", "Robustness", "200 virtual assemblies of a two-stage 33:1 planetary elbow. Pass rate with its confidence interval, failures in red."],
-  ["sensitivity", "Sensitivity", "Which tolerances drive the error, with 95 % intervals and the raw scatter behind each ranking."],
-  ["workbench", "Workbench", "Component tree, 3D view with x-ray and section, and a readiness check that refuses to hide assumed values."],
-  ["tolerances", "Tolerances", "Limits, distributions, datums, fits and correlations, with a validation panel."],
-] as const;
+/* ------------------------------------------------------------------ products: an index, a screen, a spec sheet */
+interface Product { key: string; cat: string; name: string; lead: string; general: string; features: string[]; specs: [string, string][] }
+const CATS = ["Model", "Manufacturing", "Simulation", "Analysis", "Evidence"] as const;
+const PRODUCTS: Product[] = [
+  { key: "projects", cat: "Model", name: "Projects", lead: "One place for a mechanism's models, experiments and results.",
+    general: "Every model, experiment and artifact lives in a project. The overview shows what exists, what ran, and the next step.",
+    features: ["Models and experiments listed with their outcomes", "Add the reference design in one action", "Experiment manifests are immutable"],
+    specs: [["Storage", "SQLite workspace plus files"], ["Experiments", "Immutable manifests"], ["Replay", "Bit-exact, any scenario"], ["Resume", "Checkpointed runs"]] },
+  { key: "workbench", cat: "Model", name: "Assembly workbench", lead: "Component tree, 3D view and a readiness check that refuses to hide assumed values.",
+    general: "Import a CAD assembly, inspect it in 3D with x-ray and section views, and see what the model still lacks before anything runs.",
+    features: ["Component tree with groups and bodies", "X-ray and section views", "Readiness check on every assumption"],
+    specs: [["Import", "STEP, STL, OBJ, URDF, MJCF"], ["STEP solids", "Cylinder detection"], ["Fit measurement", "Exact, from the B-rep"], ["Provenance", "Specified, assumed, measured"]] },
+  { key: "tolerances", cat: "Manufacturing", name: "Tolerances", lead: "Limits, distributions, datums, fits and correlations in one table.",
+    general: "Each tolerance carries a distribution, a datum and a source. A validation panel flags what is missing or inconsistent.",
+    features: ["Datums and fits per feature", "Correlated tolerances", "Validation panel"],
+    specs: [["Distributions", "Six"], ["Correlation", "Gaussian copula"], ["Sampling designs", "Five"], ["Statistics", "Cp, Cpk, stack-ups"]] },
+  { key: "mechanics", cat: "Simulation", name: "Mechanical model", lead: "A reduced-order drive-train on MuJoCo, with the physics you can name.",
+    general: "Each driven joint couples a rotor to the output through a dead band and a torsional spring. Backlash is computed per variant from the gear stages.",
+    features: ["Backlash from sun-planet and planet-ring clearance", "Stiffness, efficiency and friction", "Motor torque-speed limit"],
+    specs: [["Engine", "MuJoCo 3.14 multibody"], ["Backlash", "Worst planet wins"], ["Fidelity", "Reduced order"], ["Not modelled", "Tooth contact, FEA"]] },
+  { key: "hardware", cat: "Simulation", name: "Hardware testing", lead: "Run the same experiment on a physical rig and compare.",
+    general: "A JSON-lines protocol connects a rig to MotionProof, with a safety monitor in front of every command.",
+    features: ["JSON-lines rig protocol", "Safety monitor", "Encoder analysis without the model"],
+    specs: [["Firmware", "ESP32 sketch included"], ["Protocol", "JSON lines"], ["Physical validation", "Not yet run"], ["Benchmark J", "Waits for a rig"]] },
+  { key: "robustness", cat: "Analysis", name: "Robustness", lead: "How many virtual copies still meet the requirement, with an honest interval.",
+    general: "Pass rate across every sampled assembly, the constraints that fail, and the distribution of each metric.",
+    features: ["Wilson and Clopper-Pearson intervals", "Failure categories you can drill into", "Histograms with the limit drawn"],
+    specs: [["Reference run", "1000 scenarios"], ["Pass rate", "79.9 % (799 of 1000)"], ["Interval", "77.3 to 82.3 %"], ["Requirements", "Four constraints"]] },
+  { key: "sensitivity", cat: "Analysis", name: "Sensitivity", lead: "Which tolerances drive the error, and how sure we are.",
+    general: "Rank every tolerance by its effect on a chosen metric, with intervals and the raw scatter behind each ranking.",
+    features: ["Spearman rank correlation", "Standardised regression", "Sobol indices"],
+    specs: [["Reference run", "1000 scenarios"], ["Top driver", "Output friction, rho 0.45"], ["Caveat", "Association, not causation"], ["Also", "Worst-case search"]] },
+  { key: "trust", cat: "Evidence", name: "Model trust", lead: "The evidence behind every parameter.",
+    general: "Every value is marked generated, estimated, assumed or measured, and the model's overall trust follows the weakest link.",
+    features: ["Evidence level per parameter", "Calibration reports attached", "Nothing certified without measurement"],
+    specs: [["Levels", "Specified, measured, estimated, assumed"], ["Reference design", "Synthetic, illustrative"], ["Claims", "Predictions, not certificates"], ["Calibration", "Physical, when measured"]] },
+  { key: "benchmarks", cat: "Evidence", name: "Benchmarks", lead: "Fourteen reference problems with independent expected values.",
+    general: "A fixed suite checks the engine against answers worked out another way. One benchmark stays marked not run until a physical rig exists.",
+    features: ["Independent expected values", "Run from the app or the CLI", "Failures are shown, not hidden"],
+    specs: [["Problems", "14"], ["Passing", "13"], ["Not run", "J, needs a physical rig"], ["Tests", "225 passing"]] },
+];
 
-function App() {
-  const [i, setI] = useState(0);
+function Products() {
+  const [i, setI] = useState(5);
+  const pr = PRODUCTS[i];
+  const go = (n: number) => setI((n + PRODUCTS.length) % PRODUCTS.length);
   return (
-    <section className="hm-sec hm-app" id="app" aria-labelledby="h-app">
+    <section className="hm-sec hm-prod" id="app" aria-labelledby="h-app">
       <div className="hm-wrap">
-        <div className="hm-apphead">
-          <div><h2 id="h-app">The application</h2></div>
-          <div className="hm-tabs" role="tablist" aria-label="Screens">
-            {SHOTS.map(([k, label], n) => <button key={k} role="tab" aria-selected={n === i} className={n === i ? "on" : ""} onClick={() => setI(n)}>{label}</button>)}
+        <div className="pr-head">
+          <p className="hm-eyebrow">Products</p>
+          <h2 id="h-app">Nine screens of the twenty-eight, built around the work.</h2>
+        </div>
+        <div className="pr-grid">
+          <nav className="pr-index" aria-label="Products">
+            {CATS.map((c, ci) => (
+              <div key={c} className="pr-cat">
+                <p><span>{String(ci + 1).padStart(2, "0")}</span>{c}</p>
+                {PRODUCTS.map((x, n) => x.cat === c && (
+                  <button key={x.key} className={n === i ? "on" : ""} onClick={() => setI(n)} aria-current={n === i}>{x.name}</button>))}
+              </div>))}
+          </nav>
+          <div className="pr-stage">
+            <div className="pr-top"><span>{String(i + 1).padStart(3, "0")} / {String(PRODUCTS.length).padStart(3, "0")}</span><span>{pr.cat}</span></div>
+            <h3 className="pr-name">{pr.name}</h3>
+            <div className="pr-frame">
+              <div className="hm-chrome" aria-hidden="true"><i /><i /><i /><span>motionproof / {pr.key}</span></div>
+              {PRODUCTS.map((x, n) => <img key={x.key} src={`/home/${x.key}.png`} alt={`${x.name} screen`} className={n === i ? "on" : ""} loading="lazy" />)}
+            </div>
+            <div className="pr-sheet">
+              <div><h4><span>01</span>General information</h4><p className="lead">{pr.lead}</p><p>{pr.general}</p></div>
+              <div><h4><span>02</span>Features</h4><ul>{pr.features.map((f) => <li key={f}>{f}</li>)}</ul></div>
+              <div><h4><span>03</span>Specifications</h4><dl>{pr.specs.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl></div>
+            </div>
+            <div className="pr-nav">
+              <button onClick={() => go(i - 1)}>Previous</button>
+              <button onClick={() => go(i + 1)}>Next product <ArrowRight /></button>
+            </div>
           </div>
         </div>
-        <div className="hm-frame">
-          <div className="hm-chrome" aria-hidden="true"><i /><i /><i /><span>motionproof / {SHOTS[i][0]}</span></div>
-          {SHOTS.map(([k], n) => <img key={k} src={`/home/${k}.png`} alt={`${SHOTS[n][1]} screen`} className={n === i ? "on" : ""} loading="lazy" />)}
-        </div>
-        <p className="hm-note">{SHOTS[i][2]} Screenshots show the synthetic reference design; its tolerances are illustrative assumptions.</p>
+        <p className="hm-note">Screenshots show the synthetic reference design; its tolerances are illustrative assumptions. Figures are from the reference experiment EXP_001 and the project's test and benchmark records.</p>
       </div>
     </section>
   );
@@ -264,7 +346,7 @@ function Home() {
         <a className="hm-brand" href="#/"><i className="mark" />MotionProof</a>
         <nav aria-label="Sections"><a href="#evidence" onClick={(e) => { e.preventDefault(); document.getElementById("evidence")?.scrollIntoView({ behavior: "smooth" }); }}>Evidence</a>
           <a href="#how" onClick={(e) => { e.preventDefault(); document.getElementById("how")?.scrollIntoView({ behavior: "smooth" }); }}>Workflow</a>
-          <a href="#app" onClick={(e) => { e.preventDefault(); document.getElementById("app")?.scrollIntoView({ behavior: "smooth" }); }}>Application</a></nav>
+          <a href="#app" onClick={(e) => { e.preventDefault(); document.getElementById("app")?.scrollIntoView({ behavior: "smooth" }); }}>Products</a></nav>
         <a className="btn primary hm-signin" href="#/signin">Sign in</a>
       </header>
 
@@ -273,7 +355,7 @@ function Home() {
 
         <Evidence />
         <Pipeline />
-        <App />
+        <Products />
 
         <section className="hm-sec hm-close" aria-labelledby="h-close">
           <div className="hm-wrap hm-closegrid">
