@@ -394,16 +394,24 @@ table.grid tr.selected td:first-child { box-shadow: inset 3px 0 0 var(--accent);
 
 /* ---- dark mode: three distinct levels (ground, chrome, surface) and readable rules ---- */
 [data-theme="dark"] {
-  /* neutral graphite, the greys of CAD and 3D tools: no blue cast, clear steps between ground,
-     panels and inputs, and not near-black */
-  --bg: #262626; --surface: #2e2e2e; --surface-2: #383838; --border: #3d3d3d; --border-strong: #565656;
-  --text: #ececea; --muted: #b5b5b1; --faint: #94948f;
-  /* ink, not a brand colour: primary actions are off-white on graphite, like ink on a drawing */
-  --accent: #ececea; --accent-weak: #424242; --accent-text: #1e1e1e; --accent-hover: #ffffff;
-  --data: #86b4d6; --data-2: #d9b064; --viewport: #2a2a2a; --grid: #3a3a3a;
+  /* near-black neutral: no blue cast; cards a step lighter with a soft sheen, quiet borders */
+  --bg: #0b0b0b; --surface: #151515; --surface-2: #1f1f1f; --border: #242424; --border-strong: #363636;
+  --text: #f2f2f2; --muted: #a3a3a3; --faint: #7c7c7c;
+  /* ink, not a brand colour: primary actions are off-white, like ink on a drawing */
+  --accent: #f2f2f2; --accent-weak: #2a2a2a; --accent-text: #0b0b0b; --accent-hover: #ffffff;
+  --data: #9aa1ad; --data-2: #d5b46e; --viewport: #121212; --grid: #262626;
+  --radius: 10px;
 }
-[data-theme="dark"] .nav, [data-theme="dark"] .topbar { background: #212121; }
-[data-theme="dark"] .panel { border-color: #3a3a3a; box-shadow: none; }
+[data-theme="dark"] .nav, [data-theme="dark"] .topbar { background: #0b0b0b; }
+[data-theme="dark"] .nav { border-right-color: #1c1c1c; }
+[data-theme="dark"] .topbar { border-bottom-color: #1c1c1c; }
+[data-theme="dark"] .panel { border-radius: 14px; border-color: #232323; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  background: linear-gradient(180deg, #181818 0%, #121212 100%); }
+[data-theme="dark"] .panel-head { border-bottom-color: #222; }
+[data-theme="dark"] .btn, [data-theme="dark"] .input, [data-theme="dark"] select, [data-theme="dark"] textarea { border-radius: 8px; }
+[data-theme="dark"] .input, [data-theme="dark"] select, [data-theme="dark"] textarea { background: #1a1a1a; border-color: #2c2c2c; }
+[data-theme="dark"] .nav-item { border-radius: 8px; margin: 1px 8px; width: calc(100% - 16px); }
+[data-theme="dark"] .nav-item.active { background: #1e1e1e; }
 [data-theme="dark"] table.grid th { border-bottom-color: var(--border-strong); }
 [data-theme="dark"] .page { gap: 18px; }
 @media (prefers-reduced-motion: reduce) { .pick-list button::before, .pick-go { transition: none; } }
