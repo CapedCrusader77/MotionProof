@@ -46,7 +46,7 @@ function ScrollFilm({ caps: CAPSx, frames: SEQ_FRAMES, url: seqUrl, label, alt, 
     const small = window.matchMedia("(max-width: 760px)").matches;
     const stride = small ? 2 : 1;                                    // phones fetch every second frame
     const imgs: (ImageBitmap | HTMLImageElement | null)[] = Array(SEQ_FRAMES).fill(null);
-    let count = 0, cur = 0, target = reduce ? SEQ_FRAMES - 1 : 0, raf = 0, dead = false;
+    let count = 0, cur = 0, target = 0, raf = 0, dead = false;
     const order: number[] = [0, SEQ_FRAMES - 1];
     for (let step = 16; step >= stride; step = Math.max(stride, Math.floor(step / 2))) { for (let i = 0; i < SEQ_FRAMES; i += step * stride) order.push(i); if (step === stride) break; }
     for (let i = 0; i < SEQ_FRAMES; i += stride) order.push(i);
@@ -122,18 +122,20 @@ function ScrollFilm({ caps: CAPSx, frames: SEQ_FRAMES, url: seqUrl, label, alt, 
 
 function ScrollHero() {
   return <ScrollFilm hero caps={ENG_CAPS} frames={ENG_FRAMES} url={engUrl} label="Turbocharged engine, shown as a scroll-driven film"
-    alt="Rendered turbocharged four-cylinder engine: from inside a cylinder, out past the turbocharger, exploded, and a final low-angle hero shot as you scroll."
+    alt="Rendered turbocharged four-cylinder engine: the finished engine, taken apart, past the turbocharger and into one cylinder bore as you scroll."
     note="Illustrative engine, modelled in Blender. Not a real manufacturer's design, not a MotionProof result, not a validated simulation." />;
 }
 
 /* ------------------------------------------------------------------ hero film: engine (short cinematic cut) */
 const ENG_FRAMES = 480;
-const engUrl = (i: number) => `/home/engine/f${String(i).padStart(4, "0")}.webp`;
+// The film is played backwards: it opens on the finished engine, takes it apart and ends inside
+// one cylinder bore, on a single toleranced dimension.
+const engUrl = (i: number) => `/home/engine/f${String(ENG_FRAMES - 1 - i).padStart(4, "0")}.webp`;
 const ENG_CAPS: Cap[] = [
-  { id: "e1", w: [-0.02, 0.0, 0.08, 0.10], eyebrow: "Inside", title: "See how manufacturing tolerances change the way a mechanism moves.", body: "MotionProof connects manufacturing variation to mechanical performance, from CAD geometry and tolerances to dynamic simulation and reliability.", cta: true },
-  { id: "e2", w: [0.11, 0.13, 0.21, 0.25], eyebrow: "Motion", title: "Every bore, pin and journal has a tolerance.", body: "Pistons, rods and crank follow slider-crank geometry. Each dimension can vary from part to part." },
-  { id: "e3", w: [0.46, 0.49, 0.58, 0.61], eyebrow: "Turbo", title: "Stack-ups decide how it fits.", body: "Small deviations add up across flanges, housings and shafts." },
-  { id: "e4", w: [0.63, 0.67, 0.88, 0.91], eyebrow: "Parts", title: "Taken apart, part by part.", body: "Each part pulled out along the axis it assembles on." },
+  { id: "e1", w: [-0.02, 0.0, 0.08, 0.10], eyebrow: "Engine", title: "See how manufacturing tolerances change the way a mechanism moves.", body: "MotionProof connects manufacturing variation to mechanical performance, from CAD geometry and tolerances to dynamic simulation and reliability.", cta: true },
+  { id: "e4", w: [0.10, 0.13, 0.33, 0.37], eyebrow: "Parts", title: "Taken apart, part by part.", body: "Each part pulled out along the axis it assembles on." },
+  { id: "e3", w: [0.39, 0.42, 0.51, 0.54], eyebrow: "Turbo", title: "Stack-ups decide how it fits.", body: "Small deviations add up across flanges, housings and shafts." },
+  { id: "e2", w: [0.74, 0.78, 0.87, 0.90], eyebrow: "Bore", title: "Every bore, pin and journal has a tolerance.", body: "Pistons, rods and crank follow slider-crank geometry. Each dimension can vary from part to part, down to this Ø86 H7 bore." },
   { id: "e5", w: [0.93, 0.955, 1.0, 1.02], eyebrow: "Results", title: "A thousand virtual copies. One pass rate.", body: "The numbers below come from MotionProof's reference design, a two-stage planetary robot joint, sampled and simulated 1000 times.", cta: true,
     stats: [["1000", "virtual assemblies"], ["79.9 %", "meet every requirement"], ["4", "requirements checked"]] },
 ];
