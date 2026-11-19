@@ -211,7 +211,7 @@ export function DegradationScreen() {
       <div className="split two" style={{ gridTemplateColumns: "380px minmax(0, 1fr)" }}>
         <div className="col">
           <Panel title="Mechanisms" actions={<select style={{ width: 170 }} value="" aria-label="Add mechanism" onChange={(e) => e.target.value && setMechs([...mechs, { parameter: e.target.value, kind: "linear", rate: NaN, rate_std: NaN, basis: "assumed", assumptions: "" }])}>
-            <option value="">add…</option>{["backlash", "friction", "stiffness", "radial_play", "efficiency", "damping"].map((p) => <option key={p}>{p}</option>)}</select>}>
+            <option value="">Add…</option>{["backlash", "friction", "stiffness", "radial_play", "efficiency", "damping"].map((p) => <option key={p}>{p}</option>)}</select>}>
             {mechs.length === 0 ? <Empty title="No mechanisms">Add a parameter progression. Rates come from your data or are labelled assumed.</Empty> : mechs.map((m, i) => {
               const upd = (p: AnyJson) => setMechs(mechs.map((x, j) => (j === i ? { ...x, ...p } : x)));
               return <div key={i} className="form" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 8, marginBottom: 8 }}>

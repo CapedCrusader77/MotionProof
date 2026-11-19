@@ -184,7 +184,7 @@ export function SensitivityScreen() {
               {sens.regression.r_squared == null ? <Empty title="Regression not available">{sens.regression.note}</Empty> : (<>
                 <Alert kind={sens.regression.r_squared > 0.8 ? "ok" : "warn"}>The linear model explains R² = {fmt(sens.regression.r_squared, 3)} of the variance.
                   {sens.regression.r_squared <= 0.8 && " The response is not well described by a linear model: treat these shares as indicative only."}</Alert>
-                <HBars rows={sens.regression.coefficients.slice(0, 12).map((c) => ({ name: c.parameter, value: c.src_squared }))} label="squared standardised coefficient" /></>)}
+                <HBars rows={sens.regression.coefficients.slice(0, 12).map((c) => ({ name: c.parameter, value: c.src_squared }))} label="Squared standardised coefficient" /></>)}
             </Panel>
             <Panel title="Interaction screen" foot={sens.interactions.method ?? sens.interactions.note}>
               {sens.interactions.pairs.length === 0 ? <Empty title="No interaction screen">{sens.interactions.note}</Empty> : (<>

@@ -120,11 +120,11 @@ export default function App() {
         <span className="spacer" />
         {project.data && project.data.models.length > 0 && (
           <select style={{ width: 210 }} value={s.modelId ?? ""} onChange={(e) => s.setModel(e.target.value || null)} aria-label="Current model">
-            <option value="">select model…</option>{project.data.models.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>)}
+            <option value="">Select model…</option>{project.data.models.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>)}
         {project.data && project.data.experiments.length > 0 && (
           <select style={{ width: 210 }} value={s.experimentId ?? ""} onChange={(e) => { const id = e.target.value || null; s.setExperiment(id);
             const m = project.data?.experiments.find((x) => x.id === id)?.model_id; if (m) s.setModel(m); }} aria-label="Current experiment">
-            <option value="">select experiment…</option>{project.data.experiments.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}</select>)}
+            <option value="">Select experiment…</option>{project.data.experiments.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}</select>)}
         {health.error ? <Badge kind="bad" title={health.error}>backend offline</Badge>
           : health.data && health.data.active_jobs > 0 ? <Badge kind="info" title="Background simulation jobs">{health.data.active_jobs} job running</Badge> : null}
         <button className="btn ghost small" onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }))} title="Command palette (Ctrl+K)" aria-label="Command palette"><CommandIcon />Ctrl+K</button>

@@ -73,9 +73,9 @@ export function CalibrationScreen() {
               One row per sample: a time column and one or more signal columns.</Empty> : (
               <div className="form">
                 <Field label="Calibration set (used for fitting)" wide><select value={calFile} onChange={(e) => { setCalFile(e.target.value); setMapping({}); }}>
-                  <option value="">select a file…</option>{list.map((f) => <option key={f.file} value={f.file}>{f.file} ({f.row_count} rows)</option>)}</select></Field>
+                  <option value="">Select a file…</option>{list.map((f) => <option key={f.file} value={f.file}>{f.file} ({f.row_count} rows)</option>)}</select></Field>
                 <Field label="Holdout set (independent validation)" wide hint={holdFile ? "A separate recording: independent evidence." : "None selected: the last 30% of the calibration recording is held out, which is weaker evidence."}>
-                  <select value={holdFile} onChange={(e) => setHoldFile(e.target.value)}><option value="">tail of the calibration recording</option>
+                  <select value={holdFile} onChange={(e) => setHoldFile(e.target.value)}><option value="">Tail of the calibration recording</option>
                     {list.filter((f) => f.file !== calFile).map((f) => <option key={f.file} value={f.file}>{f.file} ({f.row_count} rows)</option>)}</select></Field>
               </div>)}</Load>
           </Panel>
@@ -89,7 +89,7 @@ export function CalibrationScreen() {
             <table className="grid" style={{ marginTop: 6 }}><thead><tr><th>Signal</th><th>Column</th><th>Unit</th></tr></thead><tbody>
               {Object.entries(SIGNALS).map(([key, s]) => { const m = mapping[key]; return (<tr key={key}><td>{s.label}</td>
                 <td><select value={m?.column ?? ""} aria-label={`${s.label} column`} onChange={(e) => { const next = { ...mapping }; if (e.target.value) next[key] = { column: e.target.value, unit: m?.unit ?? s.units[0] }; else delete next[key]; setMapping(next); }}>
-                  <option value="">not recorded</option>{preview.columns.filter((c) => c !== timeColumn).map((c) => <option key={c}>{c}</option>)}</select></td>
+                  <option value="">Not recorded</option>{preview.columns.filter((c) => c !== timeColumn).map((c) => <option key={c}>{c}</option>)}</select></td>
                 <td><select value={m?.unit ?? s.units[0]} disabled={!m} aria-label={`${s.label} unit`} onChange={(e) => m && setMapping({ ...mapping, [key]: { ...m, unit: e.target.value } })}>{s.units.map((x) => <option key={x}>{x}</option>)}</select></td></tr>); })}
             </tbody></table>
           </Panel>}

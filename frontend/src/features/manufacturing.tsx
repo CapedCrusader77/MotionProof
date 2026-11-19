@@ -167,7 +167,7 @@ export function TolerancesScreen() {
                       <Field label="Parameter"><input className="input" value={draft.parameter} onChange={(e) => patch({ parameter: e.target.value })} /></Field>
                       <Field label="Component"><select value={draft.component} onChange={(e) => patch({ component: e.target.value })}>
                         {[...new Set([draft.component, ...(model.data?.components.map((c) => c.id) ?? [])])].filter(Boolean).map((c) => <option key={c}>{c}</option>)}</select></Field>
-                      <Field label="Feature"><select value={draft.feature ?? ""} onChange={(e) => patch({ feature: e.target.value || null })}><option value="">none</option>
+                      <Field label="Feature"><select value={draft.feature ?? ""} onChange={(e) => patch({ feature: e.target.value || null })}><option value="">None</option>
                         {model.data?.spec.features.map((f) => <option key={f.id}>{f.id}</option>)}</select></Field>
                       <Field label="Category"><select value={draft.category} onChange={(e) => patch({ category: e.target.value as Tolerance["category"] })}>
                         {["dimensional", "geometric", "assembly", "mechanical"].map((c) => <option key={c}>{c}</option>)}</select></Field>
@@ -179,7 +179,7 @@ export function TolerancesScreen() {
                       <Field label="Lower deviation"><Num value={draft.lower} onChange={(v) => patch({ lower: v })} /></Field>
                       <Field label="Upper deviation"><Num value={draft.upper} onChange={(v) => patch({ upper: v })} /></Field>
                       <Field label="Unit"><input className="input" value={draft.unit} onChange={(e) => patch({ unit: e.target.value })} /></Field>
-                      <Field label="Datum"><select value={draft.datum ?? ""} onChange={(e) => patch({ datum: e.target.value || null })}><option value="">none</option>
+                      <Field label="Datum"><select value={draft.datum ?? ""} onChange={(e) => patch({ datum: e.target.value || null })}><option value="">None</option>
                         {model.data?.spec.datums.map((d) => <option key={d.id}>{d.id}</option>)}</select></Field>
                       <Field label="Zone group"><input className="input" value={draft.zone_group ?? ""} onChange={(e) => patch({ zone_group: e.target.value || null })} /></Field>
                     </div>

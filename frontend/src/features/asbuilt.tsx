@@ -85,7 +85,7 @@ export function AsBuiltScreen() {
     <div className="page">
       <div className="page-head"><h1>As-built inspection</h1><span className="sub">{model.data?.name}</span><span className="spacer" />
         <Field label="Scan unit"><select style={{ width: 110 }} value={units} onChange={(e) => setUnits(e.target.value)}>
-          <option value="">not stated</option><option>mm</option><option>cm</option><option>m</option><option value="in">inch</option></select></Field>
+          <option value="">Not stated</option><option>mm</option><option>cm</option><option>m</option><option value="in">inch</option></select></Field>
         <Field label="Scanner (optional)"><input className="input" style={{ width: 150 }} value={scanner} onChange={(e) => setScanner(e.target.value)} /></Field>
         <button className="btn primary" onClick={() => file.current?.click()}><Upload />Import point cloud</button>
         <input ref={file} type="file" hidden accept=".ply,.pcd,.xyz,.txt,.csv,.stl,.obj" onChange={(e) => void upload(e.target.files?.[0])} />
@@ -105,7 +105,7 @@ export function AsBuiltScreen() {
             <div className="col" style={{ gap: 8 }}>
               {d && !d.scan?.units && <Alert kind="bad">This scan has no unit and cannot be compared with CAD.</Alert>}
               <Field label="Nominal component"><select value={component} onChange={(e) => setComponent(e.target.value)}>
-                <option value="">whole assembly</option>{model.data?.components.filter((c) => c.mesh).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>
+                <option value="">Whole assembly</option>{model.data?.components.filter((c) => c.mesh).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>
               <Field label="Locked degrees of freedom (datum constraints)">
                 <div className="row wrap" style={{ gap: 6 }}>{DOF.map((x) => (
                   <label key={x} className="check"><input type="checkbox" checked={lock.includes(x)} onChange={(e) => setLock(e.target.checked ? [...lock, x] : lock.filter((y) => y !== x))} />{x}</label>))}</div></Field>
@@ -117,7 +117,7 @@ export function AsBuiltScreen() {
             <div className="col" style={{ gap: 8 }}>
               <Field label="Deviation limit (± mm)"><Num value={limit} min={0.0001} onChange={setLimit} /></Field>
               <Field label="Cylindrical feature to measure"><select value={feature} onChange={(e) => setFeature(e.target.value)}>
-                <option value="">deviation only</option>{feats.map((f) => <option key={f.id} value={f.id}>{f.id} ({f.type})</option>)}</select></Field>
+                <option value="">Deviation only</option>{feats.map((f) => <option key={f.id} value={f.id}>{f.id} ({f.type})</option>)}</select></Field>
               {feats.length === 0 && <p className="small faint">No registered cylindrical feature on this component. Register one under Features and datums.</p>}
             </div>
           </Panel>}

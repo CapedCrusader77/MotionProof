@@ -20,12 +20,20 @@ export function Panel(props: { title?: ReactNode; actions?: ReactNode; foot?: Re
   );
 }
 
+/** Sentence case for text that may arrive lowercase (backend states, labels built from ids):
+ *  capitalise the first letter of a string, leave anything else alone. "ok" becomes "OK". */
+export function cap(v: ReactNode): ReactNode {
+  if (typeof v !== "string" || !v) return v;
+  if (v === "ok") return "OK";
+  return v.charAt(0).toUpperCase() + v.slice(1);
+}
+
 export function Field(props: { label: string; hint?: string; wide?: boolean; children: ReactNode }) {
   return (
     <label className={`field ${props.wide ? "wide" : ""}`}>
-      <span>{props.label}</span>
+      <span>{cap(props.label)}</span>
       {props.children}
-      {props.hint && <span className="hint">{props.hint}</span>}
+      {props.hint && <span className="hint">{cap(props.hint)}</span>}
     </label>
   );
 }
@@ -44,7 +52,7 @@ export function Num(props: { value: number; onChange: (v: number) => void; step?
 }
 
 export function Badge(props: { kind?: "ok" | "warn" | "bad" | "info" | "plain"; children: ReactNode; title?: string }) {
-  return <span className={`badge ${props.kind ?? "plain"}`} title={props.title}>{props.children}</span>;
+  return <span className={`badge ${props.kind ?? "plain"}`} title={props.title}>{cap(props.children)}</span>;
 }
 
 export function Alert(props: { kind: "ok" | "warn" | "bad" | "info"; children: ReactNode }) {
@@ -55,7 +63,7 @@ export function Alert(props: { kind: "ok" | "warn" | "bad" | "info"; children: R
 export function Empty(props: { title: string; children?: ReactNode; action?: ReactNode }) {
   return (
     <div className="empty">
-      <b>{props.title}</b>
+      <b>{cap(props.title)}</b>
       {props.children && <div>{props.children}</div>}
       {props.action}
     </div>
@@ -94,9 +102,9 @@ export function Tabs<K extends string>(props: { tabs: [K, string][]; value: K; o
 export function Stat(props: { label: string; value: ReactNode; sub?: ReactNode; tone?: "pos" | "neg" }) {
   return (
     <div className="stat">
-      <span className={`v ${props.tone ?? ""}`}>{props.value}</span>
-      <span className="l">{props.label}</span>
-      {props.sub && <span className="s">{props.sub}</span>}
+      <span className={`v ${props.tone ?? ""}`}>{cap(props.value)}</span>
+      <span className="l">{cap(props.label)}</span>
+      {props.sub && <span className="s">{cap(props.sub)}</span>}
     </div>
   );
 }

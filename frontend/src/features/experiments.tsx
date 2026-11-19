@@ -134,7 +134,7 @@ export function BuilderScreen() {
               <div className="row center wrap"><span className="muted">Add a constraint on:</span>
                 {(task ? TASK_METRICS[task.type] : []).filter((k) => metrics.includes(k)).map((k) => <button key={k} className="btn small" onClick={() => addConstraint(k)}><Plus />{metricLabel(k)}</button>)}
                 <select style={{ width: 210 }} value="" onChange={(e) => { if (e.target.value) addConstraint(e.target.value); }} aria-label="Other metric">
-                  <option value="">other metric…</option>{metrics.map((k) => <option key={k} value={k}>{metricLabel(k)}</option>)}</select></div>
+                  <option value="">Other metric…</option>{metrics.map((k) => <option key={k} value={k}>{metricLabel(k)}</option>)}</select></div>
               {constraints.length === 0 ? <Empty title="No constraints">A constraint turns a measured quantity into a pass/fail requirement. Each new limit starts at the nominal result; set it to your actual requirement.</Empty> : (
                 <table className="grid"><thead><tr><th>Name</th><th>Metric</th><th /><th className="num">Limit (SI)</th><th className="num">Displayed as</th><th className="num">Nominal result</th><th /></tr></thead><tbody>
                   {constraints.map((c, i) => { const [k, u] = metricUnit(c.metric); const upd = (p: Partial<Constraint>) => setConstraints(constraints.map((x, j) => (j === i ? { ...x, ...p } : x)));

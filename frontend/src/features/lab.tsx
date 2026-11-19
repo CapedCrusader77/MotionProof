@@ -54,7 +54,7 @@ export function ProcessScreen() {
       <div className="split two" style={{ gridTemplateColumns: "minmax(0, 1fr) 300px" }}>
         <div className="col">
           <Panel title="Process model" actions={<select style={{ width: 230 }} value="" aria-label="Add feature" onChange={(e) => { const t = tols.find((x) => x.id === e.target.value); if (t) add(t); }}>
-            <option value="">add a toleranced feature…</option>{tols.filter((t) => !features.some((f) => f.feature === t.id)).map((t) => <option key={t.id}>{t.id}</option>)}</select>}>
+            <option value="">Add a toleranced feature…</option>{tols.filter((t) => !features.some((f) => f.feature === t.id)).map((t) => <option key={t.id}>{t.id}</option>)}</select>}>
             {features.length === 0 ? <Empty title="No features in the process model">Add the toleranced features this process produces.</Empty> : features.map((f, i) => (
               <div key={f.feature} style={{ borderBottom: "1px solid var(--border)", paddingBottom: 8, marginBottom: 8 }}>
                 <div className="row center"><b className="grow">{f.feature}</b><button className="btn ghost small" onClick={() => setFeatures(features.filter((_, j) => j !== i))} aria-label="Remove feature"><Trash2 /></button></div>
@@ -271,13 +271,13 @@ export function ChallengeScreen() {
           {payload && <div className="form"><Field label="Low (kg)"><Num value={payload[0]} min={0} onChange={(v) => setPayload([v, payload[1]])} /></Field><Field label="High (kg)"><Num value={payload[1]} min={0} onChange={(v) => setPayload([payload[0], v])} /></Field></div>}</div>}
         {step === 1 && <div className="col"><p className="muted">Requirements are your values; none is suggested. A scenario passes only if it meets all of them.</p>
           <select style={{ width: 260 }} value="" onChange={(e) => e.target.value && setCons([...cons, { name: e.target.value, metric: e.target.value, op: e.target.value.startsWith("min_") ? ">=" : "<=", limit: NaN }])} aria-label="Add requirement">
-            <option value="">add requirement…</option>{metrics.filter((m) => !cons.some((c) => c.metric === m)).map((m) => <option key={m} value={m}>{metricLabel(m)}</option>)}</select>
+            <option value="">Add requirement…</option>{metrics.filter((m) => !cons.some((c) => c.metric === m)).map((m) => <option key={m} value={m}>{metricLabel(m)}</option>)}</select>
           <table className="grid"><tbody>{cons.map((c, i) => <tr key={c.metric}><td>{metricLabel(c.metric)}</td><td style={{ width: 70 }}>{c.op}</td>
             <td style={{ width: 160 }}><Num value={c.limit} onChange={(v) => setCons(cons.map((x, j) => (j === i ? { ...x, limit: v } : x)))} ariaLabel="Limit (SI)" /></td><td className="muted">SI units</td>
             <td><button className="btn ghost small" onClick={() => setCons(cons.filter((_, j) => j !== i))} aria-label="Remove"><Trash2 /></button></td></tr>)}</tbody></table></div>}
         {step === 2 && <div className="col"><p className="muted">Scale multiplies a tolerance's width and spread (below 1 tightens). Shift moves its centre, for example a backlash target.</p>
           <select style={{ width: 260 }} value="" onChange={(e) => e.target.value && setVars([...vars, { tolerance: e.target.value, kind: "scale", lower: 0.5, upper: 1.5 }])} aria-label="Add variable">
-            <option value="">add decision variable…</option>{tols.map((t) => <option key={t.id}>{t.id}</option>)}</select>
+            <option value="">Add decision variable…</option>{tols.map((t) => <option key={t.id}>{t.id}</option>)}</select>
           <table className="grid"><thead><tr><th>Tolerance</th><th>Kind</th><th className="num">Lower</th><th className="num">Upper</th><th /></tr></thead><tbody>
             {vars.map((v, i) => { const u = (p: Partial<typeof v>) => setVars(vars.map((x, j) => (j === i ? { ...x, ...p } : x))); return <tr key={i}><td>{v.tolerance}</td>
               <td><select value={v.kind} onChange={(e) => u({ kind: e.target.value as "scale" | "shift", lower: e.target.value === "scale" ? 0.5 : 0, upper: e.target.value === "scale" ? 1.5 : 0 })}><option>scale</option><option>shift</option></select></td>
