@@ -1,4 +1,6 @@
-<h1 align="center">MotionProof</h1>
+<p align="center">
+  <img src="docs/images/banner.jpg" alt="MotionProof. Tolerances in. Motion out. A long exposure of the reference gearbox's planet gears, traced from its exact kinematics" width="100%">
+</p>
 
 <p align="center">
   <b>Tolerance-to-dynamics engineering lab.</b><br>
@@ -9,8 +11,17 @@
   <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-2f6f4f"></a>
   <img alt="Python 3.12" src="https://img.shields.io/badge/python-3.12-3b5b92">
   <img alt="MuJoCo 3.14" src="https://img.shields.io/badge/physics-MuJoCo%203.14-555">
-  <img alt="tests" src="https://img.shields.io/badge/tests-225%20passing-2f6f4f">
+  <img alt="tests" src="https://img.shields.io/badge/tests-255%20%2B%209%20e2e-2f6f4f">
   <img alt="benchmarks" src="https://img.shields.io/badge/benchmarks-13%2F14%20pass-2f6f4f">
+</p>
+
+<p align="center">
+  <a href="#how-it-works">How it works</a> ·
+  <a href="#a-look-inside">A look inside</a> ·
+  <a href="#whats-in-the-box">What's in the box</a> ·
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#python-sdk">Python SDK</a> ·
+  <a href="#trust-but-verify">Trust, but verify</a>
 </p>
 
 <p align="center">
@@ -22,6 +33,15 @@ as-manufactured copies** of it, simulates each copy doing its job on MuJoCo with
 that includes backlash, stiffness and friction, and tells you **which copies fail, how often,
 and which tolerances are to blame**. Then it searches for the cheapest tolerance set that still
 meets the requirement, and checks the answer on fresh scenarios.
+
+<table align="center">
+  <tr>
+    <td align="center"><h3>255</h3>backend tests<br><sub>plus 9 browser end-to-end</sub></td>
+    <td align="center"><h3>13 / 14</h3>benchmarks pass<br><sub>J waits for a physical rig</sub></td>
+    <td align="center"><h3>57 / 57</h3>independent cross-checks<br><sub>NumPy/SciPy, no MotionProof import</sub></td>
+    <td align="center"><h3>1 · 4 · 1</h3>external validation<br><sub>pass · fail · insufficient data</sub></td>
+  </tr>
+</table>
 
 > Results are model predictions, conditional on the geometry, tolerances and drive-train values
 > you supply. Nothing here certifies real-world reliability. Every value carries its provenance
@@ -41,7 +61,10 @@ flowchart LR
     H[Hardware rig] -.-> F
 ```
 
-The physics in one block: each driven joint has a rotor coupled to the output through a dead
+<details>
+<summary><b>The physics in one block</b> (drive-train model)</summary>
+
+Each driven joint has a rotor coupled to the output through a dead
 band of width *b* and a torsional spring *k*,
 
 ```
@@ -51,6 +74,8 @@ gap = θ_rotor + TE(θ_rotor) − θ_output
 
 and the backlash *b* is computed per variant from the gear stages:
 `((j_sun-planet + j_planet-ring)/2 + c_bearing) / centre_distance`, worst planet wins.
+
+</details>
 
 ## A look inside
 
@@ -100,6 +125,7 @@ assumptions, not anyone's hardware.
 | **Manufacturing** | hierarchical process variation (batch, setup, tool, part), drift, variance components, measured-dimension import |
 | **Reliability** | workspace maps, lifetime degradation, adaptive Gaussian-process sampling, multi-fidelity checks |
 | **Hardware** | JSON-lines rig protocol, safety monitor, ESP32 firmware sketch, encoder analysis without the model |
+| **Accounts** | sign-in with salted scrypt hashes and HttpOnly sessions; every account gets its own workspace and private jobs |
 | **Interfaces** | web app (28 screens), REST API (66 routes), CLI (47 commands), Python SDK, PDF/Markdown/JSON/CSV reports |
 
 ## Quick start
@@ -156,7 +182,7 @@ print(results.sensitivity("lost_motion")[:5])
   runs the suite, and re-checks 57 quantities with
   [`reference_calculations.py`](benchmarks/reference_calculations.py), which uses only NumPy
   and SciPy and never imports MotionProof. Results: [`BENCHMARK_RESULTS.md`](BENCHMARK_RESULTS.md).
-* **Tests.** 225 tests, including analytic physics checks, an API contract that no route
+* **Tests.** 255 backend tests, including analytic physics checks, an API contract that no route
   answers 5xx to bad input, and Playwright end-to-end tests against the real backend.
 * **External experimental validation.** Public measurements of other robots (Stäubli TX2-40,
   Unitree H1, SO-101, KUKA KR300, UR5) test MotionProof's model components on unseen trials,

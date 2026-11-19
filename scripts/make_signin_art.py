@@ -5,26 +5,40 @@ times (two carrier turns, ring fixed): the exact planetary kinematics used by Mo
 drawn as light trails accumulated in a float buffer and tone mapped, like a photograph of a
 moving mechanism with the shutter left open. No renderer, NumPy and Pillow only.
 
-    uv run python scripts/make_signin_art.py
+    uv run python scripts/make_signin_art.py            # sign-in still (1200 x 1500)
+    uv run python scripts/make_signin_art.py --banner   # README banner with the title
 """
 
 from __future__ import annotations
 
+import argparse
 import math
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "frontend" / "public" / "home" / "signin.webp"
-W, H, SS = 1200, 1500, 2                 # output size, supersampling
+ap = argparse.ArgumentParser()
+ap.add_argument("--banner", action="store_true", help="wide README banner with the title")
+BANNER = ap.parse_args().banner
 ZS, ZP, ZR = 12, 21, 54
 RATIO = (ZS + ZR) / ZS
 RP, CD, RR = ZP / 2, (ZS + ZP) / 2, ZR / 2  # module 1
-SCALE = 19.0 * SS                        # px per module unit
-CX, CY = 0.52 * W * SS, 0.40 * H * SS    # mechanism centre
+SS = 2                                    # supersampling
+if BANNER:
+    OUT = ROOT / "docs" / "images" / "banner.jpg"
+    W, H = 1800, 560
+    SCALE = 0.45 * H / (RR + 1) * SS
+    CX, CY = 0.76 * W * SS, 0.5 * H * SS
+else:
+    OUT = ROOT / "frontend" / "public" / "home" / "signin.webp"
+    W, H = 1200, 1500
+    SCALE = 19.0 * SS                     # px per module unit
+    CX, CY = 0.52 * W * SS, 0.40 * H * SS  # mechanism centre
 
+# same light per unit of trail length at any drawing scale
+EXPOSURE = SCALE / (19.0 * SS)
 rng = np.random.default_rng(7)
 acc = np.zeros((H * SS, W * SS, 3), np.float64)
 
@@ -62,7 +76,7 @@ for k in range(3):
         alpha = rng.uniform(0, 2 * math.pi)
         x = CX + SCALE * (px + rho * np.cos(planet + alpha))
         y = CY + SCALE * (py + rho * np.sin(planet + alpha))
-        splat(x, y, palette(rho / RP), 0.11 * (0.55 + rho / RP))
+        splat(x, y, palette(rho / RP), EXPOSURE * 0.11 * (0.55 + rho / RP))
 
 # the fixed ring and the sun, as faint static outlines (they barely move in the exposure)
 for r, w in ((RR + 1.0, 0.9), (RR - 1.25, 0.5), (ZS / 2, 0.7)):
@@ -86,6 +100,21 @@ img *= (1 - 0.55 * np.clip(d - 0.15, 0, 1))[..., None]
 base = np.array([0.020, 0.022, 0.028])
 img = base + (1 - base) * img
 img += rng.normal(0, 0.012, img.shape)
-Image.fromarray((np.clip(img, 0, 1) ** (1 / 1.1) * 255).astype(np.uint8)).save(
-    OUT, "WEBP", quality=88, method=6)
+pic = Image.fromarray((np.clip(img, 0, 1) ** (1 / 1.1) * 255).astype(np.uint8))
+if BANNER:
+    fonts = Path("C:/Windows/Fonts")
+    def font(name: str, size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+        try:
+            return ImageFont.truetype(str(fonts / name), size)
+        except OSError:
+            return ImageFont.load_default(size)
+    d = ImageDraw.Draw(pic)
+    d.text((96, 178), "MotionProof", font=font("segoeuib.ttf", 96), fill=(236, 238, 234))
+    d.text((100, 312), "Tolerances in. Motion out.", font=font("segoeuisl.ttf", 40),
+           fill=(240, 161, 74))
+    d.text((101, 388), "Virtual as-manufactured copies of your mechanism, simulated and ranked.",
+           font=font("segoeui.ttf", 24), fill=(160, 168, 176))
+    pic.save(OUT, "JPEG", quality=90, optimize=True, progressive=True)
+else:
+    pic.save(OUT, "WEBP", quality=88, method=6)
 print("wrote", OUT)
