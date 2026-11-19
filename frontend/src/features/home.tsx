@@ -18,7 +18,7 @@ export function PublicSite() {
 /* ------------------------------------------------------------------ hero: scroll-scrubbed Blender sequence */
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 // caption windows in scroll progress: [fade-in start, full, full end, fade-out end]
-const CAPS: { id: string; w: [number, number, number, number]; eyebrow: string; title: string; body: string; cta?: boolean }[] = [
+const CAPS: { id: string; w: [number, number, number, number]; eyebrow: string; title: string; body: string; cta?: boolean; stats?: [string, string][] }[] = [
   { id: "c1", w: [-0.02, 0.0, 0.05, 0.08], eyebrow: "Overview", title: "See how manufacturing tolerances change the way a mechanism moves.", body: "MotionProof connects manufacturing variation to mechanical performance, from CAD geometry and tolerances to dynamic simulation and reliability.", cta: true },
   { id: "c2", w: [0.14, 0.165, 0.23, 0.26], eyebrow: "Mechanism", title: "Motor, planetary gearbox and link.", body: "A motor, a planetary gearbox and a robotic link: the chain that turns electrical input into positioned motion." },
   { id: "c3", w: [0.28, 0.31, 0.40, 0.43], eyebrow: "Parts", title: "The assembly, taken apart.", body: "Motor, shafts, bearings, both gear stages and the link, drawn apart so each part can be read on its own." },
@@ -32,8 +32,8 @@ const CAPS: { id: string; w: [number, number, number, number]; eyebrow: string; 
 const capOpacity = (p: number, w: [number, number, number, number]) => p < w[0] || p > w[3] ? 0 : p < w[1] ? (p - w[0]) / (w[1] - w[0]) : p <= w[2] ? 1 : (w[3] - p) / (w[3] - w[2]);
 
 type Cap = (typeof CAPS)[number];
-interface FilmProps { caps: Cap[]; frames: number; url: (i: number) => string; label: string; alt: string; note: string; hero?: boolean }
-function ScrollFilm({ caps: CAPSx, frames: SEQ_FRAMES, url: seqUrl, label, alt, note, hero }: FilmProps) {
+interface FilmProps { caps: Cap[]; frames: number; url: (i: number) => string; label: string; alt: string; note?: string; hero?: boolean }
+function ScrollFilm({ caps: CAPSx, frames: SEQ_FRAMES, url: seqUrl, label, alt, hero }: FilmProps) {
   const wrap = useRef<HTMLElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [p, setP] = useState(0);
@@ -96,15 +96,16 @@ function ScrollFilm({ caps: CAPSx, frames: SEQ_FRAMES, url: seqUrl, label, alt, 
     <section className={hero ? "sq" : "sq sq-b"} ref={wrap} aria-label={label}>
       <div className="sq-stick">
         <canvas ref={canvas} width={1600} height={900} className={loaded > 0 ? "on" : ""} role="img" aria-label={alt} />
-        <div className="sq-shade" aria-hidden="true" />
+        <div className="sq-shade" aria-hidden="true" style={{ ["--end" as string]: clamp((p - 0.9) / 0.05) } as React.CSSProperties} />
         <div className="sq-grain" aria-hidden="true" />
         {CAPSx.map((c, i) => (
-          <div key={c.id} className={`sq-cap ${i === 0 ? "first" : ""}`} style={{ opacity: capOpacity(p, c.w), transform: `translateY(${(1 - capOpacity(p, c.w)) * 14}px)`, pointerEvents: capOpacity(p, c.w) > 0.5 ? "auto" : "none" }} aria-hidden={capOpacity(p, c.w) < 0.5}>
+          <div key={c.id} className={`sq-cap ${i === 0 ? "first" : ""}`} style={{ opacity: capOpacity(p, c.w), transform: `translateY(${(1 - capOpacity(p, c.w)) * 14}px)`, pointerEvents: capOpacity(p, c.w) > 0.5 ? "auto" : "none", visibility: capOpacity(p, c.w) > 0.02 ? "visible" : "hidden" }} aria-hidden={capOpacity(p, c.w) < 0.5}>
             <p className="sq-eyebrow"><b>{String(i + 1).padStart(2, "0")}</b><i />{c.eyebrow}</p>
             {hero && i === 0 ? <h1>{c.title}</h1> : <h2>{c.title}</h2>}
             <p className="hm-lede">{c.body}</p>
+            {c.stats && <dl className="sq-stats">{c.stats.map(([v, k]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>}
             {c.cta && <div className="hm-cta">
-              <a className="btn primary" href="#evidence" onClick={(e) => { e.preventDefault(); document.getElementById("evidence")?.scrollIntoView({ behavior: "smooth" }); }}>Explore the evidence <ArrowRight /></a>
+              <a className="btn primary" href="#evidence" onClick={(e) => { e.preventDefault(); document.getElementById("evidence")?.scrollIntoView({ behavior: "smooth" }); }}>{c.stats ? "See the results" : "Explore the evidence"} <ArrowRight /></a>
               <a className="btn hm-ghost" href="#/signin">Open the workbench</a>
             </div>}
           </div>
@@ -113,7 +114,6 @@ function ScrollFilm({ caps: CAPSx, frames: SEQ_FRAMES, url: seqUrl, label, alt, 
           {CAPSx.map((c, i) => <button key={c.id} className={i === active ? "on" : ""} onClick={() => jump((c.w[1] + c.w[2]) / 2)} aria-label={`Go to: ${c.title}`} aria-current={i === active}><span>{c.eyebrow}</span></button>)}
         </nav>
         <div className="sq-load" style={{ opacity: loaded >= SEQ_FRAMES / 2 ? 0 : 1 }} aria-hidden="true"><i style={{ width: `${(loaded / (SEQ_FRAMES / 2)) * 100}%` }} /></div>
-        <p className="sq-note">{note}</p>
         <div className="sq-prog" aria-hidden="true"><i style={{ transform: `scaleX(${p})` }} /><span>{String(Math.round(p * 100)).padStart(3, "0")}</span></div>
       </div>
     </section>
@@ -134,8 +134,41 @@ const ENG_CAPS: Cap[] = [
   { id: "e2", w: [0.11, 0.13, 0.21, 0.25], eyebrow: "Motion", title: "Every bore, pin and journal has a tolerance.", body: "Pistons, rods and crank follow slider-crank geometry. Each dimension can vary from part to part." },
   { id: "e3", w: [0.46, 0.49, 0.58, 0.61], eyebrow: "Turbo", title: "Stack-ups decide how it fits.", body: "Small deviations add up across flanges, housings and shafts." },
   { id: "e4", w: [0.63, 0.67, 0.88, 0.91], eyebrow: "Parts", title: "Taken apart, part by part.", body: "Each part pulled out along the axis it assembles on." },
-  { id: "e5", w: [0.94, 0.96, 1.0, 1.02], eyebrow: "Results", title: "Results from the reference design follow below.", body: "This film shows an illustrative engine. The results below come from MotionProof's own reference design.", cta: true },
+  { id: "e5", w: [0.93, 0.955, 1.0, 1.02], eyebrow: "Results", title: "A thousand virtual copies. One pass rate.", body: "The numbers below come from MotionProof's reference design, a two-stage planetary robot joint, sampled and simulated 1000 times.", cta: true,
+    stats: [["1000", "virtual assemblies"], ["79.9 %", "meet every requirement"], ["4", "requirements checked"]] },
 ];
+/* ------------------------------------------------------------------ parts: the engine's toleranced features */
+const PARTS: { key: string; name: string; alt: string; feats: [string, string][] }[] = [
+  { key: "crank", name: "Pistons, rods and crank", alt: "Section through four cylinders: pistons, connecting rods and crankshaft",
+    feats: [["Cylinder bore", "Ø86 H7"], ["Crank pin", "Ø44 g6"], ["Piston-to-bore clearance", "fit"], ["Main journal runout", "geometric"]] },
+  { key: "timing", name: "Timing drive", alt: "Timing belt over two cam sprockets, idler, tensioner and crank pulley",
+    feats: [["Cam journal", "Ø25 H7/f6"], ["Sprocket bore runout", "geometric"], ["Belt pitch length", "size"], ["Tensioner pivot position", "position"]] },
+  { key: "turbo", name: "Turbocharger", alt: "Section through a turbocharger: compressor wheel, shaft and turbine wheel",
+    feats: [["Wheel tip-to-shroud gap", "clearance"], ["Shaft runout", "geometric"], ["Bearing bore", "H6"], ["Housing flange flatness", "form"]] },
+];
+
+function Parts() {
+  return (
+    <section className="hm-sec hm-parts" id="parts" aria-labelledby="h-parts">
+      <div className="hm-wrap">
+        <div className="hm-parts-head">
+          <h2 id="h-parts">Every moving part has a dimension that varies.</h2>
+          <p className="hm-lede">MotionProof gives each toleranced feature a distribution, builds a thousand virtual copies of the assembly and runs every one.</p>
+        </div>
+        <ul className="hm-parts-grid">
+          {PARTS.map((p) => (
+            <li key={p.key} className="hm-part">
+              <div className="hm-part-img"><img src={`/home/part-${p.key}.webp`} alt={p.alt} loading="lazy" width={1200} height={900} /></div>
+              <h3>{p.name}</h3>
+              <dl>{p.feats.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
 /* ------------------------------------------------------------------ real results */
 interface Variant { id: string; scenario: string; passed: boolean; metrics: Record<string, number>; failures: { constraint: string; value: number; limit: number }[]; values: Record<string, number> }
 interface Data {
@@ -352,6 +385,7 @@ function Home() {
 
       <main id="hm-main">
         <ScrollHero />
+        <Parts />
 
         <Evidence />
         <Pipeline />
@@ -368,7 +402,7 @@ function Home() {
           </div>
         </section>
       </main>
-      <footer className="hm-foot"><span>MotionProof</span><span>MIT licence · MuJoCo 3.14 · Python 3.12</span></footer>
+      <footer className="hm-foot"><span>MotionProof</span><span>Engine film: an illustrative model rendered in Blender, not a real manufacturer’s design and not a MotionProof result.</span><span>MIT licence · MuJoCo 3.14 · Python 3.12</span></footer>
     </div>
   );
 }
