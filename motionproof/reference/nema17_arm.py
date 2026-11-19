@@ -12,6 +12,7 @@ Coordinates: millimetres, gearbox axis along +Y, arm along +X at the reference p
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -258,7 +259,13 @@ def write_geometry(directory: str | Path, params: dict[str, float] | None = None
                            "group": part.group, "mesh": mesh_file, "mesh_units": "mm",
                            "note": part.note, "source": "generated (CadQuery)",
                            **part_properties(part)})
-    assembly.save(str(out / "assembly.step"))
+    step = out / "assembly.step"
+    assembly.export(str(step))
+    # OpenCASCADE stamps the write time into the header; a fixed stamp keeps regenerated files
+    # byte-identical when the geometry has not changed.
+    text = step.read_text(encoding="utf-8")
+    step.write_text(re.sub(r"(FILE_NAME\('[^']*',')[^']*(')", r"\g<1>2000-01-01T00:00:00\g<2>",
+                           text, count=1), encoding="utf-8")
     (out / "model.xml").write_text(build_mjcf(params, parts), encoding="utf-8")
     inventory = {
         "generator": GENERATOR,

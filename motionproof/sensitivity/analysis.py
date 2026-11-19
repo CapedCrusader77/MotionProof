@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import math
+import warnings
 from collections.abc import Callable
 from typing import Any
 
@@ -149,7 +150,17 @@ def sobol(space: VariableSpace, evaluate: Callable[[dict[str, float]], float], n
 
     res = stats.sobol_indices(func=func, n=n, dists=[stats.uniform()] * len(idx),
                               rng=np.random.default_rng(seed))
-    boot = res.bootstrap(confidence_level=0.95, n_resamples=199)
+    # BCa needs a non-degenerate bootstrap distribution; an index that is exactly zero (a
+    # parameter with no effect) makes it undefined, so fall back to percentile intervals.
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", stats.DegenerateDataWarning)
+        warnings.simplefilter("ignore", RuntimeWarning)
+        try:
+            boot = res.bootstrap(confidence_level=0.95, n_resamples=199)
+        except stats.DegenerateDataWarning:
+            boot = None
+    if boot is None:
+        boot = res.bootstrap(confidence_level=0.95, n_resamples=199, method="percentile")
     rows = []
     for j, name in enumerate(chosen):
         rows.append({

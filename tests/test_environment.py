@@ -8,7 +8,7 @@ import pytest
 MODULES = [
     "numpy", "scipy", "trimesh", "cadquery", "OCP", "shapely", "PIL",
     "mujoco", "glfw", "OpenGL", "yaml", "fastapi", "uvicorn", "pydantic",
-    "pydantic_settings", "sqlalchemy", "alembic", "httpx", "multipart",
+    "pydantic_settings", "sqlalchemy", "alembic", "httpx", "python_multipart",
     "typer", "rich",
 ]
 

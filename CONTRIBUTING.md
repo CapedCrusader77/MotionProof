@@ -8,6 +8,10 @@ uv sync
 uv run pytest
 ```
 
+On Windows, stop `motionproof serve` first: `uv run` reinstalls the package and cannot replace
+`motionproof.exe` while the server holds it (`os error 32`). Or run the tests without the
+reinstall: `.venv\Scripts\python -m pytest`.
+
 ```bash
 uv run ruff check motionproof tests
 ```

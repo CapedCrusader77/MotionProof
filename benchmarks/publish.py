@@ -206,11 +206,23 @@ def _fmt(v: Any) -> str:
     return str(v)
 
 
-def main(keys: list[str]) -> int:
+def main(argv: list[str]) -> int:
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Run the benchmark suite, publish its inputs and outputs in benchmarks/data "
+                    "and cross-check them with the independent reference calculations.")
+    parser.add_argument("keys", nargs="*", metavar="BENCHMARK",
+                        help="benchmark ids or names (A..N); all when omitted")
+    keys = parser.parse_args(argv).keys
+
     from motionproof.benchmarks import suite
 
     inputs = export_inputs()
     results = suite.run(keys or None)
+    # Timings vary run to run; print them instead of publishing them, so the files are reproducible.
+    for r in results:
+        print(f"  {r['id']} {r['status']:<7} {r.pop('seconds', 0):>7.2f} s")
     outputs: dict[str, Any] = {r["id"]: r["outputs"] for r in results if r.get("outputs")}
     if "C" in outputs:
         inputs["C"]["ik_target"] = outputs["C"]["ik_target"]
@@ -234,7 +246,7 @@ def main(keys: list[str]) -> int:
     (DATA / "MANIFEST.json").write_text(json.dumps(manifest, indent=1), encoding="utf-8")
 
     md = REPO / "BENCHMARK_RESULTS.md"
-    suite.write_markdown(results, md)
+    suite.write_markdown(results, md, reproducible=True)
     graded = [r for r in rows if r["passed"] is not None]
     ok = sum(r["passed"] for r in graded)
     lines = ["", "## Independent cross-check", "",

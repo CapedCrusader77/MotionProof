@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import {
   Activity, BarChart3, Boxes, ChevronsLeft, ChevronsRight, Cog, Command as CommandIcon, Cpu, Crosshair,
   FileText, FlaskConical, FolderOpen, Gauge, GitCompare, Hourglass, Layers, ListChecks, Map, Moon, Radar,
@@ -10,14 +10,11 @@ import { useAsync } from "./hooks/useAsync";
 import { useApp, type Route } from "./stores/app";
 import { Badge, ErrorBoundary } from "./components/ui";
 import { ProjectsScreen } from "./features/projects";
-import { FeaturesScreen, ImportScreen, WorkbenchScreen } from "./features/models";
-import { TolerancesScreen, VirtualAssemblyScreen } from "./features/manufacturing";
 import { MechanicsScreen } from "./features/mechanics";
 import { BuilderScreen, MonitorScreen } from "./features/experiments";
 import { ComparisonScreen, OptimisationScreen, RobustnessScreen, SensitivityScreen, WorstCaseScreen } from "./features/analysis";
 import { CalibrationScreen } from "./features/calibration";
 import { ReportsScreen, SettingsScreen } from "./features/reports";
-import { AsBuiltScreen } from "./features/asbuilt";
 import { BenchmarksScreen, ChallengeScreen, HardwareScreen, ProcessScreen, TrustScreen } from "./features/lab";
 import { AdaptiveScreen, DegradationScreen, FidelityScreen, InvestigationScreen, WorkspaceScreen } from "./features/reliability";
 import { CommandPalette } from "./components/CommandPalette";
@@ -36,7 +33,15 @@ const NAV: { group: string; items: [Route, string, typeof Cog, Need][] }[] = [
   { group: "Optimisation", items: [["challenge", "Engineering Challenge", Trophy, "model"], ["optimisation", "Tolerance optimisation", Scale, "experiment"], ["comparison", "Design comparison", GitCompare, "experiment"]] },
   { group: "Evidence", items: [["trust", "Model trust", ShieldCheck, "model"], ["reports", "Reports", FileText, "project"], ["benchmarks", "Benchmarks", ListChecks, null], ["external", "External validation", FlaskRound, null]] },
 ];
-const SCREENS: Record<Route, () => React.ReactElement> = {
+// Screens with a 3D viewport load three.js; split them out so the first load stays small.
+const ImportScreen = lazy(() => import("./features/models").then((m) => ({ default: m.ImportScreen })));
+const WorkbenchScreen = lazy(() => import("./features/models").then((m) => ({ default: m.WorkbenchScreen })));
+const FeaturesScreen = lazy(() => import("./features/models").then((m) => ({ default: m.FeaturesScreen })));
+const TolerancesScreen = lazy(() => import("./features/manufacturing").then((m) => ({ default: m.TolerancesScreen })));
+const VirtualAssemblyScreen = lazy(() => import("./features/manufacturing").then((m) => ({ default: m.VirtualAssemblyScreen })));
+const AsBuiltScreen = lazy(() => import("./features/asbuilt").then((m) => ({ default: m.AsBuiltScreen })));
+
+const SCREENS: Record<Route, React.ComponentType> = {
   projects: ProjectsScreen, import: ImportScreen, workbench: WorkbenchScreen, features: FeaturesScreen, tolerances: TolerancesScreen,
   virtual: VirtualAssemblyScreen, mechanics: MechanicsScreen, builder: BuilderScreen, monitor: MonitorScreen, robustness: RobustnessScreen,
   sensitivity: SensitivityScreen, worstcase: WorstCaseScreen, optimisation: OptimisationScreen, comparison: ComparisonScreen,
@@ -106,7 +111,7 @@ export default function App() {
         <button className="btn ghost" onClick={s.logout} aria-label={`Sign out ${s.user}`} title={`Sign out ${s.user}`}><LogOut /></button>
       </header>
       <main className="main">
-        <ErrorBoundary name={s.route}><Screen /></ErrorBoundary>
+        <ErrorBoundary name={s.route}><Suspense fallback={<div className="page"><p className="muted small">Loading…</p></div>}><Screen /></Suspense></ErrorBoundary>
       </main>
       <CommandPalette />
       <div className="toasts" aria-live="polite">

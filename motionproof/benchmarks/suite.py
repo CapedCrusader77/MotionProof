@@ -689,20 +689,26 @@ def _fmt(v: Any) -> str:
     return str(v)
 
 
-def write_markdown(results: list[dict[str, Any]], path: str | Path) -> Path:
+def write_markdown(results: list[dict[str, Any]], path: str | Path, *,
+                   reproducible: bool = False) -> Path:
+    """Write the results table. ``reproducible`` leaves out the run date and the timings, so
+    publishing the same results twice produces the same file."""
+    when = "" if reproducible else f" {datetime.now(UTC).isoformat(timespec='seconds')}"
     lines = ["# Benchmark results", "",
-             f"Generated {datetime.now(UTC).isoformat(timespec='seconds')} by "
+             f"Generated{when} by "
              "`uv run motionproof benchmark run` on " f"{platform.platform()}, MotionProof "
              f"{motionproof.__version__}, MuJoCo {mujoco.__version__}, NumPy {np.__version__}.",
              "", "Every number below comes from this run. Benchmarks marked synthetic use "
              "generated data with known ground truth; none of them is physical validation.", "",
-             "| ID | Benchmark | Status | Checks | Synthetic | Time (s) |",
-             "|---|---|---|---|---|---|"]
+             "| ID | Benchmark | Status | Checks | Synthetic |"
+             + ("" if reproducible else " Time (s) |"),
+             "|---|---|---|---|---|" + ("" if reproducible else "---|")]
     for r in results:
         n = len(r["checks"])
         ok = sum(c["passed"] for c in r["checks"])
         lines.append(f"| {r['id']} | {r['title']} | **{r['status']}** | {ok}/{n} | "
-                     f"{'yes' if r.get('synthetic') else 'no'} | {r['seconds']} |")
+                     f"{'yes' if r.get('synthetic') else 'no'} |"
+                     + ("" if reproducible else f" {r.get('seconds', '-')} |"))
     for r in results:
         lines += ["", f"## {r['id']}. {r['title']}", "",
                   f"- Status: **{r['status']}**",

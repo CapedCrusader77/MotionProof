@@ -70,6 +70,21 @@ test("every screen renders with a project and model selected", async ({ page, re
   expect(errors).toEqual([]);
 });
 
+test("a screen that needs a model offers the workspace's models and opens on a pick", async ({ page }) => {
+  const errors = watchErrors(page);
+  await page.goto("/#/tolerances");
+  await expect(page.getByText("Tolerances works on a model. Choose one to continue.")).toBeVisible();
+  const pick = page.locator(".pick-list button").filter({ hasText: "synthetic reference" }).first();
+  await expect(pick).toBeVisible();
+  await pick.click();
+  await expect(page.getByText("Choose one to continue.")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Manufacturing tolerances" })).toBeVisible();
+  // the selection persists
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Manufacturing tolerances" })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test("command palette navigates", async ({ page }) => {
   await page.goto("/#/projects");
   await page.keyboard.press("Control+k");

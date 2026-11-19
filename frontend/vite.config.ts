@@ -8,15 +8,8 @@ export default defineConfig({
     proxy: { "/api": { target: "http://127.0.0.1:8000", changeOrigin: false } },
   },
   build: {
-    chunkSizeWarningLimit: 900,
-    rollupOptions: {
-      output: {
-        manualChunks(id: string) {
-          if (id.includes("three") || id.includes("@react-three")) return "three";
-          if (id.includes("recharts") || id.includes("d3-")) return "charts";
-          return undefined;
-        },
-      },
-    },
+    // three.js (about 940 kB) is its own chunk, loaded only by the screens with a 3D viewport;
+    // manual chunking is left to the bundler, which otherwise pulled it into every page load.
+    chunkSizeWarningLimit: 1000,
   },
 });

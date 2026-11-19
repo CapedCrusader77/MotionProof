@@ -73,7 +73,6 @@
   ],
   "id": "A",
   "name": "fit",
-  "seconds": 5.29,
   "status": "PASS"
  },
  {
@@ -162,7 +161,6 @@
   ],
   "id": "B",
   "name": "gearbox",
-  "seconds": 0.09,
   "status": "PASS"
  },
  {
@@ -322,7 +320,6 @@
   ],
   "id": "C",
   "name": "two_link",
-  "seconds": 0.02,
   "status": "PASS"
  },
  {
@@ -399,7 +396,6 @@
   ],
   "id": "D",
   "name": "reversal",
-  "seconds": 3.27,
   "status": "PASS"
  },
  {
@@ -458,7 +454,6 @@
   ],
   "id": "E",
   "name": "misalignment",
-  "seconds": 0.25,
   "status": "PASS"
  },
  {
@@ -562,7 +557,6 @@
   ],
   "id": "F",
   "name": "loaded_arm",
-  "seconds": 0.31,
   "status": "PASS"
  },
  {
@@ -630,7 +624,6 @@
   ],
   "id": "G",
   "name": "process",
-  "seconds": 0.0,
   "status": "PASS"
  },
  {
@@ -671,7 +664,6 @@
   ],
   "id": "H",
   "name": "workspace",
-  "seconds": 1.98,
   "status": "PASS"
  },
  {
@@ -703,7 +695,6 @@
   ],
   "id": "I",
   "name": "degradation",
-  "seconds": 0.06,
   "status": "PASS"
  },
  {
@@ -719,8 +710,7 @@
    "No physical rig or measurements exist. The software path is verified with a SIMULATED DEVICE in tests/integration/test_hardware.py; that is not physical validation."
   ],
   "id": "J",
-  "name": "hardware",
-  "seconds": 0.0
+  "name": "hardware"
  },
  {
   "title": "Adaptive versus random sampling",
@@ -754,7 +744,6 @@
   ],
   "id": "K",
   "name": "adaptive",
-  "seconds": 4.19,
   "status": "PASS"
  },
  {
@@ -798,7 +787,6 @@
   ],
   "id": "L",
   "name": "fidelity",
-  "seconds": 0.1,
   "status": "PASS"
  },
  {
@@ -876,7 +864,6 @@
   },
   "id": "M",
   "name": "challenge",
-  "seconds": 22.97,
   "status": "PASS"
  },
  {
@@ -908,7 +895,6 @@
   ],
   "id": "N",
   "name": "root_cause",
-  "seconds": 3.14,
   "status": "PASS"
  }
 ]

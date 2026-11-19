@@ -8,7 +8,7 @@
  "I_synthetic_wear.csv": "5198aabbb4a5d695",
  "inputs.json": "2178ef201d937fa1",
  "motionproof_outputs.json": "0e73095f1b7a1877",
- "reference_design/geometry/assembly.step": "805eac5bf9eb550a",
+ "reference_design/geometry/assembly.step": "cb924a2d262b1dc3",
  "reference_design/geometry/inventory.json": "9194979ad6a2729d",
  "reference_design/geometry/meshes/forearm_link.stl": "d2010028a766f49d",
  "reference_design/geometry/meshes/housing.stl": "e13a8b6d90188ad6",
@@ -35,5 +35,5 @@
  "references.json": "a5379232a423ae2e",
  "single_joint/model.json": "cf5b373e2e369f8a",
  "single_joint/single.xml": "f167dd49c51eec9b",
- "suite_results.json": "23bdfbb8b1a31ac5"
+ "suite_results.json": "0afb9eeb2db697a5"
 }
