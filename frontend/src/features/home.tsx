@@ -127,10 +127,12 @@ function ScrollHero() {
 }
 
 /* ------------------------------------------------------------------ hero film: engine (short cinematic cut) */
-const ENG_FRAMES = 480;
+// the last 40 rendered frames (deep inside the bore) are the softest and are left out
+const ENG_RENDERED = 480;
+const ENG_FRAMES = 440;
 // The film is played backwards: it opens on the finished engine, takes it apart and ends inside
 // one cylinder bore, on a single toleranced dimension.
-const engUrl = (i: number) => `/home/engine/f${String(ENG_FRAMES - 1 - i).padStart(4, "0")}.webp`;
+const engUrl = (i: number) => `/home/engine/f${String(ENG_RENDERED - 1 - i).padStart(4, "0")}.webp`;
 const ENG_CAPS: Cap[] = [
   { id: "e1", w: [-0.02, 0.0, 0.08, 0.10], eyebrow: "Engine", title: "See how manufacturing tolerances change the way a mechanism moves.", body: "MotionProof connects manufacturing variation to mechanical performance, from CAD geometry and tolerances to dynamic simulation and reliability.", cta: true },
   { id: "e4", w: [0.10, 0.13, 0.33, 0.37], eyebrow: "Parts", title: "Taken apart, part by part.", body: "Each part pulled out along the axis it assembles on." },
