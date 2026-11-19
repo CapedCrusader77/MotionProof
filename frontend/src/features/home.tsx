@@ -335,7 +335,7 @@ function Products() {
       <div className="hm-wrap">
         <div className="pr-head">
           <p className="hm-eyebrow">Products</p>
-          <h2 id="h-app">Nine screens of the twenty-eight, built around the work.</h2>
+          <h2 id="h-app">Nine of the twenty-nine screens, built around the work.</h2>
         </div>
         <div className="pr-grid">
           <nav className="pr-index" aria-label="Products">
