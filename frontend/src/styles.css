@@ -394,14 +394,16 @@ table.grid tr.selected td:first-child { box-shadow: inset 3px 0 0 var(--accent);
 
 /* ---- dark mode: three distinct levels (ground, chrome, surface) and readable rules ---- */
 [data-theme="dark"] {
-  --bg: #0d1117; --surface: #171c24; --surface-2: #1f2630; --border: #2b3340; --border-strong: #46505f;
-  --text: #e6e9ee; --muted: #a7b0bd; --faint: #8a94a2;
-  /* ink, not a brand colour: primary actions are off-white on slate, like ink on a drawing */
-  --accent: #e6e9ee; --accent-weak: #262e3a; --accent-text: #0d1117; --accent-hover: #ffffff;
-  --data: #7fb0e0; --data-2: #e0b469; --viewport: #11161d; --grid: #2b3340;
+  /* neutral graphite, the greys of CAD and 3D tools: no blue cast, clear steps between ground,
+     panels and inputs, and not near-black */
+  --bg: #262626; --surface: #2e2e2e; --surface-2: #383838; --border: #3d3d3d; --border-strong: #565656;
+  --text: #ececea; --muted: #b5b5b1; --faint: #94948f;
+  /* ink, not a brand colour: primary actions are off-white on graphite, like ink on a drawing */
+  --accent: #ececea; --accent-weak: #424242; --accent-text: #1e1e1e; --accent-hover: #ffffff;
+  --data: #86b4d6; --data-2: #d9b064; --viewport: #2a2a2a; --grid: #3a3a3a;
 }
-[data-theme="dark"] .nav, [data-theme="dark"] .topbar { background: #12171e; }
-[data-theme="dark"] .panel { border-color: #29313d; box-shadow: 0 1px 0 rgba(255, 255, 255, 0.02) inset; }
+[data-theme="dark"] .nav, [data-theme="dark"] .topbar { background: #212121; }
+[data-theme="dark"] .panel { border-color: #3a3a3a; box-shadow: none; }
 [data-theme="dark"] table.grid th { border-bottom-color: var(--border-strong); }
 [data-theme="dark"] .page { gap: 18px; }
 @media (prefers-reduced-motion: reduce) { .pick-list button::before, .pick-go { transition: none; } }
