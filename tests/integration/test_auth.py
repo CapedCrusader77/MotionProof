@@ -225,3 +225,12 @@ def test_rename_and_sign_out_other_sessions(tmp_path) -> None:  # type: ignore[n
     assert a.post("/api/v1/account/sessions/end-others").json() == {"ended": 1}
     assert other.get("/api/v1/projects").status_code == 401
     assert a.get("/api/v1/account").json()["sessions"] == 1
+
+
+def test_index_is_never_cached(client: TestClient) -> None:
+    """index.html names the hashed files of the current build; a cached copy would ask for files
+    a rebuild has removed."""
+    r = client.get("/")
+    if r.status_code == 404:  # frontend not built in this environment
+        pytest.skip("frontend/dist not built")
+    assert r.headers.get("cache-control") == "no-cache"

@@ -26,5 +26,5 @@ Rules for changes:
 * Never add default tolerance, motor or measurement values that could be mistaken for real
   data. Placeholder values must be labelled `assumed`.
 * State the modelling level (A or C) and fidelity of anything that produces a result.
-* Documentation describes what is implemented. Planned work belongs in `TECHNICAL_ROADMAP.md`.
-* Update `DEVELOPMENT_STATUS.md` when something is verified or found broken.
+* Documentation describes what is implemented. Planned work belongs in an issue, not in the docs.
+* Update `docs/development-status.md` when something is verified or found broken.

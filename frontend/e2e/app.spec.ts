@@ -173,6 +173,15 @@ test("account panel changes the password", async ({ page }) => {
   await expect(page.getByText(/Password changed/).first()).toBeVisible();
 });
 
+test("a screen whose file vanished after a rebuild reloads and opens", async ({ page }) => {
+  await selectReferenceModel(page);
+  let blocked = 0;
+  await page.route(/manufacturing-[^/]*\.js$/, (route) => (blocked++ === 0 ? route.fulfill({ status: 404, body: "" }) : route.continue()));
+  await page.goto("/#/tolerances");
+  await expect(page.getByRole("heading", { name: "Manufacturing tolerances" })).toBeVisible({ timeout: 30_000 });
+  expect(blocked).toBeGreaterThanOrEqual(2);
+});
+
 test("command palette navigates", async ({ page }) => {
   await page.goto("/#/projects");
   // the shell (and its shortcut) mounts once the server has confirmed the session

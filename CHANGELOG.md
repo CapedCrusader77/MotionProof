@@ -72,7 +72,7 @@ benchmark package and software hardening.
 
 ## 0.3.0 - 2026-11-15
 
-Advanced upgrade (see ADVANCED_UPGRADE_AUDIT.md).
+Advanced upgrade.
 
 * As-built inspection: PLY/PCD/XYZ/CSV/STL/OBJ point clouds with explicit units, cleaning,
   datum and trimmed point-to-plane ICP registration with locked DOF and quality gating,

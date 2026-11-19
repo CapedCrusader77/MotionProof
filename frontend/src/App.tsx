@@ -34,12 +34,23 @@ const NAV: { group: string; items: [Route, string, typeof Cog, Need][] }[] = [
   { group: "Evidence", items: [["trust", "Model trust", ShieldCheck, "model"], ["reports", "Reports", FileText, "project"], ["benchmarks", "Benchmarks", ListChecks, null], ["external", "External validation", FlaskRound, null]] },
 ];
 // Screens with a 3D viewport load three.js; split them out so the first load stays small.
-const ImportScreen = lazy(() => import("./features/models").then((m) => ({ default: m.ImportScreen })));
-const WorkbenchScreen = lazy(() => import("./features/models").then((m) => ({ default: m.WorkbenchScreen })));
-const FeaturesScreen = lazy(() => import("./features/models").then((m) => ({ default: m.FeaturesScreen })));
-const TolerancesScreen = lazy(() => import("./features/manufacturing").then((m) => ({ default: m.TolerancesScreen })));
-const VirtualAssemblyScreen = lazy(() => import("./features/manufacturing").then((m) => ({ default: m.VirtualAssemblyScreen })));
-const AsBuiltScreen = lazy(() => import("./features/asbuilt").then((m) => ({ default: m.AsBuiltScreen })));
+// After a rebuild the chunk names change; a page loaded before that asks for files that no longer
+// exist. Reload once to pick up the new build instead of showing a broken screen.
+function chunk<T>(load: () => Promise<T>): () => Promise<T> {
+  return () => load().then((m) => { sessionStorage.removeItem("mp-chunk-reload"); return m; }, (e: unknown) => {
+    if (!sessionStorage.getItem("mp-chunk-reload")) { sessionStorage.setItem("mp-chunk-reload", "1"); window.location.reload(); }
+    throw e;
+  });
+}
+const models = chunk(() => import("./features/models"));
+const manufacturing = chunk(() => import("./features/manufacturing"));
+const asbuilt = chunk(() => import("./features/asbuilt"));
+const ImportScreen = lazy(() => models().then((m) => ({ default: m.ImportScreen })));
+const WorkbenchScreen = lazy(() => models().then((m) => ({ default: m.WorkbenchScreen })));
+const FeaturesScreen = lazy(() => models().then((m) => ({ default: m.FeaturesScreen })));
+const TolerancesScreen = lazy(() => manufacturing().then((m) => ({ default: m.TolerancesScreen })));
+const VirtualAssemblyScreen = lazy(() => manufacturing().then((m) => ({ default: m.VirtualAssemblyScreen })));
+const AsBuiltScreen = lazy(() => asbuilt().then((m) => ({ default: m.AsBuiltScreen })));
 
 const SCREENS: Record<Route, React.ComponentType> = {
   projects: ProjectsScreen, import: ImportScreen, workbench: WorkbenchScreen, features: FeaturesScreen, tolerances: TolerancesScreen,

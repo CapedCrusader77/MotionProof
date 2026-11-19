@@ -49,4 +49,4 @@ uv run motionproof measurements evaluate sheet.csv --experiment examples/forearm
   design value and are listed.
 
 The process standard deviation found here is also the input of the yield-based cost model of
-the Engineering Challenge (`ENGINEERING_CHALLENGE.md`).
+the Engineering Challenge (`engineering-challenge.md`).

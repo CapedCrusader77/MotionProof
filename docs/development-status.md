@@ -1,6 +1,6 @@
 # Development status
 
-Updated 2026-11-15. Version 0.3.0 (advanced upgrade; audit in ADVANCED_UPGRADE_AUDIT.md).
+Updated 2026-11-15. Version 0.3.0 (advanced upgrade).
 
 ## Accounts, interface and reproducibility round (unreleased)
 

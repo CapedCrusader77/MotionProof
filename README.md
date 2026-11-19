@@ -215,7 +215,7 @@ print(results.sensitivity("lost_motion")[:5])
   INSUFFICIENT DATA, all reported in
   [`EXTERNAL_VALIDATION_RESULTS.md`](EXTERNAL_VALIDATION_RESULTS.md). This is not validation of
   the reference gearbox. See [`docs/external-validation.md`](docs/external-validation.md).
-* **Honesty.** [`DEVELOPMENT_STATUS.md`](DEVELOPMENT_STATUS.md) lists what is verified, what is
+* **Honesty.** [`docs/development-status.md`](docs/development-status.md) lists what is verified, what is
   not and the known defects. No physical measurement has been made yet. The rig procedure is in
   [`docs/rig-build-and-test.md`](docs/rig-build-and-test.md).
 
@@ -244,8 +244,8 @@ Windows, stop `motionproof serve` before `uv run pytest` (see
 
 ## Documentation
 
-[`PROJECT_REPORT.md`](PROJECT_REPORT.md) explains the whole system in one document. Deeper
-reading: [`ARCHITECTURE.md`](ARCHITECTURE.md), [`ENGINEERING_CHALLENGE.md`](ENGINEERING_CHALLENGE.md)
+[`docs/project-report.md`](docs/project-report.md) explains the whole system in one document. Deeper
+reading: [`docs/architecture.md`](docs/architecture.md), [`docs/engineering-challenge.md`](docs/engineering-challenge.md)
 and the [`docs/`](docs) folder (start with `docs/getting-started.md`).
 
 ## Licence

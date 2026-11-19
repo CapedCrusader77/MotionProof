@@ -645,4 +645,13 @@ def create_app(home: str | Path | None = None) -> FastAPI:
     dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"
     if dist.is_dir():
         app.mount("/", StaticFiles(directory=dist, html=True), name="frontend")
+
+        @app.middleware("http")
+        async def fresh_index(request: Any, call_next: Any) -> Any:
+            # index.html names the current build's hashed files; never let a browser reuse an old
+            # copy, or it asks for files a rebuild has removed. Hashed assets stay cacheable.
+            response = await call_next(request)
+            if request.url.path in ("/", "/index.html"):
+                response.headers["Cache-Control"] = "no-cache"
+            return response
     return app
