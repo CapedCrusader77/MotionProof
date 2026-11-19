@@ -493,3 +493,12 @@ table.grid tr.selected td:first-child { box-shadow: inset 3px 0 0 var(--accent);
   .st-row { grid-template-columns: 1fr; gap: 8px; }
   .st-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Light theme: the sidebar keeps the graphite of the dark theme, so the navigation stands apart
+   from the off-white working area (the layout of most CAD and engineering tools). Re-declaring the
+   tokens on .nav repaints everything inside it. */
+[data-theme="light"] .nav {
+  --bg: #262626; --surface: #2e2e2e; --surface-2: #383838; --border: #3d3d3d; --border-strong: #565656;
+  --text: #ececea; --muted: #b9b9b4; --faint: #8f8f8a; --accent: #ececea; --accent-weak: #424242;
+  background: #262626; color: var(--text); border-right-color: #1f1f1f; color-scheme: dark;
+}
