@@ -1,8 +1,9 @@
-/* Public homepage. Fixed dark palette: the app's dark slate neutrals and amber accent, so home,
+/* Public homepage. Fixed dark palette: the app's dark slate neutrals, ink-white actions and steel markers, so home,
    sign-in and app read as one product. */
 .hm {
   --h-bg: #0d1117; --h-bg2: #12171e; --h-ink: #e6e9ee; --h-mut: #a7b0bd; --h-line: #2b3340;
-  --h-acc: #f0a14a; --accent: #f0a14a; --accent-text: #1a1206; --mp-accent-hover: #f5b46a;
+  /* ink buttons; small markers use the steel data colour */
+  --h-acc: #8fb3c6; --accent: #e6e9ee; --accent-text: #0d1117; --mp-accent-hover: #ffffff;
   background: var(--h-bg); color: var(--h-ink); min-height: 100%; overflow-x: clip;
 }
 html:has(.hm), body:has(.hm) { height: auto; overflow: visible; }

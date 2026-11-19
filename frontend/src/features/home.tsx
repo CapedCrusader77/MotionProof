@@ -105,8 +105,8 @@ function ScrollFilm({ caps: CAPSx, frames: SEQ_FRAMES, url: seqUrl, label, alt, 
             <p className="hm-lede">{c.body}</p>
             {c.stats && <dl className="sq-stats">{c.stats.map(([v, k]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>}
             {c.cta && <div className="hm-cta">
-              <a className="btn primary" href="#evidence" onClick={(e) => { e.preventDefault(); document.getElementById("evidence")?.scrollIntoView({ behavior: "smooth" }); }}>{c.stats ? "See the results" : "Explore the evidence"} <ArrowRight /></a>
-              <a className="btn hm-ghost" href="#/signin">Open the workbench</a>
+              <a className="btn primary reg" href="#evidence" onClick={(e) => { e.preventDefault(); document.getElementById("evidence")?.scrollIntoView({ behavior: "smooth" }); }}>{c.stats ? "See the results" : "Explore the evidence"} <ArrowRight /></a>
+              <a className="btn hm-ghost ink-ghost" href="#/signin">Open the workbench</a>
             </div>}
           </div>
         ))}
@@ -380,7 +380,7 @@ function Home() {
         <nav aria-label="Sections"><a href="#evidence" onClick={(e) => { e.preventDefault(); document.getElementById("evidence")?.scrollIntoView({ behavior: "smooth" }); }}>Evidence</a>
           <a href="#how" onClick={(e) => { e.preventDefault(); document.getElementById("how")?.scrollIntoView({ behavior: "smooth" }); }}>Workflow</a>
           <a href="#app" onClick={(e) => { e.preventDefault(); document.getElementById("app")?.scrollIntoView({ behavior: "smooth" }); }}>Products</a></nav>
-        <a className="btn primary hm-signin" href="#/signin">Sign in</a>
+        <a className="btn primary hm-signin reg" href="#/signin">Sign in</a>
       </header>
 
       <main id="hm-main">
@@ -397,7 +397,7 @@ function Home() {
             <div>
               <p className="hm-lede">Results are model predictions, conditional on the geometry, tolerances and drive-train values you supply. Nothing here certifies real-world reliability. Every value carries its provenance, and the app shows which is which.</p>
               <ul className="hm-prov"><li><i>■</i>Specified</li><li><i>●</i>Measured</li><li><i>◐</i>Estimated</li><li><i>○</i>Assumed</li></ul>
-              <a className="btn primary" href="#/signin">Open the workbench <ArrowUpRight /></a>
+              <a className="btn primary reg" href="#/signin">Open the workbench <ArrowUpRight /></a>
             </div>
           </div>
         </section>

@@ -396,7 +396,8 @@ table.grid tr.selected td:first-child { box-shadow: inset 3px 0 0 var(--accent);
 [data-theme="dark"] {
   --bg: #0d1117; --surface: #171c24; --surface-2: #1f2630; --border: #2b3340; --border-strong: #46505f;
   --text: #e6e9ee; --muted: #a7b0bd; --faint: #8a94a2;
-  --accent: #f0a14a; --accent-weak: #3a2a17; --accent-text: #1a1206; --accent-hover: #f5b46a;
+  /* ink, not a brand colour: primary actions are off-white on slate, like ink on a drawing */
+  --accent: #e6e9ee; --accent-weak: #262e3a; --accent-text: #0d1117; --accent-hover: #ffffff;
   --data: #7fb0e0; --data-2: #e0b469; --viewport: #11161d; --grid: #2b3340;
 }
 [data-theme="dark"] .nav, [data-theme="dark"] .topbar { background: #12171e; }
@@ -410,3 +411,43 @@ table.grid tr.selected td:first-child { box-shadow: inset 3px 0 0 var(--accent);
 .acct-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); }
 .acct-h { margin: 16px 0 8px; }
 .acct-actions { white-space: nowrap; text-align: right; }
+
+/* Registration marks: on hover, four corner ticks open around a primary action, the way crop and
+   measuring marks frame a drawing; pressing closes them in. Used on the public pages. */
+.reg { position: relative; }
+.reg::after {
+  content: ""; position: absolute; inset: -3px; pointer-events: none; opacity: 0;
+  --c: var(--reg-ink, #e6e9ee);
+  background:
+    linear-gradient(var(--c), var(--c)) top left / 9px 1px no-repeat,
+    linear-gradient(var(--c), var(--c)) top left / 1px 9px no-repeat,
+    linear-gradient(var(--c), var(--c)) top right / 9px 1px no-repeat,
+    linear-gradient(var(--c), var(--c)) top right / 1px 9px no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom left / 9px 1px no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom left / 1px 9px no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom right / 9px 1px no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom right / 1px 9px no-repeat;
+  transition: inset 180ms cubic-bezier(0.2, 0, 0, 1), opacity 140ms;
+}
+.reg:hover::after, .reg:focus-visible::after { inset: -7px; opacity: 1; }
+.reg:active::after { inset: -4px; }
+@media (prefers-reduced-motion: reduce) { .reg::after { transition: none; } }
+
+/* Dimension line: a thin line with end ticks draws out under a primary action on hover, like the
+   width dimension under a part on a drawing. */
+.reg::before {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -13px; height: 7px; pointer-events: none;
+  --c: var(--reg-ink, #e6e9ee);
+  background:
+    linear-gradient(var(--c), var(--c)) left center / 1px 7px no-repeat,
+    linear-gradient(var(--c), var(--c)) right center / 1px 7px no-repeat,
+    linear-gradient(var(--c), var(--c)) center / 100% 1px no-repeat;
+  opacity: 0.55; transform: scaleX(0); transform-origin: center;
+  transition: transform 260ms cubic-bezier(0.2, 0, 0, 1);
+}
+.reg:hover::before, .reg:focus-visible::before { transform: scaleX(1); }
+
+/* Construction line: secondary actions are drawn dashed until the pointer inks them in. */
+.ink-ghost { border-style: dashed !important; transition: border-color 140ms, background 140ms; }
+.ink-ghost:hover:not(:disabled), .ink-ghost:focus-visible { border-style: solid !important; }
+@media (prefers-reduced-motion: reduce) { .reg::before { transition: none; } }

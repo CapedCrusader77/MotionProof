@@ -66,7 +66,7 @@ export function LoginScreen() {
       <main className="lg-side" id="main-content">
         <div className="lg-top">
           <span className="lg-top-q">{register ? "Have an account?" : "New to this server?"}</span>
-          <button type="button" className="btn lg-switch" onClick={switchMode}>{register ? "Sign in" : "Create an account"}</button>
+          <button type="button" className="btn lg-switch ink-ghost" onClick={switchMode}>{register ? "Sign in" : "Create an account"}</button>
         </div>
         <form className="lg-form" onSubmit={submit} noValidate>
           <a className="lg-brand sm" href="#/"><i className="mark" />MotionProof</a>
@@ -104,7 +104,7 @@ export function LoginScreen() {
             {err.password && <em id="lg-e2" className="lg-err">{err.password}</em>}
           </label>
 
-          <button className="btn primary lg-go" type="submit" disabled={busy}>
+          <button className="btn primary lg-go reg" type="submit" disabled={busy}>
             {busy ? (register ? "Creating account…" : "Signing in…") : <>{register ? "Create account" : "Sign in"} <ArrowRight /></>}
           </button>
 
