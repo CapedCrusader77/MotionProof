@@ -18,6 +18,14 @@ uv run ruff check motionproof tests
 
 Frontend: `npm install`, then `npm run build` in `frontend/`.
 
+Two tools in `frontend/tools/` run against a server started on a copy of a workspace that holds
+the reference design (the first account registered owns it; see the header of each file):
+
+* `audit-contrast.mjs` checks text contrast (WCAG AA) on ten screens in both themes; run it after
+  any colour change.
+* `capture-screens.mjs` takes the product screenshots used by the README and the homepage; then
+  run `uv run python scripts/make_tour.py` to rebuild the README tour GIF.
+
 Rules for changes:
 
 * Every numerical method needs a test against an analytic value or an independent calculation.

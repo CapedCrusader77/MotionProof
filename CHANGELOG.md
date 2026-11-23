@@ -2,6 +2,14 @@
 
 ## Unreleased - accounts, interface and reproducibility
 
+* Themes: dark is a near-black neutral with rounded cards, light is a blue-grey ground with white
+  shadowed cards and a navy sidebar. A DOM contrast audit (`frontend/tools/audit-contrast.mjs`,
+  439 panels and rows on ten screens) now passes in both themes; faint text, status colours and
+  the sidebar were darkened or lightened to reach 4.5:1, and the breadcrumb no longer greys out
+  the "Synthetic" badge.
+* README screenshots, the tour GIF and the homepage screenshots retaken in the current dark
+  theme with `frontend/tools/capture-screens.mjs` and `scripts/make_tour.py`.
+
 * Accounts: `POST /api/v1/auth/register|login|logout`, `GET /auth/me`; scrypt password hashes,
   random session tokens stored only as SHA-256, HttpOnly SameSite=Strict cookie (Secure over
   HTTPS), 14-day sessions, sign-in throttling. Every other route needs a session.

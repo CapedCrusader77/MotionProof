@@ -295,7 +295,8 @@ code, .mono, .num, .stat .v, .kv dd, .proj-figures dd { font-variant-numeric: ta
 .nav-foot { border-top: 1px solid var(--border); }
 .topbar { background: var(--bg); gap: 12px; }
 .crumbs { font-size: 13px; }
-.crumbs > span:not(:first-child):not(:last-child) { color: var(--faint); }
+/* the "/" separators only; a badge in the breadcrumb keeps its own colour */
+.crumbs > span:not(.badge):not(:first-child):not(:last-child) { color: var(--faint); }
 .page { padding: 18px 20px 28px; gap: 16px; }
 .page-head { gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--border); align-items: baseline; }
 .page-head .sub { font-size: 13px; max-width: 70ch; }
@@ -396,7 +397,7 @@ table.grid tr.selected td:first-child { box-shadow: inset 3px 0 0 var(--accent);
 [data-theme="dark"] {
   /* near-black neutral: no blue cast; cards a step lighter with a soft sheen, quiet borders */
   --bg: #0b0b0b; --surface: #151515; --surface-2: #1f1f1f; --border: #242424; --border-strong: #363636;
-  --text: #f2f2f2; --muted: #a3a3a3; --faint: #7c7c7c;
+  --text: #f2f2f2; --muted: #a8a8a8; --faint: #9a9a9a;
   /* ink, not a brand colour: primary actions are off-white, like ink on a drawing */
   --accent: #f2f2f2; --accent-weak: #2a2a2a; --accent-text: #0b0b0b; --accent-hover: #ffffff;
   --data: #9aa1ad; --data-2: #d5b46e; --viewport: #121212; --grid: #262626;
@@ -506,10 +507,10 @@ table.grid tr.selected td:first-child { box-shadow: inset 3px 0 0 var(--accent);
    a border, a navy sidebar, and indigo for links, key figures and primary actions. */
 [data-theme="light"] {
   --bg: #e9edf4; --surface: #ffffff; --surface-2: #f3f5fa; --border: #e3e7ef; --border-strong: #c8cfdc;
-  --text: #1d2130; --muted: #566074; --faint: #7d8699;
+  --text: #1d2130; --muted: #475166; --faint: #5f6a80;
   --accent: #3a37d6; --accent-weak: #e9e8fc; --accent-text: #ffffff; --accent-hover: #2d2ab8;
-  --ok: #1f9d5a; --ok-weak: #e1f4ea; --warn: #b26a00; --warn-weak: #fbefd9;
-  --bad: #d63864; --bad-weak: #fbe3ea; --info: #2f6fd6; --info-weak: #e3ecfb;
+  --ok: #17773b; --ok-weak: #e1f4ea; --warn: #8a5000; --warn-weak: #fbefd9;
+  --bad: #bd2a54; --bad-weak: #fbe3ea; --info: #2a62c0; --info-weak: #e3ecfb;
   --data: #3a37d6; --data-2: #f0921d; --viewport: #eef1f7; --grid: #d6dce7;
 }
 [data-theme="light"] .topbar { background: #ffffff; border-bottom-color: #e3e7ef; }
@@ -524,7 +525,7 @@ table.grid tr.selected td:first-child { box-shadow: inset 3px 0 0 var(--accent);
 /* the sidebar is navy in light mode; re-declaring the tokens on .nav repaints everything inside */
 [data-theme="light"] .nav {
   --bg: #1e2130; --surface: #252939; --surface-2: #2c3144; --border: #2f3447; --border-strong: #464c63;
-  --text: #f2f3f7; --muted: #b3b8c8; --faint: #7f869b; --accent: #ffffff; --accent-weak: #2c3144;
+  --text: #f2f3f7; --muted: #b3b8c8; --faint: #9aa0b5; --accent: #ffffff; --accent-weak: #2c3144;
   background: #1e2130; color: var(--text); border-right-color: #1a1c29; color-scheme: dark;
 }
 [data-theme="light"] .nav .brand { border-bottom-color: #2a2e40; }
