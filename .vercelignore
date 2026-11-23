@@ -1,0 +1,20 @@
+# Only the frontend is built on Vercel; keep the Python project and its data out of the upload.
+.venv
+workspace
+external_data
+benchmarks
+tests
+motionproof
+validation
+hardware
+examples
+scripts
+docs
+deploy
+assets
+frontend/node_modules
+frontend/dist
+frontend/test-results
+frontend/playwright-report
+*.db
+MotionProof_Feature_Guide.pdf

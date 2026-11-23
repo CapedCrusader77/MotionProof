@@ -2,6 +2,10 @@
 
 ## Unreleased - accounts, interface and reproducibility
 
+* Vercel: `vercel.json` and `.vercelignore` deploy the web app alone and forward `/api/*` to a
+  backend hosted elsewhere (the backend's dependencies, about 1.07 GB, exceed Vercel's 500 MB
+  Python function limit). See `docs/hosting.md`. Not deployed or tested on Vercel.
+
 * Hardening for a server other people can reach (`docs/hosting.md`, `motionproof serve
   --production`): Secure cookies, closed registration, HSTS, no API docs page, no serial devices
   on the server, a strict Content-Security-Policy (all 29 screens run with no violations),

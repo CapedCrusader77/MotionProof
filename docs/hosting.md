@@ -97,6 +97,44 @@ tailscale serve --bg 8000                                    # https://<machine>
 Only devices on your tailnet can reach it, and `tailscale serve` provides the https certificate.
 Create the first account with `motionproof account create` as above.
 
+## Frontend on Vercel, backend elsewhere
+
+`vercel.json` deploys only the web app (the Vite build in `frontend/`) to Vercel and sends every
+`/api/*` request on to your own backend, so the browser sees one site and the cookies work as
+before. The backend still has to run somewhere else (a computer behind a tunnel, a VPS; see above).
+
+**The backend cannot run on Vercel.** Its Python dependencies take about 1.07 GB installed
+(measured on a Windows install: VTK 327 MB, CasADi 242 MB, OpenCascade 160 MB, LLVM 121 MB, SciPy
+99 MB, MuJoCo 59 MB), and Vercel limits a Python function to 500 MB uncompressed. Vercel functions
+also have no persistent disk (the workspace holds the accounts and every project) and are not built
+for simulations that take minutes. A two-service setup (`app` + `frontend`) would fail at build.
+
+Steps:
+
+1. Run the backend as described above, with `--production`, reachable over https at a **stable**
+   address (a Tailscale Funnel name or a VPS host name; a Cloudflare quick tunnel changes each
+   time). Create the first account there with `motionproof account create`.
+2. In `vercel.json`, replace `REPLACE-WITH-YOUR-BACKEND-HOST` in the `/api` rewrite with that host
+   name (the file cannot read environment variables).
+3. Tell the backend which site may send requests to it, in its environment, then restart it:
+   `MOTIONPROOF_ALLOWED_ORIGINS=https://your-project.vercel.app` (add your own domain if you use
+   one). Without it the backend refuses sign-in with "cross-origin request refused", because the
+   browser's `Origin` is the Vercel address while the request reaches the backend under its own host
+   name.
+4. In Vercel, import the repository. Leave the framework preset on "Other": the install and build
+   commands and the `frontend/dist` output come from `vercel.json`. If the build complains about
+   the Node version, set Node 22 or newer in Project Settings.
+
+`vercel.json` also sets the same security headers and Content-Security-Policy the backend sends,
+for the pages Vercel serves itself. `.vercelignore` keeps the Python project out of the upload.
+
+What has **not** been tested: a real deployment (the build was run locally and produces 505 files,
+43.5 MB, but nothing was deployed), that session cookies pass through Vercel's rewrite, and
+uploads of large CAD files through it (Vercel may limit the size of a proxied request; if it
+does, uploads fail and need another route). Also, behind Vercel the backend sees Vercel's addresses
+rather than each visitor's, so its per-address limits (failed sign-ins, new accounts) are shared by
+everyone; the per-account lockout still applies.
+
 ## Backups
 
 The whole state is the workspace folder (`/var/lib/motionproof/workspace`): the databases
