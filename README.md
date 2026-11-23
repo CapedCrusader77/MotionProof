@@ -14,58 +14,29 @@
   <img alt="benchmarks" src="https://img.shields.io/badge/benchmarks-13%2F14%20pass-2f6f4f">
 </p>
 
-<p align="center">
-  <a href="#what-a-run-tells-you">Results</a> ·
-  <a href="#how-it-works">How it works</a> ·
-  <a href="#the-app">The app</a> ·
-  <a href="#whats-in-the-box">Features</a> ·
-  <a href="#quick-start">Quick start</a> ·
-  <a href="#trust-but-verify">Trust, but verify</a>
-</p>
+MotionProof builds **virtual as-manufactured copies** of a CAD assembly from its tolerance
+specification, simulates each one on MuJoCo with a drive train that has backlash, stiffness and
+friction, and tells you **which copies fail, how often, and which tolerances are to blame**.
 
----
-
-MotionProof is a tolerance-to-dynamics lab. Give it a CAD assembly and its tolerance
-specification and it builds **virtual as-manufactured copies**, simulates each copy doing its
-job on MuJoCo with a drive train that has backlash, stiffness and friction, and reports
-**which copies fail, how often, and which tolerances are to blame**. It then searches for the
-cheapest tolerance set that still meets the requirement and checks that answer on fresh
-scenarios.
-
-<table align="center">
-  <tr>
-    <td align="center"><h3>262</h3>backend tests<br><sub>plus 13 browser end-to-end</sub></td>
-    <td align="center"><h3>13 / 14</h3>benchmarks pass<br><sub>J waits for a physical rig</sub></td>
-    <td align="center"><h3>57 / 57</h3>independent cross-checks<br><sub>NumPy/SciPy, no MotionProof import</sub></td>
-    <td align="center"><h3>1 · 4 · 1</h3>external validation<br><sub>pass · fail · insufficient data</sub></td>
-  </tr>
-</table>
+| 1 | 2 | 3 | 4 |
+|:--|:--|:--|:--|
+| **Import** a STEP, STL, URDF or MJCF model | **Specify** limits, distributions and fits | **Simulate** hundreds to thousands of variants | **Rank** the tolerances that drive failures, then find the cheapest set that still passes |
 
 > [!NOTE]
-> Results are model predictions, conditional on the geometry, tolerances and drive-train values
-> you supply. Nothing here certifies real-world reliability. Every value carries its provenance
-> (`specified`, `assumed` or `measured`) and the app shows which is which.
+> Results are model predictions, conditional on the geometry, tolerances and drive-train values you
+> supply, not a certification. Every value is marked `specified`, `assumed` or `measured`. No
+> physical measurement has been made yet; see [verification](docs/verification.md).
 
-## What a run tells you
+## A real run
 
 <p align="center"><img src="docs/images/results.png" alt="Results of a 1000-assembly reversal experiment: scatter of backlash against direction error with failures in red, input sensitivity ranking, and the error distribution against its 2 mm limit" width="100%"></p>
 
-One experiment on the reference elbow, a NEMA 17 motor driving a two-stage 33:1 planetary
-gearbox: 1000 virtual assemblies reverse the joint and **201 miss a requirement** (79.9 % pass,
-95 % interval 77.3 to 82.3 %). Most failures are a direction error above 2 mm; the few red
-points below the line failed a different requirement (lost motion or gear mesh clearance).
-Output friction and the stage 2 planet bearing clearance drive the error most.
+The reference elbow (a NEMA 17 motor and a two-stage 33:1 planetary gearbox), 1000 virtual
+assemblies reversing the joint:
 
-The title animation replays the same run in order. Both figures come straight from the run's
-`results.jsonl`:
-
-```bash
-uv run python scripts/make_result_figures.py workspace/projects/PRJ_001/experiments/EXP_001
-```
-
-```bash
-uv run python scripts/make_title_anim.py workspace/projects/PRJ_001/experiments/EXP_001
-```
+* **79.9 % pass** (95 % interval 77.3 to 82.3 %); 201 miss a requirement.
+* Most failures are a direction error above 2 mm.
+* Output friction and the stage 2 planet bearing clearance drive the error most.
 
 ## How it works
 
@@ -81,72 +52,12 @@ flowchart LR
     H[Hardware rig] -.-> F
 ```
 
-<details>
-<summary><b>The drive-train model in one block</b></summary>
-
-Each driven joint has a rotor coupled to the output through a dead band of width *b* and a
-torsional spring *k*,
-
-```
-gap = θ_rotor + TE(θ_rotor) − θ_output
-τ   = k·(gap − clip(gap, −b/2, b/2)) + c·Δω      (a flank can push, never pull)
-```
-
-and the backlash *b* is computed per variant from the gear stages:
-`((j_sun-planet + j_planet-ring)/2 + c_bearing) / centre_distance`, worst planet wins.
-
-</details>
-
 ## The app
 
 <p align="center"><img src="docs/images/workflow-tour.gif" alt="Tour of the MotionProof application: project, assembly workbench, tolerances, virtual assemblies, robustness, sensitivity, model trust and benchmarks" width="860"></p>
 
-<table>
-  <tr>
-    <td width="50%"><img src="docs/images/robustness.png" alt="Robustness analysis with pass rate, confidence interval and metric histograms"></td>
-    <td width="50%"><img src="docs/images/sensitivity.png" alt="Sensitivity explorer ranking tolerances by their effect on direction error"></td>
-  </tr>
-  <tr>
-    <td><b>Robustness.</b> Pass rate with its confidence interval, every metric's distribution, the failures in red.</td>
-    <td><b>Sensitivity.</b> Which tolerances drive the error, with 95 % intervals and the raw scatter behind each ranking.</td>
-  </tr>
-  <tr>
-    <td><img src="docs/images/workbench.png" alt="Assembly workbench with component tree, 3D viewport and model readiness checks"></td>
-    <td><img src="docs/images/tolerances.png" alt="Tolerance table with distributions, fits and validation warnings"></td>
-  </tr>
-  <tr>
-    <td><b>Assembly workbench.</b> Component tree, 3D view with x-ray and section, and a readiness check that refuses to hide assumed values.</td>
-    <td><b>Tolerances.</b> Limits, distributions, datums, fits and correlations, with a validation panel.</td>
-  </tr>
-  <tr>
-    <td><img src="docs/images/trust.png" alt="Model trust panel listing the evidence behind every parameter"></td>
-    <td><img src="docs/images/benchmarks.png" alt="Benchmark suite results A to N"></td>
-  </tr>
-  <tr>
-    <td><b>Model trust.</b> The evidence behind every parameter: generated, estimated, assumed or measured.</td>
-    <td><b>Benchmarks.</b> 14 reference problems with independent expected values. J stays NOT RUN until a physical rig exists.</td>
-  </tr>
-</table>
-
-The screenshots use the synthetic reference design. Its tolerances are illustrative
-assumptions, not anyone's hardware.
-
-## What's in the box
-
-| Area | What you get |
-|---|---|
-| **Import** | STEP, STL, OBJ, URDF, MJCF; cylinder detection on STEP solids; exact B-rep fit measurement |
-| **Tolerances** | six distributions, Gaussian-copula correlation, five sampling designs, Cp/Cpk, stack-ups |
-| **Dynamics** | MuJoCo multibody plus motor torque-speed limit, gearbox backlash, stiffness, efficiency and friction |
-| **Experiments** | immutable manifests, checkpoint and resume, bit-exact replay of any scenario |
-| **Analysis** | Wilson and Clopper-Pearson intervals, Spearman/regression/Sobol sensitivity, worst-case search, root cause by counterfactual rerun |
-| **Optimisation** | Engineering Challenge: least-cost tolerances under a verified reliability bound, with a yield (scrap) cost model |
-| **As-built** | point-cloud import, cleaning, ICP or datum registration, deviation maps, feature fits |
-| **Manufacturing** | hierarchical process variation (batch, setup, tool, part), drift, variance components, measured-dimension import |
-| **Reliability** | workspace maps, lifetime degradation, adaptive Gaussian-process sampling, multi-fidelity checks |
-| **Hardware** | JSON-lines rig protocol, safety monitor, ESP32 firmware sketch, encoder analysis without the model |
-| **Accounts** | sign-in with salted scrypt hashes and HttpOnly sessions; every account gets its own workspace and private jobs |
-| **Interfaces** | web app (29 screens), REST API (83 routes), CLI (55 commands), Python SDK, PDF/Markdown/JSON/CSV reports |
+29 screens, a REST API, a CLI and a [Python SDK](docs/python-sdk.md). Dark and light themes.
+Accounts keep their own workspaces. [All features](docs/features.md).
 
 ## Quick start
 
@@ -154,100 +65,24 @@ Python 3.12 with [`uv`](https://docs.astral.sh/uv/), Node 24 for the web app.
 
 ```bash
 uv sync
-```
-
-```bash
 cd frontend && npm ci && npm run build && cd ..
-```
-
-```bash
 uv run motionproof serve --home workspace
 ```
 
-Open http://127.0.0.1:8000, create an account (the first account keeps the existing
-workspace), create a project and click **Add reference design**. From the command line:
+Open http://127.0.0.1:8000, create an account, then a project, and click **Add reference
+design**. Or from the command line: `uv run motionproof reference create demo`.
 
-```bash
-uv run motionproof reference create demo
-```
+## Go deeper
 
-```bash
-uv run motionproof doctor
-```
+| | |
+|:--|:--|
+| [Features](docs/features.md) | Everything the tool does, by area |
+| [Python SDK](docs/python-sdk.md) | The same experiment from Python |
+| [Verification](docs/verification.md) | Benchmarks, tests, external validation, what is not proven |
+| [Project report](docs/project-report.md) | The whole system in one document |
+| [Architecture](docs/architecture.md) | Packages and design decisions |
+| [Getting started](docs/getting-started.md) | A guided first session |
+| [Development](docs/development.md) · [Contributing](CONTRIBUTING.md) | Lint, types, tests, e2e |
+| [Security](SECURITY.md) · [Changelog](CHANGELOG.md) | Accounts and sessions; release notes |
 
-<details>
-<summary><b>Python SDK</b></summary>
-
-```python
-from motionproof import MechanicalModel
-from motionproof.experiments import ManufacturingExperiment
-from motionproof.uncertainty import Uniform
-
-model = MechanicalModel.load("demo/model.yaml")
-experiment = ManufacturingExperiment(
-    model=model,
-    task={"type": "reversal", "joint": "shoulder", "target": {"shoulder": 1.5708}},
-    samples=100,
-    seed=42,
-)
-experiment.add_operating_variation("payload_mass", Uniform(0.0, 0.5))
-experiment.add_constraint("lost_motion", "<=", 0.0065)
-results = experiment.run()
-print(results.failure_estimate)
-print(results.sensitivity("lost_motion")[:5])
-```
-
-</details>
-
-## Trust, but verify
-
-* **Benchmarks.** `uv run python benchmarks/publish.py` regenerates the inputs and raw data,
-  runs the suite, and re-checks 57 quantities with
-  [`reference_calculations.py`](benchmarks/reference_calculations.py), which uses only NumPy
-  and SciPy and never imports MotionProof. Published outputs are reproducible byte for byte.
-  Results: [`BENCHMARK_RESULTS.md`](BENCHMARK_RESULTS.md).
-* **Tests.** 262 backend tests, including analytic physics checks, an API contract that no route
-  answers 5xx to bad input, account isolation, and 13 Playwright end-to-end tests against the
-  real backend.
-* **External experimental validation.** Public measurements of other robots (Stäubli TX2-40,
-  Unitree H1, SO-101, KUKA KR300, UR5) test MotionProof's model components on unseen trials,
-  under acceptance criteria committed before the runs. Current result: 1 PASS, 4 FAIL, 1
-  INSUFFICIENT DATA, all reported in
-  [`EXTERNAL_VALIDATION_RESULTS.md`](EXTERNAL_VALIDATION_RESULTS.md). This is not validation of
-  the reference gearbox. See [`docs/external-validation.md`](docs/external-validation.md).
-* **Honesty.** [`docs/development-status.md`](docs/development-status.md) lists what is verified, what is
-  not and the known defects. No physical measurement has been made yet. The rig procedure is in
-  [`docs/rig-build-and-test.md`](docs/rig-build-and-test.md).
-
-## Development
-
-```bash
-uv run ruff check motionproof tests benchmarks
-```
-
-```bash
-uv run mypy motionproof
-```
-
-```bash
-uv run pytest
-```
-
-```bash
-cd frontend && npm run typecheck && npm run build && npm run e2e
-```
-
-`npm run e2e` starts its own backend on port 8765 with a fresh workspace. Set
-`MP_E2E_CHANNEL=chrome` to use an installed Chrome instead of Playwright's Chromium. On
-Windows, stop `motionproof serve` before `uv run pytest` (see
-[`CONTRIBUTING.md`](CONTRIBUTING.md)).
-
-## Documentation
-
-[`docs/project-report.md`](docs/project-report.md) explains the whole system in one document. Deeper
-reading: [`docs/architecture.md`](docs/architecture.md), [`docs/engineering-challenge.md`](docs/engineering-challenge.md)
-and the [`docs/`](docs) folder (start with `docs/getting-started.md`).
-
-## Licence
-
-[MIT](LICENSE).
+[MIT licence](LICENSE).

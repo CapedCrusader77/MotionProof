@@ -162,7 +162,7 @@ assembly, the two poses and the design README from `out.zip`.
 | Calibration with holdout and identifiability warnings | `motionproof/calibration` | Tested on synthetic recordings only |
 | Reports (JSON, Markdown, CSV, PDF) | `motionproof/reporting` | Tested |
 | REST API with background jobs, SQLite workspace | `motionproof/api`, `persistence` | End-to-end test |
-| CLI and Python SDK | `motionproof/cli`, `experiments/__init__.py` | Tested, README example is a test |
+| CLI and Python SDK | `motionproof/cli`, `experiments/__init__.py` | Tested, the SDK example in docs/python-sdk.md is a test |
 | React application, 16 screens | `frontend/src` | Builds; partly exercised by hand (see below) |
 | Optional Ollama assistant | `motionproof/ai` | Code path for "unavailable" exercised; **not tested with a running Ollama** |
 

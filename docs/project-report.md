@@ -287,7 +287,7 @@ On top of the results:
   progress and cancellation. The OpenAPI schema is generated. Every route except the public
   health check and sign-in needs a session; each account has its own workspace and jobs
   (scrypt password hashes, HttpOnly session cookie; see `SECURITY.md`).
-* **Python SDK**: `motionproof.ManufacturingExperiment`. The README example is executed as a
+* **Python SDK**: `motionproof.ManufacturingExperiment`. The example in `docs/python-sdk.md` is executed as a
   test.
 * **Web application** (React 19, three.js, Recharts), 29 screens grouped as Models,
   Manufacturing, Inspection and test, Experiments, Reliability, Optimisation and Evidence. It

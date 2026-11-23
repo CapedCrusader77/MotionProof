@@ -7,6 +7,10 @@
   439 panels and rows on ten screens) now passes in both themes; faint text, status colours and
   the sidebar were darkened or lightened to reach 4.5:1, and the breadcrumb no longer greys out
   the "Synthetic" badge.
+* README cut to one scannable page (88 lines): pitch, the four steps, one real run, the flow, the
+  app tour, quick start and a table of links. The feature table, the SDK example, the verification
+  notes and the development commands moved unchanged into `docs/features.md`, `docs/python-sdk.md`,
+  `docs/verification.md` and `docs/development.md`.
 * README screenshots, the tour GIF and the homepage screenshots retaken in the current dark
   theme with `frontend/tools/capture-screens.mjs` and `scripts/make_tour.py`.
 

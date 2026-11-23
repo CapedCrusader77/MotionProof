@@ -1,4 +1,4 @@
-"""The SDK example printed in README.md must run against the real implementation."""
+"""The SDK example in docs/python-sdk.md must run against the real implementation."""
 
 from __future__ import annotations
 
