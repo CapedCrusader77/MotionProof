@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import numpy as np
-from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
@@ -185,9 +185,12 @@ def create_app(home: str | Path | None = None) -> FastAPI:
         return {"status": "ok"}
 
     @app.get(f"{API}/system")
-    def system() -> dict[str, Any]:
+    def system(request: Request) -> dict[str, Any]:
+        ai_state = ai_status()
+        if ai_state.get("cloud") and ai_state["available"]:
+            ai_state["used_today"] = request.app.state.auth.ai_used(request.state.user["id"])
         return {"status": "ok", "versions": versions(), "workspace": str(store.home),
-                "active_jobs": len(jobs.active()), "ai": ai_status()}
+                "active_jobs": len(jobs.active()), "ai": ai_state}
 
     @app.get(f"{API}/jobs/{{job_id}}")
     def job(job_id: str) -> dict[str, Any]:
@@ -628,11 +631,16 @@ def create_app(home: str | Path | None = None) -> FastAPI:
                             filename=f"{experiment_id}_report.pdf")
 
     @app.post(f"{API}/ai/explain")
-    def ai(body: AiIn) -> dict[str, Any]:
+    def ai(body: AiIn, request: Request) -> dict[str, Any]:
         exp = experiment(body.experiment_id)
         if not exp.results():
             raise HTTPException(409, "the experiment has no results to explain")
-        return ai_explain(reporting.build(exp), body.question)
+        report = reporting.build(exp)
+        state = ai_status()
+        if state.get("cloud") and state["available"]:
+            # each account has a daily budget of cloud questions
+            request.app.state.auth.ai_use(request.state.user["id"], int(state["daily_limit"]))
+        return ai_explain(report, body.question)
 
     from motionproof.api.advanced_routes import register as register_advanced
 

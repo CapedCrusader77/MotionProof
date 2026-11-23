@@ -24,8 +24,12 @@ on a network, put it behind HTTPS.
 * Paths inside a model directory are resolved and refused if they leave it.
 * No shell commands are built from user input.
 * Project deletion requires the project id as explicit confirmation.
-* The optional AI assistant talks only to a local Ollama server and receives a digest of stored
-  results; disable it with `MOTIONPROOF_AI=off`.
+* The optional AI assistant receives only a digest of one experiment's stored results. By default
+  it talks to a local Ollama server. With `MOTIONPROOF_AI_PROVIDER=anthropic` or `openai` it sends
+  that digest and the question to the provider over https; the API key comes from the server's
+  environment only (never stored, never sent to the browser, never in a response or error), each
+  account has a daily question limit, and the interface says where the data goes. Disable it with
+  `MOTIONPROOF_AI=off`. See [`docs/ai-assistant.md`](docs/ai-assistant.md).
 * MotionProof does not connect to actuators or other hardware except through the hardware
   module, which needs an explicit confirmation before it moves anything.
 

@@ -10,7 +10,7 @@
   <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-2f6f4f"></a>
   <img alt="Python 3.12" src="https://img.shields.io/badge/python-3.12-3b5b92">
   <img alt="MuJoCo 3.14" src="https://img.shields.io/badge/physics-MuJoCo%203.14-555">
-  <img alt="tests" src="https://img.shields.io/badge/tests-262%20%2B%2013%20e2e-2f6f4f">
+  <img alt="tests" src="https://img.shields.io/badge/tests-280%20%2B%2014%20e2e-2f6f4f">
   <img alt="benchmarks" src="https://img.shields.io/badge/benchmarks-13%2F14%20pass-2f6f4f">
 </p>
 

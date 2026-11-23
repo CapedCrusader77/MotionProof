@@ -22,7 +22,7 @@ export function ReportsScreen() {
   const ask = async () => {
     if (!experimentId) return;
     setAsking(true);
-    try { setAnswer(await api.explain(experimentId, question)); } catch (e) { setAnswer({ available: false, reason: (e as Error).message }); } finally { setAsking(false); }
+    try { setAnswer(await api.explain(experimentId, question)); } catch (e) { setAnswer({ available: false, reason: (e as Error).message }); } finally { setAsking(false); health.reload(); }
   };
   const formats: ["pdf" | "markdown" | "json" | "csv", string, typeof FileText][] = [
     ["pdf", "PDF engineering report", FileText], ["markdown", "Markdown report", FileText], ["json", "JSON (full data)", FileJson], ["csv", "CSV (all scenarios)", FileSpreadsheet]];
@@ -59,10 +59,11 @@ export function ReportsScreen() {
           </Panel>}
           {experimentId && replay && <ScenarioReplay experimentId={experimentId} scenario={replay} />}
         </div>
-        <Panel title="AI explanation (optional)" actions={<Badge kind={health.data?.ai.available ? "ok" : "plain"}>{health.data?.ai.available ? `local: ${health.data.ai.model}` : "not available"}</Badge>}
+        <Panel title="AI explanation (optional)" actions={<Badge kind={health.data?.ai.available ? "ok" : "plain"}>{!health.data?.ai.available ? "Not available" : health.data.ai.cloud ? `Cloud: ${health.data.ai.provider}, ${health.data.ai.model}` : `Local: ${health.data.ai.model}`}</Badge>}
           foot="Explanations are generated text. Every number in MotionProof comes from the engineering engine, never from a language model.">
-          {!health.data?.ai.available ? <Empty title="No local AI model">{health.data?.ai.reason ?? "Checking…"}. MotionProof works fully without it. To enable explanations, run a local Ollama server with a model installed.</Empty>
+          {!health.data?.ai.available ? <Empty title="No AI model configured">{health.data?.ai.reason ?? "Checking…"}. MotionProof works fully without it. To enable explanations, run a local Ollama server with a model installed, or set MOTIONPROOF_AI_PROVIDER, MOTIONPROOF_AI_KEY and MOTIONPROOF_AI_MODEL on the server for a cloud provider.</Empty>
             : !experimentId ? <Empty title="Select an experiment" /> : (<div className="col">
+              {health.data.ai.cloud && <Alert kind="warn">Your question and a summary of this experiment's results (metrics, constraints, failure categories, assumptions; no CAD files) are sent to {health.data.ai.host}. {health.data.ai.used_today ?? 0} of {health.data.ai.daily_limit} questions used today.</Alert>}
               <Field label="Question about this experiment's evidence"><textarea rows={3} value={question} placeholder="e.g. Which tolerances drive the positioning failures?" onChange={(e) => setQuestion(e.target.value)} /></Field>
               <button className="btn primary" disabled={asking || question.trim().length === 0} onClick={ask}><Send />{asking ? "Generating…" : "Ask"}</button>
               {answer && (answer.available ? <><div style={{ whiteSpace: "pre-wrap" }}>{answer.answer}</div><p className="small faint">{answer.disclaimer}</p></> : <Alert kind="warn">{answer.reason}</Alert>)}

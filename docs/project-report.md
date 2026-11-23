@@ -29,7 +29,7 @@ Around that core it now has:
 |---|---|
 | Python engine | 15,055 lines in 28 subpackages |
 | React application | 5,496 lines, 29 screens |
-| Tests | 3,373 lines, 262 tests plus 13 browser end-to-end, all passing |
+| Tests | 3,373 lines, 280 tests plus 14 browser end-to-end, all passing |
 | REST API | 83 routes |
 | CLI | 55 commands |
 | Documentation | 48 topic documents in `docs/` plus top-level guides |
@@ -299,11 +299,11 @@ On top of the results:
 
 | Check | Result |
 |---|---|
-| `pytest`: unit, analytic physics, integration, end to end, API and CLI contracts, benchmark package | 262 passed |
+| `pytest`: unit, analytic physics, integration, end to end, API and CLI contracts, benchmark package | 280 passed |
 | `mypy --strict` (engine and benchmark scripts) | clean, 99 files |
 | `ruff` | clean |
 | Frontend `tsc` (application and E2E sources) and `vite build` | clean |
-| Playwright E2E against the real backend and a fresh workspace | 13 passed: sign-in checked against the server, a process batch, an adaptive experiment and a degradation projection launched from their screens, a password changed in Settings, shell, project and reference design created through the UI, all 29 screens render, the chooser opens a screen from a pick, command palette, theme persistence, bad input rejected, no horizontal overflow at 390 px |
+| Playwright E2E against the real backend and a fresh workspace | 14 passed: sign-in checked against the server, a process batch, an adaptive experiment and a degradation projection launched from their screens, a password changed in Settings, shell, project and reference design created through the UI, all 29 screens render, the chooser opens a screen from a pick, command palette, theme persistence, bad input rejected, no horizontal overflow at 390 px |
 | API contract | no route answers 5xx to invalid input; collection routes succeed on an empty workspace |
 | CLI contract | every one of the 55 commands answers `--help` |
 | Accounts | 10 tests: sessions required, wrong password and unknown email answer alike, throttling, no clear-text passwords or tokens stored, per-account workspaces and jobs |

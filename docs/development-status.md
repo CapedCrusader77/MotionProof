@@ -39,7 +39,7 @@ KUKA model; per-run TCP data (does not exist in the NIST release).
 | 1. Test the real NEMA 17 planetary gearbox | **Tooling ready, not run** | serial device, firmware sketch, rig test files, `hardware analyse`; tests/integration/test_hardware.py (15) incl. serial path with a fake port and model-independent analysis | build the rig (`docs/rig-build-and-test.md`), compile the firmware, run the tests; no physical measurement exists |
 | 2. Validate against real manufacturing measurements | **Tooling ready, no data** | measurement CSV import, summary, apply, per-part evaluation; test_measurements.py (4); as-built scan path from 0.3.0 | measured dimensions or a real scan of the parts |
 | 3. Reproducible benchmarks | **Done (synthetic)** | `benchmarks/`: inputs, raw data, references, hashes; 13 PASS, J NOT RUN; cross-check 57/57 agree; test_benchmark_package.py (3) | physical benchmark J needs item 1 |
-| 4. Software hardening | **Done** | full pytest 262 passed; mypy strict clean (99 files); ruff clean (engine, tests, benchmarks); test_contracts.py (CLI help for every command, every API route); 13 Playwright E2E tests passed against the real backend with installed Chrome; CI workflow for Windows and Linux | CI first run on GitHub to be checked |
+| 4. Software hardening | **Done** | full pytest 280 passed; mypy strict clean (99 files); ruff clean (engine, tests, benchmarks); test_contracts.py (CLI help for every command, every API route); 14 Playwright E2E tests passed against the real backend with installed Chrome; CI workflow for Windows and Linux | CI first run on GitHub to be checked |
 | 5. Engineering Challenge with a defensible cost model | **Method verified, defensible run waits for data** | yield cost model, closed-form test, benchmark M; template refuses placeholder values | real unit cost, inspection cost and measured process spread (item 2) |
 
 ## Advanced upgrade: verified
@@ -164,7 +164,7 @@ assembly, the two poses and the design README from `out.zip`.
 | REST API with background jobs, SQLite workspace | `motionproof/api`, `persistence` | End-to-end test |
 | CLI and Python SDK | `motionproof/cli`, `experiments/__init__.py` | Tested, the SDK example in docs/python-sdk.md is a test |
 | React application, 16 screens | `frontend/src` | Builds; partly exercised by hand (see below) |
-| Optional Ollama assistant | `motionproof/ai` | Code path for "unavailable" exercised; **not tested with a running Ollama** |
+| Optional AI assistant (Ollama, Anthropic, OpenAI-compatible) | `motionproof/ai`, `docs/ai-assistant.md` | tests/integration/test_ai.py (16): configuration, https-only keys, request and response shapes, error handling without leaking the key, daily limit; **tested against fakes only, never against a live provider or a running Ollama** |
 
 ## Not done or not verified
 

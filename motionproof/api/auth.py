@@ -60,6 +60,12 @@ CREATE TABLE IF NOT EXISTS failures (
   count INTEGER NOT NULL,
   until REAL NOT NULL
 );
+CREATE TABLE IF NOT EXISTS ai_usage (
+  user_id INTEGER NOT NULL,
+  day TEXT NOT NULL,
+  count INTEGER NOT NULL,
+  PRIMARY KEY (user_id, day)
+);
 CREATE TABLE IF NOT EXISTS sessions (
   token_hash TEXT PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -221,6 +227,34 @@ class AuthStore:
         with self._lock, closing(self._conn()) as c, c:
             return c.execute("DELETE FROM sessions WHERE user_id = ? AND token_hash != ?",
                              (user_id, keep)).rowcount
+
+    @staticmethod
+    def _today() -> str:
+        return time.strftime("%Y-%m-%d", time.gmtime())
+
+    def ai_used(self, user_id: int) -> int:
+        """Cloud AI questions this account has asked today (UTC)."""
+        with closing(self._conn()) as c:
+            row = c.execute("SELECT count FROM ai_usage WHERE user_id = ? AND day = ?",
+                            (user_id, self._today())).fetchone()
+        return int(row[0]) if row else 0
+
+    def ai_use(self, user_id: int, limit: int) -> int:
+        """Count one cloud AI question, or refuse (429) once the day's limit is reached. Returns
+        the questions left today. Counted before the request is sent, so a loop cannot run up a
+        bill."""
+        day = self._today()
+        with self._lock, closing(self._conn()) as c, c:
+            row = c.execute("SELECT count FROM ai_usage WHERE user_id = ? AND day = ?",
+                            (user_id, day)).fetchone()
+            used = int(row[0]) if row else 0
+            if used >= limit:
+                raise HTTPException(429, f"the daily limit of {limit} cloud AI questions is "
+                                         "reached; it resets at 00:00 UTC")
+            c.execute("INSERT OR REPLACE INTO ai_usage (user_id, day, count) VALUES (?, ?, ?)",
+                      (user_id, day, used + 1))
+            c.execute("DELETE FROM ai_usage WHERE day < ?", (day,))
+        return limit - used - 1
 
     def users(self) -> list[dict[str, Any]]:
         with closing(self._conn()) as c:

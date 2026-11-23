@@ -13,4 +13,5 @@
 | **Reliability** | workspace maps, lifetime degradation, adaptive Gaussian-process sampling, multi-fidelity checks |
 | **Hardware** | JSON-lines rig protocol, safety monitor, ESP32 firmware sketch, encoder analysis without the model |
 | **Accounts** | sign-in with salted scrypt hashes and HttpOnly sessions; every account gets its own workspace and private jobs |
+| **AI (optional)** | explanations of an experiment's results from a local Ollama model or, with a server-side API key, Anthropic or an OpenAI-compatible API; daily limit per account; see [AI assistant](ai-assistant.md) |
 | **Interfaces** | web app (29 screens), REST API (83 routes), CLI (55 commands), Python SDK, PDF/Markdown/JSON/CSV reports |

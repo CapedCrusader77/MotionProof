@@ -44,7 +44,7 @@ services.py ──> api.app (FastAPI, api.auth, api.jobs) ──> frontend (Reac
 | `persistence` | Workspace folders and the SQLite index |
 | `api`, `cli`, `services` | Interfaces; `services` holds logic shared by both |
 | `api.auth` | Accounts, sessions and the middleware that requires one; hands each request the signed-in account's own `Store` and tags background jobs with their owner |
-| `ai` | Optional Ollama client that only sees a digest of stored results |
+| `ai` | Optional assistant (Ollama, Anthropic or an OpenAI-compatible API) that only sees a digest of stored results |
 
 ## Decisions
 

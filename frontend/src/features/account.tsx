@@ -200,8 +200,10 @@ export function SettingsPage() {
           <Section id="system" title="System">
             <Row label="Backend"><span>{sys.error ? <span className="neg">{sys.error}</span> : sys.data ? "running" : "…"}</span></Row>
             {sys.data && Object.entries(sys.data.versions).map(([k, v]) => <Row key={k} label={k}><span className="mono">{v}</span></Row>)}
-            <Row label="Optional AI" hint="Local Ollama only. Disable with MOTIONPROOF_AI=off.">
-              <span>{sys.data ? (sys.data.ai.available ? `available (${sys.data.ai.model})` : `off: ${sys.data.ai.reason}`) : "…"}</span></Row>
+            <Row label="Optional AI" hint="Local Ollama by default. For a cloud provider the server needs MOTIONPROOF_AI_PROVIDER (anthropic or openai), MOTIONPROOF_AI_KEY and, for openai, MOTIONPROOF_AI_MODEL; the key stays on the server. Disable with MOTIONPROOF_AI=off.">
+              {!sys.data ? <span>…</span> : !sys.data.ai.available ? <span>Off: {sys.data.ai.reason}</span>
+                : sys.data.ai.cloud ? <span>Cloud ({sys.data.ai.provider}, {sys.data.ai.model}). Questions and result summaries are sent to <span className="mono">{sys.data.ai.host}</span>. {sys.data.ai.used_today ?? 0} of {sys.data.ai.daily_limit} questions used today.</span>
+                : <span>Local ({sys.data.ai.model}). Nothing leaves this machine.</span>}</Row>
             <Row label="Execution" hint="Set MOTIONPROOF_WORKERS to change the number of worker processes.">
               <span>Runs of 100 scenarios or more use several worker processes; results are identical to a one-process run. Interrupted runs resume.</span></Row>
             <Row label="Scope of results"><span className="muted">Model predictions conditional on the supplied geometry, tolerances and drive-train values. Not a certification of strength, fatigue life, thermal behaviour or real-world reliability.</span></Row>

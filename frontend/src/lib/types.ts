@@ -248,7 +248,8 @@ export interface CalibrationResult {
 }
 export interface Health {
   status: string; versions: Dict<string>; workspace: string; active_jobs: number;
-  ai: { available: boolean; reason?: string; model?: string };
+  ai: { available: boolean; reason?: string; model?: string; provider?: string; cloud?: boolean;
+        host?: string; daily_limit?: number; used_today?: number };
 }
 export interface Report {
   synthetic_notice: string | null; assumptions: string[]; limitations: string[]; versions: Dict<string>;

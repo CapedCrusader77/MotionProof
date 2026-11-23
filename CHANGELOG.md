@@ -2,6 +2,12 @@
 
 ## Unreleased - accounts, interface and reproducibility
 
+* AI assistant: optional cloud providers besides local Ollama (`MOTIONPROOF_AI_PROVIDER=anthropic`
+  or `openai`, any OpenAI-compatible endpoint). The API key comes from the server's environment
+  only and never reaches the browser, a response or an error message; keys are only sent over
+  https; a per-account daily limit (default 30) is counted before each request; the Reports panel
+  and Settings say where data goes. See `docs/ai-assistant.md`.
+
 * Themes: dark is a near-black neutral with rounded cards, light is a blue-grey ground with white
   shadowed cards and a navy sidebar. A DOM contrast audit (`frontend/tools/audit-contrast.mjs`,
   439 panels and rows on ten screens) now passes in both themes; faint text, status colours and
