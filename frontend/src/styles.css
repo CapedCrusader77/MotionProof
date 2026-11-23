@@ -532,3 +532,7 @@ table.grid tr.selected td:first-child { box-shadow: inset 3px 0 0 var(--accent);
 [data-theme="light"] .nav-item.active { background: #2c3144; }
 [data-theme="light"] .nav-item.active::before { background: #6f6cf0; }
 [data-theme="light"] .nav-item.active svg { color: #9b99ff; }
+
+/* administrator: add an account */
+.acct-add { margin: 12px 0 14px; }
+.acct-add .input { max-width: 220px; }

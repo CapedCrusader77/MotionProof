@@ -163,14 +163,19 @@ test("account panel changes the password", async ({ page }) => {
   await page.getByLabel("Current password").fill(ACCOUNT.password);
   await page.getByLabel("New password", { exact: true }).fill("e2e-password-2");
   await page.getByLabel("New password again").fill("e2e-password-2");
+  // wait for the server's answer, not just a toast: hashing takes a moment, and the next test signs
+  // in with the original password as soon as this one ends
+  const answered = () => page.waitForResponse((r) => r.url().endsWith("/account/password") && r.request().method() === "POST");
+  let reply = answered();
   await page.getByRole("button", { name: "Change password" }).click();
-  await expect(page.getByText(/Password changed/)).toBeVisible();
+  expect((await reply).status()).toBe(200);
   // put it back so later tests can sign in
   await page.getByLabel("Current password").fill("e2e-password-2");
   await page.getByLabel("New password", { exact: true }).fill(ACCOUNT.password);
   await page.getByLabel("New password again").fill(ACCOUNT.password);
+  reply = answered();
   await page.getByRole("button", { name: "Change password" }).click();
-  await expect(page.getByText(/Password changed/).first()).toBeVisible();
+  expect((await reply).status()).toBe(200);
 });
 
 test("a screen whose file vanished after a rebuild reloads and opens", async ({ page }) => {

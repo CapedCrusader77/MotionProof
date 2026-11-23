@@ -115,7 +115,9 @@ def test_each_account_has_its_own_workspace(tmp_path) -> None:  # type: ignore[n
     assert b.get(f"/api/v1/projects/{pid}").status_code == 404
     # the first account keeps the workspace root; later accounts get their own folder
     assert a.get("/api/v1/system").json()["workspace"] == str(tmp_path.resolve())
-    assert b.get("/api/v1/system").json()["workspace"] == str((tmp_path / "users" / "2").resolve())
+    # a member is not told where the server keeps its files
+    assert b.get("/api/v1/system").json()["workspace"] == "your own workspace"
+    assert (tmp_path / "users" / "2").is_dir()
 
 
 def test_jobs_are_private_to_their_owner(tmp_path) -> None:  # type: ignore[no-untyped-def]

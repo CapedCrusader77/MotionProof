@@ -19,15 +19,25 @@ JobFn = Callable[[Callable[[dict[str, Any]], None], threading.Event], Any]
 
 
 class JobManager:
-    def __init__(self, workers: int = 1):
+    def __init__(self, workers: int = 1, max_per_user: int | None = None):
+        self.max_per_user = max_per_user
         self._pool = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="mp-job")
         self._jobs: dict[str, dict[str, Any]] = {}
         self._cancel: dict[str, threading.Event] = {}
         self._lock = threading.Lock()
 
     def submit(self, kind: str, subject: str, fn: JobFn) -> dict[str, Any]:
+        from fastapi import HTTPException
+
         from motionproof.api.auth import current_user
 
+        owner = current_user.get()
+        if self.max_per_user is not None and owner is not None:
+            mine = sum(1 for j in self._jobs.values()
+                       if j.get("owner") == owner and j["status"] in ("queued", "running"))
+            if mine >= self.max_per_user:
+                raise HTTPException(429, f"you already have {mine} jobs queued or running "
+                                         f"(limit {self.max_per_user}); wait for one to finish")
         jid = uuid.uuid4().hex[:12]
         cancel = threading.Event()
         job: dict[str, Any] = {"id": jid, "kind": kind, "subject": subject, "status": "queued",

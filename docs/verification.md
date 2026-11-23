@@ -7,7 +7,7 @@ What has been checked, how, and what has not.
   [`reference_calculations.py`](../benchmarks/reference_calculations.py), which uses only NumPy
   and SciPy and never imports MotionProof. Published outputs are reproducible byte for byte.
   Results: [`BENCHMARK_RESULTS.md`](../BENCHMARK_RESULTS.md).
-* **Tests.** 280 backend tests, including analytic physics checks, an API contract that no route
+* **Tests.** 300 backend tests, including analytic physics checks, an API contract that no route
   answers 5xx to bad input, account isolation, and 14 Playwright end-to-end tests against the
   real backend.
 * **External experimental validation.** Public measurements of other robots (Stäubli TX2-40,

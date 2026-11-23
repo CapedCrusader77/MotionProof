@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useState, type FormEvent, type KeyboardEvent } from "react";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useApp } from "../stores/app";
 import { ApiError, auth } from "../lib/api";
@@ -25,6 +25,9 @@ function Plate() {
 export function LoginScreen() {
   const login = useApp((s) => s.login);
   const [mode, setMode] = useState<"signin" | "register">("signin");
+  // a server with closed registration makes its accounts itself (Settings, or `motionproof account`)
+  const [registration, setRegistration] = useState<"open" | "closed">("open");
+  useEffect(() => { auth.config().then((c) => setRegistration(c.registration), () => undefined); }, []);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -65,8 +68,10 @@ export function LoginScreen() {
       <Plate />
       <main className="lg-side" id="main-content">
         <div className="lg-top">
-          <span className="lg-top-q">{register ? "Have an account?" : "New to this server?"}</span>
-          <button type="button" className="btn lg-switch ink-ghost" onClick={switchMode}>{register ? "Sign in" : "Create an account"}</button>
+          {registration === "open" ? <>
+            <span className="lg-top-q">{register ? "Have an account?" : "New to this server?"}</span>
+            <button type="button" className="btn lg-switch ink-ghost" onClick={switchMode}>{register ? "Sign in" : "Create an account"}</button>
+          </> : <span className="lg-top-q">Accounts are created by the administrator.</span>}
         </div>
         <form className="lg-form" onSubmit={submit} noValidate>
           <a className="lg-brand sm" href="#/"><i className="mark" />MotionProof</a>

@@ -29,7 +29,7 @@ Around that core it now has:
 |---|---|
 | Python engine | 15,055 lines in 28 subpackages |
 | React application | 5,496 lines, 29 screens |
-| Tests | 3,373 lines, 280 tests plus 14 browser end-to-end, all passing |
+| Tests | 3,373 lines, 300 tests plus 14 browser end-to-end, all passing |
 | REST API | 83 routes |
 | CLI | 55 commands |
 | Documentation | 48 topic documents in `docs/` plus top-level guides |
@@ -299,7 +299,7 @@ On top of the results:
 
 | Check | Result |
 |---|---|
-| `pytest`: unit, analytic physics, integration, end to end, API and CLI contracts, benchmark package | 280 passed |
+| `pytest`: unit, analytic physics, integration, end to end, API and CLI contracts, benchmark package | 300 passed |
 | `mypy --strict` (engine and benchmark scripts) | clean, 99 files |
 | `ruff` | clean |
 | Frontend `tsc` (application and E2E sources) and `vite build` | clean |

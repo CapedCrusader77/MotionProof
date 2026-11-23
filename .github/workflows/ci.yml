@@ -24,6 +24,22 @@ jobs:
       - name: Benchmark references run without MotionProof
         run: uv run python -I benchmarks/reference_calculations.py benchmarks/data
 
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Python dependencies with known vulnerabilities
+        run: |
+          uv export --frozen --no-hashes --no-emit-project > requirements.audit.txt
+          uvx pip-audit -r requirements.audit.txt --no-deps --disable-pip
+      - name: JavaScript dependencies with known vulnerabilities
+        run: npm audit --omit=dev
+        working-directory: frontend
+
   benchmarks:
     runs-on: ubuntu-24.04
     needs: backend

@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from pydantic import BaseModel, ConfigDict, Field
 
 from motionproof import advanced, services
@@ -188,9 +188,18 @@ def register(app: FastAPI, store: Store, jobs: JobManager) -> None:
         return list_devices()
 
     @app.post(f"{API}/hardware/experiments", status_code=202)
-    def hardware_create(req: advanced.HardwareRequest) -> dict[str, Any]:
+    def hardware_create(req: advanced.HardwareRequest, request: Request) -> dict[str, Any]:
         if not req.confirm_actuation:
             raise HTTPException(400, "actuation was not confirmed; nothing was sent")
+        if req.device != "simulated":
+            # only the serial ports the server itself lists, and only if the server allows them
+            from motionproof.hardware.device import list_devices
+
+            if not request.app.state.security.serial:
+                raise HTTPException(403, "serial devices are disabled on this server "
+                                         "(MOTIONPROOF_SERIAL=1 enables them)")
+            if req.device not in {d["id"] for d in list_devices() if d["kind"] == "serial"}:
+                raise HTTPException(422, f"unknown serial device {req.device!r}")
         services.load_model(store, req.model_id)
         return submit("hardware", req.model_id,
                       lambda p, c: advanced.hardware_run(store, req)["id"])

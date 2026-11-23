@@ -21,6 +21,7 @@ from __future__ import annotations
 import contextvars
 import hashlib
 import hmac
+import logging
 import re
 import secrets
 import sqlite3
@@ -35,6 +36,7 @@ from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
+from motionproof.api.security import RateLimiter, SecurityConfig
 from motionproof.persistence.store import Store
 
 COOKIE = "mp_session"
@@ -43,7 +45,11 @@ MIN_PASSWORD = 8
 # sign-in throttling: after this many failures for one email, wait LOCK_SECONDS
 MAX_FAILURES = 5
 LOCK_SECONDS = 60
-_SCRYPT = {"n": 2 ** 14, "r": 8, "p": 1, "dklen": 32}
+# scrypt cost: N = 2**LOG_N (64 MB, about 0.35 s). Accounts made with a lower cost are rehashed at
+# their next successful sign-in.
+LOG_N = 16
+OLD_LOG_N = 14                    # what accounts created before the cost was raised use
+LOG = logging.getLogger("motionproof.auth")
 _EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 SCHEMA = """
@@ -74,7 +80,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 """
 
 # Paths under /api/v1 that work without a session.
-PUBLIC = {"/health", "/auth/login", "/auth/register", "/auth/me", "/auth/logout"}
+PUBLIC = {"/health", "/auth/config", "/auth/login", "/auth/register", "/auth/me", "/auth/logout"}
 # /health answers only {"status": "ok"}; server details are at /system, behind sign-in.
 
 
@@ -105,8 +111,9 @@ class UserStores:
         return getattr(self.for_user(uid), name)
 
 
-def _hash_password(password: str, salt: bytes) -> bytes:
-    return hashlib.scrypt(password.encode("utf-8"), salt=salt, **_SCRYPT)
+def _hash_password(password: str, salt: bytes, log_n: int = LOG_N) -> bytes:
+    return hashlib.scrypt(password.encode("utf-8"), salt=salt, n=2 ** log_n, r=8, p=1,
+                          maxmem=2 ** 28, dklen=32)
 
 
 def _token_hash(token: str) -> str:
@@ -153,6 +160,8 @@ class AuthStore:
         with closing(self._conn()) as c, c:
             c.executescript(SCHEMA)
             cols = [r[1] for r in c.execute("PRAGMA table_info(users)")]
+            if "kdf" not in cols:       # accounts created before the scrypt cost was raised
+                c.execute(f"ALTER TABLE users ADD COLUMN kdf INTEGER NOT NULL DEFAULT {OLD_LOG_N}")
             if "is_admin" not in cols:  # accounts created before the admin role existed
                 c.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0")
                 c.execute("UPDATE users SET is_admin = 1 WHERE id = (SELECT MIN(id) FROM users)")
@@ -173,6 +182,11 @@ class AuthStore:
         if len(password) < MIN_PASSWORD:
             raise ValueError(f"the password needs at least {MIN_PASSWORD} characters")
 
+    def exists(self, email: str) -> bool:
+        with closing(self._conn()) as c:
+            return c.execute("SELECT 1 FROM users WHERE email = ?",
+                             (email.strip().lower(),)).fetchone() is not None
+
     def register(self, email: str, password: str, name: str) -> dict[str, Any]:
         email = email.strip().lower()
         if not _EMAIL.match(email):
@@ -183,10 +197,10 @@ class AuthStore:
         with self._lock, closing(self._conn()) as c, c:
             first = c.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0
             try:
-                cur = c.execute("INSERT INTO users (email, name, salt, hash, created, is_admin) "
-                                "VALUES (?, ?, ?, ?, ?, ?)",
+                cur = c.execute("INSERT INTO users (email, name, salt, hash, created, is_admin, "
+                                "kdf) VALUES (?, ?, ?, ?, ?, ?, ?)",
                                 (email, name.strip() or email.split("@")[0], salt, digest,
-                                 time.time(), int(first)))
+                                 time.time(), int(first), LOG_N))
             except sqlite3.IntegrityError:
                 raise HTTPException(409, "an account with this email already exists") from None
             row = c.execute(f"SELECT {self.USER_COLS} FROM users WHERE id = ?",
@@ -195,8 +209,9 @@ class AuthStore:
 
     def _verify(self, user_id: int, password: str) -> None:
         with closing(self._conn()) as c:
-            row = c.execute("SELECT salt, hash FROM users WHERE id = ?", (user_id,)).fetchone()
-        if row is None or not hmac.compare_digest(_hash_password(password, row[0]), row[1]):
+            row = c.execute("SELECT salt, hash, kdf FROM users WHERE id = ?",
+                            (user_id,)).fetchone()
+        if row is None or not hmac.compare_digest(_hash_password(password, row[0], row[2]), row[1]):
             raise HTTPException(403, "the password is not correct")
 
     def set_password(self, user_id: int, new: str, keep_token: str | None = None) -> None:
@@ -204,8 +219,8 @@ class AuthStore:
         self._check_password(new)
         salt = secrets.token_bytes(16)
         with self._lock, closing(self._conn()) as c, c:
-            if c.execute("UPDATE users SET salt = ?, hash = ? WHERE id = ?",
-                         (salt, _hash_password(new, salt), user_id)).rowcount == 0:
+            if c.execute("UPDATE users SET salt = ?, hash = ?, kdf = ? WHERE id = ?",
+                         (salt, _hash_password(new, salt), LOG_N, user_id)).rowcount == 0:
                 raise HTTPException(404, "no such account")
             keep = _token_hash(keep_token) if keep_token else ""
             c.execute("DELETE FROM sessions WHERE user_id = ? AND token_hash != ?",
@@ -278,15 +293,19 @@ class AuthStore:
         now = time.time()
         with closing(self._conn()) as c:
             f = c.execute("SELECT count, until FROM failures WHERE email = ?", (email,)).fetchone()
-            row = c.execute(f"SELECT {self.USER_COLS}, salt, hash FROM users WHERE email = ?",
+            row = c.execute(f"SELECT {self.USER_COLS}, salt, hash, kdf FROM users WHERE email = ?",
                             (email,)).fetchone()
         count, until = f if f else (0, 0.0)
         if count >= MAX_FAILURES and now < until:
             raise HTTPException(429, "too many failed sign-ins; try again in a minute")
         # hash even for an unknown email, so the response time does not reveal which exist
-        salt, stored = (row[4], row[5]) if row else (b"\0" * 16, b"")
-        ok = hmac.compare_digest(_hash_password(password, salt), stored) and row is not None
+        salt, stored, log_n = (row[4], row[5], row[6]) if row else (b"\0" * 16, b"", LOG_N)
+        ok = hmac.compare_digest(_hash_password(password, salt, log_n), stored) and row is not None
         with self._lock, closing(self._conn()) as c, c:
+            if ok and log_n < LOG_N:      # first sign-in since the cost was raised: rehash now
+                new_salt = secrets.token_bytes(16)
+                c.execute("UPDATE users SET salt = ?, hash = ?, kdf = ? WHERE id = ?",
+                          (new_salt, _hash_password(password, new_salt), LOG_N, row[0]))
             if not ok:
                 count = count + 1 if now < until or count < MAX_FAILURES else 1
                 c.execute("INSERT OR REPLACE INTO failures (email, count, until) VALUES (?, ?, ?)",
@@ -321,14 +340,26 @@ class AuthStore:
                 c.execute("DELETE FROM sessions WHERE token_hash = ?", (_token_hash(token),))
 
 
-def install(app: FastAPI, home: Path, api: str) -> AuthStore:
+def _ip(request: Request) -> str:
+    return request.client.host if request.client else "unknown"
+
+
+def install(app: FastAPI, home: Path, api: str, cfg: SecurityConfig) -> AuthStore:
     """Add the auth routes and the middleware that guards the rest of the API."""
     auth = AuthStore(home)
     app.state.auth = auth
+    # failed sign-ins per address, and new accounts per address (each costs CPU and memory)
+    failed_signins = RateLimiter(20, 600)
+    new_accounts = RateLimiter(10, 3600)
 
     def set_cookie(response: Response, request: Request, token: str) -> None:
         response.set_cookie(COOKIE, token, max_age=SESSION_SECONDS, httponly=True,
-                            samesite="strict", secure=request.url.scheme == "https", path="/")
+                            samesite="strict", path="/",
+                            secure=cfg.secure_cookies or request.url.scheme == "https")
+
+    def too_many(wait: float) -> HTTPException:
+        return HTTPException(429, f"too many attempts from this address; try again in "
+                                  f"{int(wait) + 1} s", headers={"Retry-After": str(int(wait) + 1)})
 
     @app.middleware("http")
     async def require_session(request: Request,
@@ -347,15 +378,38 @@ def install(app: FastAPI, home: Path, api: str) -> AuthStore:
                 current_user.reset(reset)
         return await call_next(request)
 
+    @app.get(f"{api}/auth/config")
+    def auth_config() -> dict[str, Any]:
+        return {"registration": cfg.registration}
+
     @app.post(f"{api}/auth/register", status_code=201)
     def register(body: Registration, request: Request, response: Response) -> dict[str, Any]:
+        if cfg.registration == "closed":
+            raise HTTPException(403, "registration is closed; ask the administrator for an account")
+        if auth.exists(body.email):                  # no password hashing for a known email
+            raise HTTPException(409, "an account with this email already exists")
+        wait = new_accounts.hit(_ip(request))
+        if wait:
+            raise too_many(wait)
         user = auth.register(body.email, body.password, body.name)
+        LOG.info("account created id=%s ip=%s", user["id"], _ip(request))
         set_cookie(response, request, auth.open_session(user["id"]))
         return {"user": user}
 
     @app.post(f"{api}/auth/login")
     def login(body: Credentials, request: Request, response: Response) -> dict[str, Any]:
-        user = auth.authenticate(body.email, body.password)
+        wait = failed_signins.check(_ip(request))
+        if wait:
+            raise too_many(wait)
+        try:
+            user = auth.authenticate(body.email, body.password)
+        except HTTPException as exc:
+            if exc.status_code == 401:
+                failed_signins.hit(_ip(request))
+                LOG.warning("sign-in failed email=%s ip=%s", body.email.strip().lower()[:80],
+                            _ip(request))
+            raise
+        LOG.info("sign-in id=%s ip=%s", user["id"], _ip(request))
         set_cookie(response, request, auth.open_session(user["id"]))
         return {"user": user}
 
@@ -383,6 +437,7 @@ def install(app: FastAPI, home: Path, api: str) -> AuthStore:
         uid = request.state.user["id"]
         auth._verify(uid, body.current)
         auth.set_password(uid, body.new, keep_token=request.cookies.get(COOKIE))
+        LOG.info("password changed id=%s ip=%s", uid, _ip(request))
         return {"ok": True}
 
     @app.get(f"{api}/account")
@@ -405,8 +460,18 @@ def install(app: FastAPI, home: Path, api: str) -> AuthStore:
         uid = request.state.user["id"]
         auth._verify(uid, body.password)
         auth.delete(uid)
+        LOG.info("account deleted by owner id=%s ip=%s", uid, _ip(request))
         response.delete_cookie(COOKIE, path="/")
         return {"ok": True}
+
+    @app.post(f"{api}/admin/users", status_code=201)
+    def create_user(body: Registration, request: Request) -> dict[str, Any]:
+        me_ = admin(request)
+        if auth.exists(body.email):
+            raise HTTPException(409, "an account with this email already exists")
+        user = auth.register(body.email, body.password, body.name)
+        LOG.info("account created by admin id=%s new=%s", me_["id"], user["id"])
+        return user
 
     @app.get(f"{api}/admin/users")
     def list_users(request: Request) -> list[dict[str, Any]]:

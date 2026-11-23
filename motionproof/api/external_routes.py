@@ -8,7 +8,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 
 from motionproof.api.jobs import JobManager
 
@@ -57,7 +57,9 @@ def register(app: FastAPI, jobs: JobManager) -> None:
         return [a.load(data_root(), f).summary() for f in files[:max(1, min(limit, 5))]]
 
     @app.post(f"{API}/datasets/{{key}}/import", status_code=202)
-    def import_dataset(key: str) -> dict[str, Any]:
+    def import_dataset(key: str, request: Request) -> dict[str, Any]:
+        if not request.state.user["admin"]:        # downloads use the server's disk and bandwidth
+            raise HTTPException(403, "only the administrator can download datasets")
         if key not in ADAPTERS:
             raise HTTPException(404, f"unknown dataset {key!r}")
 

@@ -2,6 +2,22 @@
 
 ## Unreleased - accounts, interface and reproducibility
 
+* Hardening for a server other people can reach (`docs/hosting.md`, `motionproof serve
+  --production`): Secure cookies, closed registration, HSTS, no API docs page, no serial devices
+  on the server, a strict Content-Security-Policy (all 29 screens run with no violations),
+  `X-Frame-Options`, `nosniff`, `Referrer-Policy`, a same-origin check on state-changing requests,
+  no `server:` banner, per-address limits on failed sign-ins and new accounts, 4 jobs per account,
+  scrypt cost raised from 2^14 to 2^16 (old accounts rehashed at their next sign-in), auth events
+  logged, `/system` hides the server path from members.
+* Fixed: the hardware test route opened any path given as `device` as a serial port; it now accepts
+  only the ports the server lists, and only when serial devices are allowed. Dataset downloads
+  need the administrator.
+* Accounts: `motionproof account create|reset-password|list` (with `--password-stdin`), an
+  Add account form for the administrator, and the sign-in page hides "Create an account" when
+  registration is closed.
+* Deployment files in `deploy/` (Caddyfile, systemd unit, environment example), Dependabot, and a
+  CI job that fails on known vulnerabilities in the Python and JavaScript dependencies.
+
 * AI assistant: optional cloud providers besides local Ollama (`MOTIONPROOF_AI_PROVIDER=anthropic`
   or `openai`, any OpenAI-compatible endpoint). The API key comes from the server's environment
   only and never reaches the browser, a response or an error message; keys are only sent over

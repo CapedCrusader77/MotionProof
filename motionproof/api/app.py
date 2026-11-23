@@ -21,6 +21,8 @@ from motionproof import services
 from motionproof.ai.assistant import explain as ai_explain
 from motionproof.ai.assistant import status as ai_status
 from motionproof.api.jobs import JobManager
+from motionproof.api.security import SecurityConfig
+from motionproof.api.security import install as install_security
 from motionproof.cad.importers import MAX_UPLOAD_BYTES, ImportFailure, safe_name
 from motionproof.calibration.fit import (
     CalibrationConfig,
@@ -145,15 +147,19 @@ def create_app(home: str | Path | None = None) -> FastAPI:
     root.mkdir(parents=True, exist_ok=True)
     # every route sees the signed-in user's own workspace through this stand-in
     store: Store = UserStores(root)  # type: ignore[assignment]
-    jobs = JobManager(workers=1)
+    security_cfg = SecurityConfig.from_env()
+    jobs = JobManager(workers=1, max_per_user=security_cfg.max_jobs_per_user)
     app = FastAPI(title="MotionProof", version=motionproof.__version__,
-                  description="Tolerance-to-dynamics engineering lab API")
+                  description="Tolerance-to-dynamics engineering lab API",
+                  docs_url="/docs" if security_cfg.docs else None,
+                  redoc_url="/redoc" if security_cfg.docs else None,
+                  openapi_url="/openapi.json" if security_cfg.docs else None)
     app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173",
                                                       "http://127.0.0.1:5173"],
                        allow_methods=["*"], allow_headers=["*"], allow_credentials=True)
     app.state.store, app.state.jobs = store, jobs
 
-    install_auth(app, root, API)
+    install_auth(app, root, API, security_cfg)
 
     def problem(status: int, message: str) -> JSONResponse:
         return JSONResponse(status_code=status, content={"error": message})
@@ -189,7 +195,10 @@ def create_app(home: str | Path | None = None) -> FastAPI:
         ai_state = ai_status()
         if ai_state.get("cloud") and ai_state["available"]:
             ai_state["used_today"] = request.app.state.auth.ai_used(request.state.user["id"])
-        return {"status": "ok", "versions": versions(), "workspace": str(store.home),
+        is_admin = request.state.user["admin"]
+        # the server's folder layout is for the administrator only
+        return {"status": "ok", "versions": versions(),
+                "workspace": str(store.home) if is_admin else "your own workspace",
                 "active_jobs": len(jobs.active()), "ai": ai_state}
 
     @app.get(f"{API}/jobs/{{job_id}}")
@@ -662,4 +671,6 @@ def create_app(home: str | Path | None = None) -> FastAPI:
             if request.url.path in ("/", "/index.html"):
                 response.headers["Cache-Control"] = "no-cache"
             return response
+    # last, so the headers and the same-origin check cover every response, 401s included
+    install_security(app, security_cfg, API)
     return app

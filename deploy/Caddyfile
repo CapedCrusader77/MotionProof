@@ -1,0 +1,13 @@
+# Caddy terminates https (and gets and renews the certificate by itself) and forwards to MotionProof,
+# which listens only on 127.0.0.1. Replace the host name with yours; its DNS record must already
+# point at this server.
+motionproof.example.com {
+	encode zstd gzip
+
+	# CAD uploads are limited to 300 MB by the application; leave a little room for the form.
+	request_body {
+		max_size 350MB
+	}
+
+	reverse_proxy 127.0.0.1:8000
+}

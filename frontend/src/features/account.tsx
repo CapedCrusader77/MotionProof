@@ -57,6 +57,31 @@ function DeleteAccount({ user }: { user: User }) {
   );
 }
 
+function AddAccount({ onAdded }: { onAdded: () => void }) {
+  const notify = useApp((s) => s.notify);
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      await auth.createUser(email.trim(), password, name.trim());
+      notify("ok", `Account created for ${email.trim()}. Tell them the password; they can change it under Settings.`);
+      setEmail(""); setName(""); setPassword(""); onAdded();
+    } catch (x) { notify("error", (x as Error).message); } finally { setBusy(false); }
+  }
+  return (
+    <form className="st-inline acct-add" onSubmit={submit}>
+      <input className="input" type="email" placeholder="Email" aria-label="New account email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      <input className="input" placeholder="Name (optional)" aria-label="New account name" value={name} onChange={(e) => setName(e.target.value)} />
+      <input className="input" type="password" autoComplete="new-password" placeholder={`Password, ${MIN}+ characters`} aria-label="New account password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      <button className="btn" disabled={busy || !email || password.length < MIN}>Add account</button>
+    </form>
+  );
+}
+
 function Accounts({ me }: { me: User }) {
   const notify = useApp((s) => s.notify);
   const list = useAsync(() => auth.users(), []);
@@ -71,7 +96,8 @@ function Accounts({ me }: { me: User }) {
     try { await auth.deleteUser(u.id); notify("ok", `Deleted ${u.email}`); list.reload(); }
     catch (x) { notify("error", (x as Error).message); }
   }
-  return (
+  return (<>
+    <AddAccount onAdded={list.reload} />
     <Load state={list}>{(users) => (
       <table className="grid">
         <thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Created</th><th /></tr></thead>
@@ -84,7 +110,7 @@ function Accounts({ me }: { me: User }) {
               <button className="btn ghost" onClick={() => remove(u)}>Delete</button></>}</td>
           </tr>))}</tbody>
       </table>)}</Load>
-  );
+  </>);
 }
 
 // ---------------------------------------------------------------------------------- settings page

@@ -161,13 +161,102 @@ def inspect(file: Path, as_json: Annotated[bool, typer.Option("--json")] = False
 
 @app.command()
 @guard
-def serve(host: str = "127.0.0.1", port: int = 8000, home: HomeOpt = None) -> None:
+def serve(host: str = "127.0.0.1", port: int = 8000, home: HomeOpt = None,
+          production: Annotated[bool, typer.Option(
+              "--production", help="Settings for a server other people can reach: Secure "
+              "cookies, closed registration, HSTS, no API docs page, no serial devices. Put it "
+              "behind an https reverse proxy (docs/hosting.md).")] = False,
+          trusted_proxies: Annotated[str, typer.Option(
+              help="Addresses whose X-Forwarded-* headers are believed (the reverse proxy)."
+              )] = "127.0.0.1") -> None:
     """Start the API (and the built web application, when frontend/dist exists)."""
+    import os
+
     import uvicorn
 
+    if production:
+        os.environ["MOTIONPROOF_PRODUCTION"] = "1"
     from motionproof.api.app import create_app
+    from motionproof.api.security import SecurityConfig
 
-    uvicorn.run(create_app(home), host=host, port=port, log_level="info")
+    cfg = SecurityConfig.from_env()
+    if host not in ("127.0.0.1", "localhost", "::1"):
+        console.print(f"[bold yellow]Listening on {host}, which other machines can reach.[/]\n"
+                      "Passwords and session cookies must not cross a network in clear text: "
+                      "put an https reverse proxy in front and prefer --host 127.0.0.1 "
+                      "(see docs/hosting.md).")
+        if cfg.registration == "open":
+            console.print("[bold yellow]Registration is open: anyone who can reach this server "
+                          "can create an account. Use --production or "
+                          "MOTIONPROOF_REGISTRATION=closed.[/]")
+    uvicorn.run(create_app(home), host=host, port=port, log_level="info",
+                server_header=False, proxy_headers=production,
+                forwarded_allow_ips=trusted_proxies if production else None)
+
+
+account_app = typer.Typer(help="Accounts of the web application (work on the server's files, "
+                               "stop the server first when changing passwords).",
+                          no_args_is_help=True)
+app.add_typer(account_app, name="account")
+
+
+StdinOpt = Annotated[bool, typer.Option(
+    "--password-stdin", help="Read the password from standard input instead of asking "
+    "(for scripts; keeps it out of the command line).")]
+
+
+def _password(prompt: str, from_stdin: bool) -> str:
+    if from_stdin:
+        import sys
+
+        return sys.stdin.readline().rstrip("\r\n")
+    return str(typer.prompt(prompt, hide_input=True, confirmation_prompt=True))
+
+
+def _auth_store(home: Path | None) -> Any:
+    from motionproof.api.auth import AuthStore
+    from motionproof.persistence.store import default_home
+
+    root = Path(home).resolve() if home else default_home()
+    root.mkdir(parents=True, exist_ok=True)
+    return AuthStore(root)
+
+
+@account_app.command("create")
+@guard
+def account_create(email: str, name: Annotated[str, typer.Option(help="Display name")] = "",
+                   home: HomeOpt = None, password_stdin: StdinOpt = False) -> None:
+    """Create an account. The first account of a server is its administrator; on a --production
+    server (registration closed) this is how that first account is made."""
+    password = _password("Password (at least 8 characters)", password_stdin)
+    user = _auth_store(home).register(email, password, name)
+    console.print(f"created [bold]{user['email']}[/bold]"
+                  f"{' (administrator)' if user['admin'] else ''}")
+
+
+@account_app.command("reset-password")
+@guard
+def account_reset_password(email: str, home: HomeOpt = None,
+                           password_stdin: StdinOpt = False) -> None:
+    """Set a new password for an account (its sessions are signed out everywhere)."""
+    store = _auth_store(home)
+    user = next((u for u in store.users() if u["email"] == email.strip().lower()), None)
+    if user is None:
+        fail(f"no account with the email {email}")
+        return
+    password = _password("New password (at least 8 characters)", password_stdin)
+    store.set_password(user["id"], password)
+    console.print(f"password set for [bold]{user['email']}[/bold]")
+
+
+@account_app.command("list")
+@guard
+def account_list(home: HomeOpt = None) -> None:
+    """List the accounts."""
+    t = Table("id", "email", "name", "role")
+    for u in _auth_store(home).users():
+        t.add_row(str(u["id"]), u["email"], u["name"], "administrator" if u["admin"] else "member")
+    console.print(t)
 
 
 @reference_app.command("create")
