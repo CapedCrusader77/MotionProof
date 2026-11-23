@@ -49,7 +49,7 @@ jobs:
       - run: uv sync --locked
       - name: Regenerate the benchmark package and cross-check it
         run: uv run python benchmarks/publish.py
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: benchmark-package
@@ -84,7 +84,7 @@ jobs:
         working-directory: frontend
         env:
           MP_PYTHON: ${{ github.workspace }}/.venv/bin/python
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
