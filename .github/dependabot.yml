@@ -4,10 +4,18 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # every benchmark and validation result was produced on MuJoCo 3.x; move to 4.x on purpose
+      - dependency-name: mujoco
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: npm
     directory: /frontend
     schedule:
       interval: weekly
+    ignore:
+      # types should match the Node version the project runs on, not the newest release
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
