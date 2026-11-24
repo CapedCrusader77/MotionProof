@@ -325,6 +325,23 @@ class AuthStore:
                       (_token_hash(token), user_id, now + SESSION_SECONDS))
         return token
 
+    def local_user(self) -> dict[str, Any]:
+        """The account that owns the workspace when nobody signs in (local mode).
+
+        The first account, so projects made before this mode existed stay visible. A fresh
+        workspace gets an administrator whose password nobody knows."""
+        with self._lock, closing(self._conn()) as c, c:
+            row = c.execute(f"SELECT {self.USER_COLS} FROM users ORDER BY id LIMIT 1").fetchone()
+            if row is None:
+                salt = secrets.token_bytes(16)
+                cur = c.execute("INSERT INTO users (email, name, salt, hash, created, is_admin, "
+                                "kdf) VALUES (?, ?, ?, ?, ?, 1, ?)",
+                                ("local@motionproof", "Local", salt, secrets.token_bytes(32),
+                                 time.time(), LOG_N))
+                row = c.execute(f"SELECT {self.USER_COLS} FROM users WHERE id = ?",
+                                (cur.lastrowid,)).fetchone()
+        return self._user(row)
+
     def session_user(self, token: str | None) -> dict[str, Any] | None:
         if not token:
             return None
@@ -367,7 +384,8 @@ def install(app: FastAPI, home: Path, api: str, cfg: SecurityConfig) -> AuthStor
         path = request.url.path
         if (path.startswith(api + "/") and request.method != "OPTIONS"
                 and path[len(api):] not in PUBLIC):
-            user = auth.session_user(request.cookies.get(COOKIE))
+            user = (auth.local_user() if cfg.local
+                    else auth.session_user(request.cookies.get(COOKIE)))
             if user is None:
                 return JSONResponse(status_code=401, content={"error": "sign in to continue"})
             request.state.user = user
@@ -380,7 +398,7 @@ def install(app: FastAPI, home: Path, api: str, cfg: SecurityConfig) -> AuthStor
 
     @app.get(f"{api}/auth/config")
     def auth_config() -> dict[str, Any]:
-        return {"registration": cfg.registration}
+        return {"registration": cfg.registration, "local": cfg.local}
 
     @app.post(f"{api}/auth/register", status_code=201)
     def register(body: Registration, request: Request, response: Response) -> dict[str, Any]:
@@ -421,7 +439,8 @@ def install(app: FastAPI, home: Path, api: str, cfg: SecurityConfig) -> AuthStor
 
     @app.get(f"{api}/auth/me")
     def me(request: Request) -> dict[str, Any]:
-        user = auth.session_user(request.cookies.get(COOKIE))
+        user = (auth.local_user() if cfg.local
+                else auth.session_user(request.cookies.get(COOKIE)))
         if user is None:
             raise HTTPException(401, "not signed in")
         return {"user": user}

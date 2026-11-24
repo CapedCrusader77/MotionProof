@@ -168,7 +168,12 @@ def serve(host: str = "127.0.0.1", port: int = 8000, home: HomeOpt = None,
               "behind an https reverse proxy (docs/hosting.md).")] = False,
           trusted_proxies: Annotated[str, typer.Option(
               help="Addresses whose X-Forwarded-* headers are believed (the reverse proxy)."
-              )] = "127.0.0.1") -> None:
+              )] = "127.0.0.1",
+          require_sign_in: Annotated[bool, typer.Option(
+              "--require-sign-in", help="Ask for an account even on this computer. Without it, "
+              "a server on 127.0.0.1 opens straight into the first account's workspace."
+              )] = False
+          ) -> None:
     """Start the API (and the built web application, when frontend/dist exists)."""
     import os
 
@@ -176,6 +181,8 @@ def serve(host: str = "127.0.0.1", port: int = 8000, home: HomeOpt = None,
 
     if production:
         os.environ["MOTIONPROOF_PRODUCTION"] = "1"
+    elif host in ("127.0.0.1", "localhost", "::1") and not require_sign_in:
+        os.environ.setdefault("MOTIONPROOF_LOCAL", "1")
     from motionproof.api.app import create_app
     from motionproof.api.security import SecurityConfig
 

@@ -28,7 +28,7 @@ export default defineConfig({
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"],
     ...(process.env.MP_E2E_CHANNEL ? { channel: process.env.MP_E2E_CHANNEL } : {}) } }],
   webServer: {
-    command: `"${PYTHON}" -m motionproof.cli.main serve --port ${PORT} --home "${HOME}"`,
+    command: `"${PYTHON}" -m motionproof.cli.main serve --require-sign-in --port ${PORT} --home "${HOME}"`,
     url: `http://127.0.0.1:${PORT}/api/v1/health`,
     timeout: 120_000,
     reuseExistingServer: false,

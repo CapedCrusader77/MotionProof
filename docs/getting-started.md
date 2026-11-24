@@ -1,9 +1,9 @@
 # Getting started
 
 1. `uv sync`, then `uv run motionproof doctor` to check the environment.
-2. `uv run motionproof serve --home workspace` and open http://127.0.0.1:8000. Create an
-   account on the sign-in page; the first account keeps any projects already in the workspace,
-   later accounts start with their own empty workspace.
+2. `uv run motionproof serve --home workspace` and open http://127.0.0.1:8000. There is
+   no sign-in on your own computer: you work in the workspace of the first account (a fresh
+   workspace gets one automatically). `--require-sign-in` asks for an account again.
 3. Create a project. Either import a model (CAD import) or add the reference design, which is
    synthetic and labelled as such everywhere.
 4. Assembly workbench: inspect components, move joints, read the readiness report.

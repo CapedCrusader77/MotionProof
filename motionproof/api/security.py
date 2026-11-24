@@ -18,6 +18,10 @@ own variable. Without it everything stays as convenient as before for a single u
   MOTIONPROOF_MAX_JOBS_PER_USER   queued plus running jobs per account (default 8; production 4)
   MOTIONPROOF_TRUSTED_PROXIES     addresses whose X-Forwarded-* headers are believed
                                   (`serve --production` default: 127.0.0.1)
+  MOTIONPROOF_LOCAL               1 for one person on their own computer: no sign-in, requests act
+                                  as the first account; only answers to localhost host names.
+                                  `motionproof serve` sets it on a loopback address; ignored with
+                                  MOTIONPROOF_PRODUCTION
 """
 
 from __future__ import annotations
@@ -59,6 +63,9 @@ class SecurityConfig:
     hsts: bool = False
     allowed_origins: tuple[str, ...] = ()
     max_jobs_per_user: int = 8
+    # one person on their own computer: no sign-in, requests act as the workspace owner. Set by
+    # `motionproof serve` on a loopback address; never together with production.
+    local: bool = False
 
     @classmethod
     def from_env(cls) -> SecurityConfig:
@@ -77,7 +84,8 @@ class SecurityConfig:
         return cls(production=prod, secure_cookies=_flag("MOTIONPROOF_SECURE_COOKIES", prod),
                    registration=registration, docs=_flag("MOTIONPROOF_DOCS", not prod),
                    serial=_flag("MOTIONPROOF_SERIAL", not prod), hsts=prod,
-                   allowed_origins=origins, max_jobs_per_user=max(1, jobs))
+                   allowed_origins=origins, max_jobs_per_user=max(1, jobs),
+                   local=_flag("MOTIONPROOF_LOCAL", False) and not prod)
 
 
 class RateLimiter:
@@ -126,6 +134,13 @@ def _origin_ok(request: Request, cfg: SecurityConfig) -> bool:
     return urlparse(origin).netloc == host
 
 
+def _local_host(request: Request) -> bool:
+    host = request.headers.get("host", "").lower()
+    bracketed = host.startswith("[") and "]" in host
+    name = host[1:host.index("]")] if bracketed else host.rsplit(":", 1)[0]
+    return name in ("localhost", "127.0.0.1", "::1")
+
+
 def install(app: FastAPI, cfg: SecurityConfig, api: str) -> None:
     """Security headers on every response and a same-origin check on state-changing API calls."""
     app.state.security = cfg
@@ -134,8 +149,13 @@ def install(app: FastAPI, cfg: SecurityConfig, api: str) -> None:
     async def guard(request: Request,
                     call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         path = request.url.path
-        if request.method in UNSAFE and path.startswith(api + "/") and not _origin_ok(request, cfg):
+        if cfg.local and not _local_host(request):
+            # without sign-in, a web page that rebinds its own name to 127.0.0.1 must not get in
             response: Response = JSONResponse(
+                status_code=403, content={"error": "this server answers only on localhost"})
+        elif (request.method in UNSAFE and path.startswith(api + "/")
+              and not _origin_ok(request, cfg)):
+            response = JSONResponse(
                 status_code=403, content={"error": "cross-origin request refused"})
         else:
             response = await call_next(request)

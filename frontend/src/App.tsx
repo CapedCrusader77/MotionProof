@@ -85,7 +85,15 @@ export default function App() {
   useEffect(() => {
     if (session.data && session.data.user.email !== s.user) s.login(session.data.user.email);
   }, [session.data, session.error]); // eslint-disable-line react-hooks/exhaustive-deps
-  if (!s.user) return <PublicSite />;
+  // A server on this computer needs no sign-in: it answers as the owner of the workspace.
+  const local = useAsync(() => auth.config(), []);
+  useEffect(() => {
+    if (local.data?.local && !s.user) auth.me().then((r) => s.login(r.user.email), () => undefined);
+  }, [local.data, s.user]); // eslint-disable-line react-hooks/exhaustive-deps
+  const noSignIn = !!local.data?.local;
+  if (!s.user) return noSignIn || (!local.data && !local.error)
+    ? <div className="page"><p className="muted small" role="status">Opening your workspace…</p></div>
+    : <PublicSite />;
   // a 401 signs out inside the API client; any other failure (backend down) is shown here
   if (!session.data) return (
     <div className="page"><p className="muted small" role="status">
@@ -129,7 +137,7 @@ export default function App() {
           : health.data && health.data.active_jobs > 0 ? <Badge kind="info" title="Background simulation jobs">{health.data.active_jobs} job running</Badge> : null}
         <button className="btn ghost small" onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }))} title="Command palette (Ctrl+K)" aria-label="Command palette"><CommandIcon />Ctrl+K</button>
         <button className="btn ghost" onClick={s.toggleTheme} aria-label={`Switch to ${s.theme === "light" ? "dark" : "light"} theme`}>{s.theme === "light" ? <Moon /> : <Sun />}</button>
-        <button className="btn ghost" onClick={() => { auth.logout().catch(() => undefined).finally(s.logout); }} aria-label={`Sign out ${s.user}`} title={`Sign out ${s.user}`}><LogOut /></button>
+        {!noSignIn && <button className="btn ghost" onClick={() => { auth.logout().catch(() => undefined).finally(s.logout); }} aria-label={`Sign out ${s.user}`} title={`Sign out ${s.user}`}><LogOut /></button>}
       </header>
       <main className="main">
         <ErrorBoundary name={s.route}><Suspense fallback={<div className="page"><p className="muted small">Loading…</p></div>}><Screen /></Suspense></ErrorBoundary>

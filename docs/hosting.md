@@ -10,7 +10,7 @@ how to run it safely.
 |---|---|---|
 | Only you, or a lab or team you know | **Run it on one machine and reach it over [Tailscale](https://tailscale.com)** (a private network); no public port | Nothing is exposed to the internet, no certificate to manage, and each person signs in to the tailnet first, then to MotionProof |
 | People outside a private network | **A small Linux server (VPS) with the Caddy web server in front**, as below | Caddy gets and renews the https certificate by itself; MotionProof only listens on the server itself |
-| Just you, on your own computer | `uv run motionproof serve` and open `http://127.0.0.1:8000` | Nothing leaves the machine. Do not use `--host 0.0.0.0` without the steps below |
+| Just you, on your own computer | `uv run motionproof serve` and open `http://127.0.0.1:8000` | Nothing leaves the machine, and there is no sign-in. Do not use `--host 0.0.0.0` without the steps below |
 
 **Not suitable:** Vercel, Netlify, GitHub Pages and other serverless or static hosts (the backend
 runs long simulations and keeps files), and free container tiers with 512 MB of memory or an

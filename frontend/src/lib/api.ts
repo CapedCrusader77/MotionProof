@@ -41,7 +41,7 @@ const json = (method: string, body: unknown): RequestInit => ({
 });
 export interface User { id: number; email: string; name: string; admin: boolean }
 export const auth = {
-  config: () => request<{ registration: "open" | "closed" }>("/auth/config"),
+  config: () => request<{ registration: "open" | "closed"; local: boolean }>("/auth/config"),
   createUser: (email: string, password: string, name: string) =>
     request<User>("/admin/users", json("POST", { email, password, name })),
   me: () => request<{ user: User }>("/auth/me"),

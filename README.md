@@ -69,8 +69,8 @@ cd frontend && npm ci && npm run build && cd ..
 uv run motionproof serve --home workspace
 ```
 
-Open http://127.0.0.1:8000, create an account, then a project, and click **Add reference
-design**. Or from the command line: `uv run motionproof reference create demo`.
+Open http://127.0.0.1:8000 (no sign-in on your own computer), create a project, and click **Add
+reference design**. Or from the command line: `uv run motionproof reference create demo`.
 
 ## Go deeper
 

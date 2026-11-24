@@ -27,7 +27,7 @@ PW = "correct horse 42"
 def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
     for name in ("MOTIONPROOF_PRODUCTION", "MOTIONPROOF_SECURE_COOKIES", "MOTIONPROOF_REGISTRATION",
                  "MOTIONPROOF_DOCS", "MOTIONPROOF_SERIAL", "MOTIONPROOF_ALLOWED_ORIGINS",
-                 "MOTIONPROOF_MAX_JOBS_PER_USER"):
+                 "MOTIONPROOF_MAX_JOBS_PER_USER", "MOTIONPROOF_LOCAL"):
         monkeypatch.delenv(name, raising=False)
 
 
@@ -81,7 +81,7 @@ def test_production_defaults(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
     c = TestClient(create_app(tmp_path))
     cfg = SecurityConfig.from_env()
     assert cfg.secure_cookies and cfg.registration == "closed" and not cfg.docs and not cfg.serial
-    assert c.get(f"{API}/auth/config").json() == {"registration": "closed"}
+    assert c.get(f"{API}/auth/config").json() == {"registration": "closed", "local": False}
     r = c.post(f"{API}/auth/register", json={"email": "new@lab.org", "password": PW})
     assert r.status_code == 403 and "closed" in r.json()["detail"]
     assert c.get("/docs").status_code == 404 and c.get("/openapi.json").status_code == 404
@@ -94,7 +94,7 @@ def test_production_defaults(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
 
 def test_defaults_stay_convenient_without_production(tmp_path: Path) -> None:
     c = TestClient(create_app(tmp_path))
-    assert c.get(f"{API}/auth/config").json() == {"registration": "open"}
+    assert c.get(f"{API}/auth/config").json() == {"registration": "open", "local": False}
     assert c.get("/openapi.json").status_code == 200
     assert not SecurityConfig.from_env().hsts and not SecurityConfig.from_env().secure_cookies
 
@@ -255,3 +255,43 @@ def test_account_commands_create_list_and_reset(tmp_path: Path) -> None:
     assert c.post(f"{API}/auth/login", json={"email": "boss@lab.org", "password": new}).status_code == 200
     r = runner.invoke(cli_app, ["account", "reset-password", "ghost@lab.org", *home], input="x\nx\n")
     assert r.exit_code != 0
+
+
+# ------------------------------------------------------------------ local mode (no sign-in)
+
+
+def test_local_mode_opens_without_sign_in_as_the_first_account(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    owner = signed_in(tmp_path, "owner@lab.org")                 # an account made before local mode
+    assert owner.post(f"{API}/projects", json={"name": "mine"}).status_code == 201
+    monkeypatch.setenv("MOTIONPROOF_LOCAL", "1")
+    c = TestClient(create_app(tmp_path), base_url="http://127.0.0.1:8000")
+    assert c.get(f"{API}/auth/config").json()["local"] is True
+    me = c.get(f"{API}/auth/me")
+    assert me.status_code == 200 and me.json()["user"]["email"] == "owner@lab.org"
+    assert [p["name"] for p in c.get(f"{API}/projects").json()] == ["mine"]   # existing data kept
+
+
+def test_local_mode_on_a_fresh_workspace_makes_an_administrator(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MOTIONPROOF_LOCAL", "1")
+    c = TestClient(create_app(tmp_path), base_url="http://localhost:8000")
+    assert c.post(f"{API}/projects", json={"name": "first"}).status_code == 201
+    assert c.get(f"{API}/auth/me").json()["user"]["admin"] is True
+
+
+def test_local_mode_answers_only_to_localhost_names(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MOTIONPROOF_LOCAL", "1")
+    app = create_app(tmp_path)
+    for host in ("http://127.0.0.1:8000", "http://localhost", "http://[::1]:8000"):
+        assert TestClient(app, base_url=host).get(f"{API}/projects").status_code == 200
+    evil = TestClient(app, base_url="http://rebind.evil.example:8000")
+    assert evil.get(f"{API}/projects").status_code == 403
+
+
+def test_production_ignores_local_mode(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MOTIONPROOF_LOCAL", "1")
+    monkeypatch.setenv("MOTIONPROOF_PRODUCTION", "1")
+    assert SecurityConfig.from_env().local is False
+    assert TestClient(create_app(tmp_path)).get(f"{API}/projects").status_code == 401
