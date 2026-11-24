@@ -1,6 +1,6 @@
 """MotionProof: tolerance-to-dynamics verification for mechanical assemblies."""
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 from motionproof.model import MechanicalModel  # noqa: E402
 

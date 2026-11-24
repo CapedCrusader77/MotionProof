@@ -28,6 +28,24 @@ def create_reference_model(store: Store, project_id: str) -> dict[str, Any]:
                                 directory)
 
 
+def seed_demo(store: Store) -> bool:
+    """Give a brand-new workspace one project holding the synthetic reference design.
+
+    Done once: a marker file stops it coming back after the user deletes the project. Returns
+    whether a project was created."""
+    marker = store.home / ".demo-seeded"
+    if marker.exists():
+        return False
+    marker.write_text("", encoding="utf-8")
+    if store.projects():
+        return False
+    project = store.create_project(
+        "Demo", "The synthetic NEMA 17 planetary joint: open Virtual assemblies or Robustness "
+        "to run it.", demo=True)
+    create_reference_model(store, project["id"])
+    return True
+
+
 def import_model(store: Store, project_id: str, files: list[Path], name: str | None = None,
                  mesh_units: str | None = None) -> dict[str, Any]:
     """Import a CAD/model file (plus companion mesh files) as a new model."""

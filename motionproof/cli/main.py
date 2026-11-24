@@ -159,6 +159,24 @@ def inspect(file: Path, as_json: Annotated[bool, typer.Option("--json")] = False
         console.print(f"[yellow]warning:[/yellow] {w}")
 
 
+def _seed_demo_in_background(home: Path | None) -> None:
+    """First start on a computer: add a Demo project (the CAD kernel takes a few seconds, so the
+    server does not wait for it)."""
+    import logging
+    import threading
+
+    from motionproof.persistence.store import Store
+    from motionproof.services import seed_demo
+
+    def work() -> None:
+        try:
+            seed_demo(Store(home))
+        except Exception:                      # the app works without it
+            logging.getLogger("motionproof").exception("could not create the demo project")
+
+    threading.Thread(target=work, name="seed-demo", daemon=True).start()
+
+
 @app.command()
 @guard
 def serve(host: str = "127.0.0.1", port: int = 8000, home: HomeOpt = None,
@@ -196,6 +214,8 @@ def serve(host: str = "127.0.0.1", port: int = 8000, home: HomeOpt = None,
             console.print("[bold yellow]Registration is open: anyone who can reach this server "
                           "can create an account. Use --production or "
                           "MOTIONPROOF_REGISTRATION=closed.[/]")
+    if cfg.local:
+        _seed_demo_in_background(home)
     uvicorn.run(create_app(home), host=host, port=port, log_level="info",
                 server_header=False, proxy_headers=production,
                 forwarded_allow_ips=trusted_proxies if production else None)

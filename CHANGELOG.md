@@ -1,11 +1,12 @@
 # Changelog
 
-## Unreleased - accounts, interface and reproducibility
+## 0.4.0 - 2026-11-24 - accounts, interface and reproducibility
 
 * Vercel: `vercel.json` and `.vercelignore` deploy the web app alone and forward `/api/*` to a
   backend hosted elsewhere (the backend's dependencies, about 1.07 GB, exceed Vercel's 500 MB
   Python function limit). See `docs/hosting.md`. Not deployed or tested on Vercel.
 
+* First start on your own computer adds a Demo project holding the reference design, once.
 * No sign-in on your own computer: `motionproof serve` on 127.0.0.1 opens straight into the
   workspace of the first account (a fresh workspace gets an administrator nobody signs in as) and
   answers only to `localhost` names, so a web page cannot reach it by rebinding its own name.

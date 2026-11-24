@@ -295,3 +295,19 @@ def test_production_ignores_local_mode(tmp_path: Path, monkeypatch: pytest.Monke
     monkeypatch.setenv("MOTIONPROOF_PRODUCTION", "1")
     assert SecurityConfig.from_env().local is False
     assert TestClient(create_app(tmp_path)).get(f"{API}/projects").status_code == 401
+
+
+def test_a_new_workspace_gets_one_demo_project_once(tmp_path: Path) -> None:
+    from motionproof.persistence.store import Store
+    from motionproof.services import seed_demo
+
+    store = Store(tmp_path)
+    assert seed_demo(store) is True
+    [project] = store.projects()
+    assert project["name"] == "Demo" and len(store.models(project["id"])) == 1
+    store.delete_project(project["id"])
+    assert seed_demo(store) is False and store.projects() == []     # not brought back
+    assert seed_demo(Store(tmp_path / "other")) is True
+    busy = Store(tmp_path / "busy")
+    busy.create_project("mine")
+    assert seed_demo(busy) is False and [p["name"] for p in busy.projects()] == ["mine"]
