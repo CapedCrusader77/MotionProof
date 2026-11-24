@@ -1,6 +1,6 @@
 version: 2
 updates:
-  - package-ecosystem: pip
+  - package-ecosystem: uv      # also updates uv.lock; CI installs with `uv sync --locked`
     directory: /
     schedule:
       interval: weekly
