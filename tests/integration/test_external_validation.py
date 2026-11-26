@@ -195,7 +195,7 @@ def test_runs_are_recorded_reproducibly_with_provenance(tmp_path: Path) -> None:
 def test_missing_data_is_not_run_and_tcp_is_insufficient(tmp_path: Path) -> None:
     for pid in ("h1-friction", "so101-tracking", "kuka-inverse", "kuka-inverse-v2",
                 "nist-tracking", "nist-tracking-v2", "transmission-error-v4",
-                "transmission-error-axis1", "nist-dynamics"):
+                "transmission-error-axis1", "nist-dynamics", "so101-joints"):
         assert runs.run(pid, tmp_path)["status"] == "NOT RUN"
     assert runs.run("nist-tcp", tmp_path)["status"] == "INSUFFICIENT DATA"
 

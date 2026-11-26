@@ -182,6 +182,32 @@ PROTOCOLS: dict[str, Protocol] = {
         motionproof_components=("backlash dead band", "motor-side position control with "
                                 "speed limit"),
         reproduce="motionproof external validate so101-tracking"),
+    # Written and committed 2026-11-27 BEFORE the three single-joint identification trials
+    # below were downloaded and before any fit to these joints: a blind test of the X3 servo
+    # model on other joints of the same arm. The heldout trials were already on disk for X3,
+    # which used only their elbow signals.
+    "so101-joints": Protocol(
+        id="so101-joints", benchmark="X10", dataset="anchor-lab",
+        title="Simulated joint response, SO-101 rotation, wrist pitch and wrist roll (blind "
+              "test of the X3 servo model)",
+        system="SO-101 arm, base rotation, wrist pitch and wrist roll (Feetech servos)",
+        quantity="<joint>/actual_q (rad) at its own sample instants",
+        identification="per joint, the train trial single-joint-rotation, "
+                       "single-joint-wrist-pitch or single-joint-wrist-roll",
+        validation="per joint, every heldout trial in which that joint's command spans "
+                   ">= 0.1 rad",
+        unused="heldout trials in which the joint's command spans < 0.1 rad; the shoulder "
+               "pitch and jaw (no single-joint trial)",
+        baseline="B0 per joint: actual = command held between samples + constant offset "
+                 "fitted on identification (as X3)",
+        model="X3 unchanged: second-order position loop (wn, zeta) with velocity limit vmax "
+              "through a dead band b, plus offset; fitted per joint on its identification trial",
+        acceptance="per joint: pooled validation RMSE(model) <= 0.6 x pooled validation "
+                   "RMSE(B0); X10 passes if every joint with at least one validation trial "
+                   "passes and at least one joint has one",
+        motionproof_components=("backlash dead band", "motor-side position control with "
+                                "speed limit"),
+        reproduce="motionproof external validate so101-joints"),
     "kuka-inverse": Protocol(
         id="kuka-inverse", benchmark="X4-v1", dataset="kuka-kr300",
         title="Inverse dynamics per axis, KUKA KR300 R2500 ultra SE",

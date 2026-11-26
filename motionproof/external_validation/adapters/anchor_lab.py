@@ -3,7 +3,8 @@
 Protocol subsets
 * ``h1-teststand``: the 36 sine trials of the H1 elbow test stand at 0.5, 1.0 and 1.5 Hz with
   small, medium and large amplitude, at stand positions 8, 9, 10 and 11.
-* ``so101``: the SO-101 train trial ``single-joint-elbow`` and the eight ``heldout`` trials.
+* ``so101``: the SO-101 single-joint train trials (elbow, rotation, wrist pitch, wrist roll)
+  and the eight ``heldout`` trials.
 
 Unit assumptions: Unitree and Feetech telemetry fields in this dataset are taken to be in rad,
 rad/s, N*m, A, V and degrees Celsius (converted to kelvin). The dataset card does not state
@@ -31,7 +32,8 @@ FILE = "https://huggingface.co/datasets/nvidia/Anchor-Lab/resolve/" + ANCHOR_LAB
 H1_NAMES = [f"h1-elbow-teststand-sysid-{f}hz-amp-{a}-position{p}.parquet"
             for f in ("0p5", "1p0", "1p5") for a in ("small", "medium", "large")
             for p in (8, 9, 10, 11)]
-SO101_IDENT = ["so101-sysid-50motion-train-single-joint-elbow.parquet"]
+SO101_IDENT = [f"so101-sysid-50motion-train-single-joint-{j}.parquet"
+               for j in ("elbow", "rotation", "wrist-pitch", "wrist-roll")]
 
 # field suffix -> (signal name, SI unit, conversion)
 UNITS = {"q": ("q", "rad", "none"), "actual_q": ("q", "rad", "none"),

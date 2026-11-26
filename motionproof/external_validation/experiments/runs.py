@@ -360,34 +360,36 @@ def _servo_sim(p: np.ndarray, t: np.ndarray, t_cmd: np.ndarray, cmd: np.ndarray,
     return np.asarray(np.interp(t, tt, out), dtype=float)
 
 
-def _so101_series(tr: Trial) -> dict[str, np.ndarray]:
-    tr.require("elbow/q", "elbow/q_cmd")
-    q, c = tr.signals["elbow/q"], tr.signals["elbow/q_cmd"]
+def _so101_series(tr: Trial, joint: str = "elbow") -> dict[str, np.ndarray]:
+    tr.require(f"{joint}/q", f"{joint}/q_cmd")
+    q, c = tr.signals[f"{joint}/q"], tr.signals[f"{joint}/q_cmd"]
     assert q.time_s is not None and c.time_s is not None
     sel = (q.time_s >= c.time_s[0]) & (q.time_s <= c.time_s[-1])
     return {"t": q.time_s[sel], "q": q.values[sel], "t_cmd": c.time_s, "cmd": c.values}
 
 
-def validate_so101_tracking(root: Path) -> dict[str, Any]:
-    out = _base("so101-tracking")
+def validate_so101_tracking(root: Path, pid: str = "so101-tracking", joint: str = "elbow",
+                            ident_trial: str = "single-joint-elbow") -> dict[str, Any]:
+    out = _base(pid)
     a = ADAPTERS["anchor-lab"]
     have = [r for r in a.available(root) if r.startswith("so101_arm_50motion/")]
-    ident_rel = [r for r in have if r.endswith("train-single-joint-elbow.parquet")]
+    ident_rel = [r for r in have if r.endswith(f"train-{ident_trial}.parquet")]
     held = [r for r in have if "-heldout-" in r]
     if not ident_rel or not held:
-        return _not_imported("so101-tracking", "anchor-lab so101")
+        return _not_imported(pid, f"anchor-lab so101 ({ident_trial})")
     ident = _trials("anchor-lab", root, ident_rel)[0]
     valid: list[tuple[Trial, float]] = []
     unused: list[tuple[Trial, float]] = []
     for tr in _trials("anchor-lab", root, sorted(held)):
-        c = tr.signals.get("elbow/q_cmd")
+        c = tr.signals.get(f"{joint}/q_cmd")
         span = 0.0 if c is None else float(np.ptp(c.values))
         (valid if span >= 0.1 else unused).append((tr, span))
     if not valid:
-        out |= {"status": "INSUFFICIENT DATA", "reason": "no heldout trial excites the elbow"}
+        out |= {"status": "INSUFFICIENT DATA",
+                "reason": f"no heldout trial excites the {joint} joint"}
         return out
     check_disjoint([ident.trial_id], [t.trial_id for t, _ in valid])
-    di = _so101_series(ident)
+    di = _so101_series(ident, joint)
 
     def resid(p: np.ndarray) -> np.ndarray:
         return np.asarray(_servo_sim(p, di["t"], di["t_cmd"], di["cmd"], di["q"][0]) - di["q"])
@@ -408,7 +410,7 @@ def validate_so101_tracking(root: Path) -> dict[str, Any]:
     per: dict[str, Any] = {}
     first = None
     for tr, span in valid:
-        d = _so101_series(tr)
+        d = _so101_series(tr, joint)
         m = _servo_sim(fit.x, d["t"], d["t_cmd"], d["cmd"], d["q"][0])
         bl = baseline(d)
         per[tr.trial_id] = {"command_span_rad": span, "model": errors(d["q"], m)["rmse"],
@@ -428,7 +430,7 @@ def validate_so101_tracking(root: Path) -> dict[str, Any]:
         "files_used": [ident.source_file] + [t.source_file for t, _ in valid + unused],
         "identification_trials": [ident.trial_id],
         "validation_trials": [t.trial_id for t, _ in valid],
-        "unused_trials": {t.trial_id: f"elbow command span {s:.3f} rad < 0.1 rad"
+        "unused_trials": {t.trial_id: f"{joint} command span {s:.3f} rad < 0.1 rad"
                           for t, s in unused},
         "fit": {"parameters": dict(zip(names, map(float, fit.x), strict=True)),
                 "standard_errors": dict(zip(names, map(float, np.sqrt(np.clip(
@@ -444,7 +446,7 @@ def validate_so101_tracking(root: Path) -> dict[str, Any]:
         "residual_histogram": residual_histogram(yo, ym),
         "plot": dict(zip(("x", "measured", "predicted", "baseline"),
                          thin(d["t"], d["q"], m, bl), strict=True))
-                | {"x_label": "time (s)", "y_label": "elbow actual_q (rad)", "trial": tid},
+                | {"x_label": "time (s)", "y_label": f"{joint} actual_q (rad)", "trial": tid},
         "transformations": ["command held constant between its samples (zero-order hold)",
                             "simulation at 1 ms, linearly interpolated to the actual_q "
                             "sample instants", "only samples inside the command time span"],
@@ -453,6 +455,39 @@ def validate_so101_tracking(root: Path) -> dict[str, Any]:
                     + [evidence("EXTERNAL_VALIDATION", "anchor-lab", t.trial_id, "validation",
                                 "simulated response to the recorded command") for t, _ in valid],
     }
+    return out
+
+
+SO101_BLIND_JOINTS = {"rotation": "single-joint-rotation",
+                      "wrist_pitch": "single-joint-wrist-pitch",
+                      "wrist_roll": "single-joint-wrist-roll"}
+
+
+def validate_so101_joints(root: Path) -> dict[str, Any]:
+    """X10: the X3 servo model, unchanged, on the SO-101 joints that have their own
+    single-joint identification trial."""
+    pid = "so101-joints"
+    out = _base(pid)
+    joints = {j: validate_so101_tracking(root, pid, j, trial)
+              for j, trial in SO101_BLIND_JOINTS.items()}
+    if all(r["status"] == "NOT RUN" for r in joints.values()):
+        return _not_imported(pid, "anchor-lab so101 single-joint trials")
+    evaluated = {j: r for j, r in joints.items() if "metrics" in r}
+    ok = bool(evaluated) and all(r["status"] == "PASS" for r in evaluated.values())
+    keep = ("status", "reason", "metrics", "rmse_ratio_model_to_baseline", "fit",
+            "identification_trials", "validation_trials", "unused_trials",
+            "validation_by_trial")
+    out |= {"status": _status(ok) if evaluated else "INSUFFICIENT DATA",
+            "joints": {j: {k: r[k] for k in keep if k in r} for j, r in joints.items()},
+            "files_used": sorted({f for r in joints.values() for f in r.get("files_used", [])}),
+            "identification_trials": [t for r in evaluated.values()
+                                      for t in r["identification_trials"]],
+            "validation_trials": sorted({t for r in evaluated.values()
+                                         for t in r["validation_trials"]}),
+            "details": ["Blind: protocol committed before the single-joint identification "
+                        "trials of these joints were downloaded and before any fit to them; "
+                        "the model is X3's, unchanged."],
+            "evidence": [e for r in evaluated.values() for e in r.get("evidence", [])]}
     return out
 
 
@@ -816,6 +851,7 @@ VALIDATIONS: dict[str, Callable[[Path], dict[str, Any]]] = {
         axis_names=("axis_1",)),
     "h1-friction": validate_h1_friction,
     "so101-tracking": validate_so101_tracking,
+    "so101-joints": validate_so101_joints,
     "kuka-inverse": validate_kuka_inverse,
     "kuka-inverse-v2": lambda root: validate_kuka_inverse(root, "kuka-inverse-v2",
                                                           coupled=True),
