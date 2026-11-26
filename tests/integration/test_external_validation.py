@@ -195,7 +195,7 @@ def test_runs_are_recorded_reproducibly_with_provenance(tmp_path: Path) -> None:
 def test_missing_data_is_not_run_and_tcp_is_insufficient(tmp_path: Path) -> None:
     for pid in ("h1-friction", "so101-tracking", "kuka-inverse", "kuka-inverse-v2",
                 "nist-tracking", "nist-tracking-v2", "transmission-error-v4",
-                "transmission-error-axis1"):
+                "transmission-error-axis1", "nist-dynamics"):
         assert runs.run(pid, tmp_path)["status"] == "NOT RUN"
     assert runs.run("nist-tcp", tmp_path)["status"] == "INSUFFICIENT DATA"
 
@@ -245,6 +245,30 @@ def test_coupled_gravity_is_added_to_the_model_only() -> None:
     assert "gc0" not in r["baseline"]["fit"]["parameters"]
     assert "F_coulomb" not in r["coupled_rigid"]["fit"]["parameters"]
     assert r["model"]["validation"]["rmse"] < 1e-9 < r["coupled_rigid"]["validation"]["rmse"]
+
+
+def test_ur5_gravity_columns_follow_the_parallel_joint_angles() -> None:
+    n = 50
+    q = {k: np.linspace(-1.0, 1.0, n) * k for k in range(1, 7)}
+    s = {f"J{k}/q": Signal(f"J{k}/q", q[k], "rad", "q") for k in range(1, 7)}
+    assert runs._ur5_gravity(s, 1) is None and runs._ur5_gravity(s, 6) is None
+    g2 = runs._ur5_gravity(s, 2)
+    assert g2 is not None and g2.shape == (n, 4)
+    assert np.allclose(g2[:, 2], np.sin(q[2] + q[3] + q[4]))
+    g4, g5 = runs._ur5_gravity(s, 4), runs._ur5_gravity(s, 5)
+    assert g4 is not None and g4.shape == (n, 6)
+    assert g5 is not None and g5.shape == (n, 4)
+
+
+def test_baseline_columns_are_shared_by_every_variant() -> None:
+    t = np.arange(0, 10, 0.01)
+    q = 0.5 * np.sin(t)
+    d = {"t": t, "q": q, "dq": np.cos(t), "ddq": -np.sin(t), "tau": q,
+         "base": np.column_stack([2 * q]), "gravity": np.column_stack([np.cos(2 * q)])}
+    r = runs._joint_validation([d], [d], ["x"], coupled=True)
+    for v in ("baseline", "model", "coupled_rigid"):
+        assert "b0" in r[v]["fit"]["parameters"]
+    assert "gc0" not in r["baseline"]["fit"]["parameters"]
 
 
 def _toothed(teeth: int, r_root: float, r_tip: float, tooth_angle: float, internal: bool,

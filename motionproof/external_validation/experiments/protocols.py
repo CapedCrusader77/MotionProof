@@ -222,6 +222,29 @@ PROTOCOLS: dict[str, Protocol] = {
         acceptance="every axis: test RMSE(model) <= 0.8 x test RMSE(B0) (unchanged)",
         motionproof_components=("drive friction and damping", "multibody gravity coupling"),
         reproduce="motionproof external validate kuka-inverse-v2"),
+    # Written and committed 2026-11-27 BEFORE any model was fitted to, or any plot made of, the
+    # UR5 joint currents: a blind test of the kuka-inverse-v2 idea (gravity acts through the sum
+    # of parallel joint angles) on a second robot. The UR5 data were already imported for X5,
+    # which uses positions only. Column sets below are fixed from the UR5 kinematics: J2, J3, J4
+    # pitch about parallel axes; J5 is perpendicular to them; J1 and J6 carry no gravity term.
+    "nist-dynamics": Protocol(
+        id="nist-dynamics", benchmark="X9", dataset="nist-ur5",
+        title="Joint current per axis, UR5 (blind test of the multibody-gravity model)",
+        system="Universal Robots UR5",
+        quantity="actual joint current per joint (A), controller data, every sample",
+        identification="repeats 1 and 2 of every condition",
+        validation="repeat 3 of every condition",
+        unused="target current, target torque, control current, tool pose, TCP force",
+        baseline="B0 per joint: i = J ddq_target + (g1 + p1 m) sin q + (g2 + p2 m) cos q + i0, "
+                 "with m the run's payload mass (kg)",
+        model="B0 + c dq + Fc tanh(dq / 0.02 rad/s) + multibody gravity columns, each also "
+              "times m: J2 and J3 sin, cos of q23 and q234; J4 sin, cos of q234 and the same "
+              "times cos q5 and sin q5; J5 sin, cos q5 times sin q234 and cos q234; J1 and J6 "
+              "none (q23 = q2 + q3, q234 = q2 + q3 + q4)",
+        acceptance="every joint J1..J6: validation RMSE(model) <= 0.8 x validation RMSE(B0) "
+                   "(as X4)",
+        motionproof_components=("drive friction and damping", "multibody gravity coupling"),
+        reproduce="motionproof external validate nist-dynamics"),
     "nist-tracking": Protocol(
         id="nist-tracking", benchmark="X5-v1", dataset="nist-ur5",
         title="Joint position error under speed, payload and temperature, UR5",

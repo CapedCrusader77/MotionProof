@@ -259,6 +259,9 @@ def _joint_design(d: dict[str, np.ndarray], friction: bool,
     if friction:
         cols += [d["dq"], np.tanh(d["dq"] / EPS_COULOMB)]
         names += ["c_viscous", "F_coulomb"]
+    if "base" in d:  # extra baseline columns shared by every variant (e.g. payload terms)
+        cols += list(d["base"].T)
+        names += [f"b{i}" for i in range(d["base"].shape[1])]
     if coupled and "gravity" in d:
         cols += list(d["gravity"].T)
         names += [f"gc{i}" for i in range(d["gravity"].shape[1])]
@@ -612,6 +615,78 @@ def validate_nist_tracking(root: Path, pid: str = "nist-tracking",
     return out
 
 
+def _ur5_gravity(s: dict[str, Signal], j: int) -> np.ndarray | None:
+    """Multibody gravity columns of UR5 joint j (nist-dynamics), before payload scaling."""
+    q = {k: s[f"J{k}/q"].values for k in (2, 3, 4, 5)}
+    q23, q234 = q[2] + q[3], q[2] + q[3] + q[4]
+    if j in (2, 3):
+        return np.column_stack([np.sin(q23), np.cos(q23), np.sin(q234), np.cos(q234)])
+    if j == 4:
+        base = [np.sin(q234), np.cos(q234)]
+        return np.column_stack(base + [b * f(q[5]) for b in base for f in (np.cos, np.sin)])
+    if j == 5:
+        return np.column_stack([f(q[5]) * a for a in (np.sin(q234), np.cos(q234))
+                                for f in (np.sin, np.cos)])
+    return None
+
+
+def validate_nist_dynamics(root: Path) -> dict[str, Any]:
+    pid = "nist-dynamics"
+    out = _base(pid)
+    a = ADAPTERS["nist-ur5"]
+    runs_ = [r for r in a.available(root) if r.endswith(".csv")]
+    if not runs_:
+        return _not_imported(pid, "nist-ur5")
+    trials = _trials("nist-ur5", root, sorted(runs_))
+    ident = [t for t in trials if t.conditions["repeat"] in (1, 2)]
+    valid = [t for t in trials if t.conditions["repeat"] == 3]
+    check_disjoint([t.trial_id for t in ident], [t.trial_id for t in valid])
+    joints: dict[str, Any] = {}
+    ok_all = True
+    for j in range(1, 7):
+        def series(tr: Trial, j: int = j) -> dict[str, np.ndarray]:
+            s = tr.signals
+            q = s[f"J{j}/q"].values
+            m = float(tr.conditions["payload_kg"])
+            d = {"q": q, "dq": s[f"J{j}/dq"].values, "ddq": s[f"J{j}/ddq_target"].values,
+                 "tau": s[f"J{j}/current"].values, "t": s[f"J{j}/q"].time_s,
+                 "base": np.column_stack([m * np.sin(q), m * np.cos(q)])}
+            g = _ur5_gravity(s, j)
+            if g is not None:
+                d["gravity"] = np.column_stack([g, m * g])
+            return d  # type: ignore[return-value]
+
+        r = _joint_validation([series(t) for t in ident], [series(t) for t in valid],
+                              [t.trial_id for t in valid], coupled=True)
+        mv, bv = r["model"]["validation"], r["baseline"]["validation"]
+        ok = mv["rmse"] <= 0.8 * bv["rmse"]
+        ok_all &= ok
+        joints[f"J{j}"] = {
+            "status": _status(ok), "rmse_ratio_model_to_baseline": mv["rmse"] / bv["rmse"],
+            "friction_only_ratio": mv["rmse"] / r["coupled_rigid"]["validation"]["rmse"],
+            "metrics": {"model": {"identification": r["model"]["identification"],
+                                  "validation": mv},
+                        "baseline": {"identification": r["baseline"]["identification"],
+                                     "validation": bv}},
+            "fit": {"model": r["model"]["fit"]}}
+    out |= {"status": _status(ok_all), "joints": joints, "files_used": sorted(runs_),
+            "identification_trials": [t.trial_id for t in ident],
+            "validation_trials": [t.trial_id for t in valid],
+            "details": [
+                "Blind: protocol committed before any model was fitted to the UR5 joint "
+                "currents; the model idea comes from X4 (KUKA).",
+                "Friction-only contribution, validation RMSE of the model / the same gravity "
+                "without friction: " + "; ".join(
+                    f"{k} {v['friction_only_ratio']:.2f}" for k, v in joints.items()) + "."],
+            "transformations": ["joint angles deg to rad (unit inferred from values)",
+                                "current compared in A; no torque constant applied"],
+            "evidence": [evidence("EXTERNAL_CALIBRATION", "nist-ur5", t.trial_id,
+                                  "identification", "current model fit") for t in ident]
+                        + [evidence("EXTERNAL_VALIDATION", "nist-ur5", t.trial_id, "validation",
+                                    "holdout current prediction") for t in valid]}
+    return out
+
+
 def validate_nist_tcp(root: Path) -> dict[str, Any]:
     out = _base("nist-tcp")
     out |= {"status": "INSUFFICIENT DATA",
@@ -747,6 +822,7 @@ VALIDATIONS: dict[str, Callable[[Path], dict[str, Any]]] = {
     "nist-tracking": validate_nist_tracking,
     "nist-tracking-v2": lambda root: validate_nist_tracking(root, "nist-tracking-v2",
                                                             accel=True),
+    "nist-dynamics": validate_nist_dynamics,
     "nist-tcp": validate_nist_tcp,
     "compact-sspg-backlash": validate_compact_backlash,
 }
