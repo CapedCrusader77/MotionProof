@@ -146,56 +146,56 @@
  {
   "benchmark": "D",
   "quantity": "lost motion = b for b = 0.0",
-  "kind": "expected value",
+  "kind": "reference value",
   "reference": 0.0,
-  "suite": 0.0,
-  "passed": true,
-  "comment": "suite expected value equals independent reference"
+  "suite": null,
+  "passed": null,
+  "comment": "no matching suite check; reported for context"
  },
  {
   "benchmark": "D",
   "quantity": "direction error at the tip = L b for b = 0.0",
-  "kind": "expected value",
+  "kind": "reference value",
   "reference": 0.0,
-  "suite": 0.0,
-  "passed": true,
-  "comment": "suite expected value equals independent reference"
+  "suite": null,
+  "passed": null,
+  "comment": "no matching suite check; reported for context"
  },
  {
   "benchmark": "D",
   "quantity": "lost motion = b for b = 0.005",
-  "kind": "expected value",
+  "kind": "reference value",
   "reference": 0.005,
-  "suite": 0.005,
-  "passed": true,
-  "comment": "suite expected value equals independent reference"
+  "suite": null,
+  "passed": null,
+  "comment": "no matching suite check; reported for context"
  },
  {
   "benchmark": "D",
   "quantity": "direction error at the tip = L b for b = 0.005",
-  "kind": "expected value",
+  "kind": "reference value",
   "reference": 0.0015,
-  "suite": 0.0015,
-  "passed": true,
-  "comment": "suite expected value equals independent reference"
+  "suite": null,
+  "passed": null,
+  "comment": "no matching suite check; reported for context"
  },
  {
   "benchmark": "D",
   "quantity": "lost motion = b for b = 0.012",
-  "kind": "expected value",
+  "kind": "reference value",
   "reference": 0.012,
-  "suite": 0.012,
-  "passed": true,
-  "comment": "suite expected value equals independent reference"
+  "suite": null,
+  "passed": null,
+  "comment": "no matching suite check; reported for context"
  },
  {
   "benchmark": "D",
   "quantity": "direction error at the tip = L b for b = 0.012",
-  "kind": "expected value",
+  "kind": "reference value",
   "reference": 0.0036,
-  "suite": 0.0036,
-  "passed": true,
-  "comment": "suite expected value equals independent reference"
+  "suite": null,
+  "passed": null,
+  "comment": "no matching suite check; reported for context"
  },
  {
   "benchmark": "E",

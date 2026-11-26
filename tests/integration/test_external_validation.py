@@ -193,7 +193,8 @@ def test_runs_are_recorded_reproducibly_with_provenance(tmp_path: Path) -> None:
 
 
 def test_missing_data_is_not_run_and_tcp_is_insufficient(tmp_path: Path) -> None:
-    for pid in ("h1-friction", "so101-tracking", "kuka-inverse", "nist-tracking"):
+    for pid in ("h1-friction", "so101-tracking", "kuka-inverse", "kuka-inverse-v2",
+                "nist-tracking", "nist-tracking-v2", "transmission-error-v4"):
         assert runs.run(pid, tmp_path)["status"] == "NOT RUN"
     assert runs.run("nist-tcp", tmp_path)["status"] == "INSUFFICIENT DATA"
 
@@ -210,6 +211,39 @@ def test_joint_friction_fit_recovers_known_parameters() -> None:
     assert p["c_viscous"] == pytest.approx(0.3, rel=1e-6)
     assert p["F_coulomb"] == pytest.approx(0.8, rel=1e-6)
     assert r["model"]["validation"]["rmse"] < 1e-9 < r["baseline"]["validation"]["rmse"]
+
+
+def test_te_windup_column_recovers_speed_dependent_offset() -> None:
+    from motionproof.external_validation.schemas.trial import Trial
+
+    trials = []
+    for v in (-0.5, -0.2, 0.2, 0.5):
+        q = np.linspace(-1.0, 2.0, 3000)
+        te = 1e-4 + 5e-4 * np.sign(v) - 6e-3 * v + 2e-4 * np.sin(40 * q)
+        trials.append(Trial("stuttgart-te", f"v{v}", "x", {
+            "q_set": Signal("q_set", q, "rad", "q_set"),
+            "theta_TE": Signal("theta_TE", te, "rad", "theta_TE")}, {"q_set_dot_rad_s": v}))
+    X, y, _, names = runs._te_design(trials, [40], windup=True)
+    beta = np.linalg.lstsq(X, y, rcond=None)[0]
+    assert names[:3] == ["c0", "b_half", "w_windup"]
+    assert beta[2] == pytest.approx(-6e-3, rel=1e-6)
+    X3, _, _, names3 = runs._te_design(trials, [40])
+    assert "w_windup" not in names3 and X3.shape[1] == X.shape[1] - 1
+
+
+def test_coupled_gravity_is_added_to_the_model_only() -> None:
+    t = np.arange(0, 20, 0.01)
+    q2, q3 = 0.3 * np.sin(0.7 * t), 0.8 * np.sin(0.4 * t + 1.0)
+    dq = np.gradient(q3, t)
+    ddq = np.gradient(dq, t)
+    tau = 0.05 * ddq + 0.5 * np.tanh(dq / 0.02) + 3.0 * np.cos(q2 + q3)
+    d = {"t": t, "q": q3, "dq": dq, "ddq": ddq, "tau": tau,
+         "gravity": np.column_stack([np.sin(q2 + q3), np.cos(q2 + q3)])}
+    r = runs._joint_validation([d], [d], ["x"], coupled=True)
+    assert "gc0" in r["model"]["fit"]["parameters"]
+    assert "gc0" not in r["baseline"]["fit"]["parameters"]
+    assert "F_coulomb" not in r["coupled_rigid"]["fit"]["parameters"]
+    assert r["model"]["validation"]["rmse"] < 1e-9 < r["coupled_rigid"]["validation"]["rmse"]
 
 
 def _toothed(teeth: int, r_root: float, r_tip: float, tooth_angle: float, internal: bool,

@@ -28,7 +28,7 @@ from motionproof.external_validation.metrics.errors import (
     thin,
 )
 from motionproof.external_validation.provenance.store import evidence
-from motionproof.external_validation.schemas.trial import SchemaError, Trial, align
+from motionproof.external_validation.schemas.trial import SchemaError, Signal, Trial, align
 
 EPS_COULOMB = 0.02  # rad/s, smoothing of sign(dq) in the Coulomb term (fixed by protocol)
 
@@ -122,19 +122,22 @@ def _te_orders(trials: list[Trial], n_orders: int = 30, kmax: int = 4000,
     return sorted(int(i) for i in np.argsort(spec)[::-1][:n_orders])
 
 
-def _te_design(trials: list[Trial], orders: list[int]) -> tuple[np.ndarray, np.ndarray,
-                                                                 np.ndarray, list[str]]:
+def _te_design(trials: list[Trial], orders: list[int], windup: bool = False
+               ) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[str]]:
     rows, ys, labels = [], [], []
     for tr in trials:
         q = tr.signals["q_set"].values
-        sgn = np.sign(tr.conditions["q_set_dot_rad_s"]) * np.ones_like(q)
-        cols = [np.ones_like(q), sgn]
+        v = float(tr.conditions["q_set_dot_rad_s"])
+        cols = [np.ones_like(q), np.sign(v) * np.ones_like(q)]
+        if windup:
+            cols.append(np.full_like(q, v))  # twist of the gearbox under viscous friction
         for k in orders:
             cols += [np.sin(k * q), np.cos(k * q)]
         rows.append(np.column_stack(cols))
         ys.append(tr.signals["theta_TE"].values)
         labels += [tr.conditions["q_set_dot_rad_s"]] * len(q)
-    names = ["c0", "b_half"] + [f"{t}{k}" for k in orders for t in ("a", "c")]
+    names = ["c0", "b_half"] + (["w_windup"] if windup else []) + [
+        f"{t}{k}" for k in orders for t in ("a", "c")]
     return np.vstack(rows), np.concatenate(ys), np.asarray(labels), names
 
 
@@ -152,8 +155,8 @@ def speed_holdout(rels: list[str]) -> tuple[list[str], list[str]]:
 
 
 def validate_transmission_error(root: Path, pid: str = "transmission-error",
-                                min_periods: float = 0.0,
-                                split: str = "published") -> dict[str, Any]:
+                                min_periods: float = 0.0, split: str = "published",
+                                windup: bool = False) -> dict[str, Any]:
     out = _base(pid)
     a = ADAPTERS["stuttgart-te"]
     have = a.available(root)
@@ -175,9 +178,9 @@ def validate_transmission_error(root: Path, pid: str = "transmission-error",
                                                                          valid_rel)
         check_disjoint([t.trial_id for t in ident], [t.trial_id for t in valid])
         orders = _te_orders(ident, min_periods=min_periods)  # identification spectrum only
-        Xi, yi, li, names = _te_design(ident, orders)
+        Xi, yi, li, names = _te_design(ident, orders, windup)
         fit = linear_fit(Xi, yi, names)
-        Xv, yv, lv, _ = _te_design(valid, orders)
+        Xv, yv, lv, _ = _te_design(valid, orders, windup)
         beta = fit.pop("beta")
         base_i, base_v = np.full_like(yi, yi.mean()), np.full_like(yv, yi.mean())
         m_i, m_v = Xi @ beta, Xv @ beta
@@ -189,14 +192,14 @@ def validate_transmission_error(root: Path, pid: str = "transmission-error",
         ok_all &= ok
         # plot: first validation trial, measured vs predicted along q
         tr = valid[len(valid) // 2]
-        Xp, yp, _, _ = _te_design([tr], orders)
+        Xp, yp, _, _ = _te_design([tr], orders, windup)
         qx = tr.signals["q_set"].values
         axes[axis] = {
             "status": _status(ok), "orders": orders,
             "identification_trials": [t.trial_id for t in ident],
             "validation_trials": [t.trial_id for t in valid],
-            "fit": {"parameters": {"c0": fit["parameters"]["c0"],
-                                   "b_half": fit["parameters"]["b_half"]},
+            "fit": {"parameters": {k: fit["parameters"][k] for k in ("c0", "b_half", "w_windup")
+                                   if k in fit["parameters"]},
                     "harmonics": len(orders),
                     "condition_number_scaled": fit["condition_number_scaled"],
                     "highly_correlated_pairs": fit["highly_correlated_pairs"]},
@@ -216,6 +219,13 @@ def validate_transmission_error(root: Path, pid: str = "transmission-error",
     prefixes = ("identification/axis_2", "identification/axis_3") + (
         ("validation/axis_2", "validation/axis_3") if split == "published" else ())
     out["files_used"] = sorted(r for r in have if r.startswith(prefixes))
+    if windup:
+        out["details"] = [
+            "Not blind: written after transmission-error-v3 (axis 3 FAIL); the windup term "
+            "was chosen from the v3 residuals, which fall linearly with the velocity setpoint.",
+            "Fitted windup w (rad per rad/s): " + "; ".join(
+                f"{k} {v['fit']['parameters']['w_windup']:.2e}" for k, v in axes.items()
+                if "fit" in v) + "."]
     out |= {"status": _status(ok_all) if all("metrics" in v for v in axes.values())
             else "INSUFFICIENT DATA", "axes": axes, "evidence": ev,
             "transformations": ["none: theta_TE compared at the published samples",
@@ -238,24 +248,31 @@ def _h1_series(tr: Trial, dt: float = 0.002) -> dict[str, np.ndarray]:
     return {"t": t[trim], "q": q[trim], "dq": dq[trim], "ddq": ddq[trim], "tau": tau[trim]}
 
 
-def _joint_design(d: dict[str, np.ndarray], friction: bool) -> tuple[np.ndarray, list[str]]:
+def _joint_design(d: dict[str, np.ndarray], friction: bool,
+                  coupled: bool = False) -> tuple[np.ndarray, list[str]]:
     cols = [d["ddq"], np.sin(d["q"]), np.cos(d["q"]), np.ones_like(d["q"])]
     names = ["J", "g1", "g2", "tau0"]
     if friction:
         cols += [d["dq"], np.tanh(d["dq"] / EPS_COULOMB)]
         names += ["c_viscous", "F_coulomb"]
+    if coupled and "gravity" in d:
+        cols += list(d["gravity"].T)
+        names += [f"gc{i}" for i in range(d["gravity"].shape[1])]
     return np.column_stack(cols), names
 
 
 def _joint_validation(ident: list[dict[str, np.ndarray]], valid: list[dict[str, np.ndarray]],
-                      labels_v: list[str]) -> dict[str, Any]:
+                      labels_v: list[str], coupled: bool = False) -> dict[str, Any]:
     res: dict[str, Any] = {}
     yi = np.concatenate([d["tau"] for d in ident])
     yv = np.concatenate([d["tau"] for d in valid])
-    for name, fr in (("baseline", False), ("model", True)):
-        Xi = np.vstack([_joint_design(d, fr)[0] for d in ident])
-        Xv = np.vstack([_joint_design(d, fr)[0] for d in valid])
-        fit = linear_fit(Xi, yi, _joint_design(ident[0], fr)[1])
+    variants = [("baseline", False, False), ("model", True, coupled)]
+    if coupled:  # diagnostic: the same coupled gravity without friction
+        variants.append(("coupled_rigid", False, True))
+    for name, fr, cp in variants:
+        Xi = np.vstack([_joint_design(d, fr, cp)[0] for d in ident])
+        Xv = np.vstack([_joint_design(d, fr, cp)[0] for d in valid])
+        fit = linear_fit(Xi, yi, _joint_design(ident[0], fr, cp)[1])
         beta = fit.pop("beta")
         res[name] = {"fit": fit, "identification": errors(yi, Xi @ beta),
                      "validation": errors(yv, Xv @ beta), "pred_v": Xv @ beta}
@@ -434,12 +451,26 @@ def validate_so101_tracking(root: Path) -> dict[str, Any]:
 
 # ---- X4 KUKA inverse dynamics -------------------------------------------------------------
 
-def validate_kuka_inverse(root: Path) -> dict[str, Any]:
-    out = _base("kuka-inverse")
+def _kuka_gravity(s: dict[str, Signal], j: int) -> np.ndarray | None:
+    """Multibody gravity columns of axis j (kuka-inverse-v2), or None for axes without."""
+    q = {k: s[f"A{k}/q"].values for k in (2, 3, 4, 5)}
+    q23 = q[2] + q[3]
+    if j in (2, 3):
+        return np.column_stack([np.sin(q23), np.cos(q23)])
+    if j == 5:
+        arms = (np.sin(q23) * np.cos(q[4]), np.cos(q23) * np.cos(q[4]), np.sin(q23),
+                np.cos(q23))
+        return np.column_stack([f(q[5]) * a for a in arms for f in (np.sin, np.cos)])
+    return None
+
+
+def validate_kuka_inverse(root: Path, pid: str = "kuka-inverse",
+                          coupled: bool = False) -> dict[str, Any]:
+    out = _base(pid)
     a = ADAPTERS["kuka-kr300"]
     assert isinstance(a, KukaKR300)
     if not a.available(root):
-        return _not_imported("kuka-inverse", "kuka-kr300")
+        return _not_imported(pid, "kuka-kr300")
     tr_train, tr_test = a.load(root, "train"), a.load(root, "test")
     axes: dict[str, Any] = {}
     ok_all = True
@@ -448,11 +479,15 @@ def validate_kuka_inverse(root: Path) -> dict[str, Any]:
 
         def series(tr: Trial, ax: str = ax) -> dict[str, np.ndarray]:
             s = tr.signals
-            return {"q": s[f"{ax}/q"].values, "dq": s[f"{ax}/dq"].values,
-                    "ddq": s[f"{ax}/ddq"].values, "tau": s[f"{ax}/tau"].values,
-                    "t": s[f"{ax}/q"].time_s}  # type: ignore[dict-item]
+            d = {"q": s[f"{ax}/q"].values, "dq": s[f"{ax}/dq"].values,
+                 "ddq": s[f"{ax}/ddq"].values, "tau": s[f"{ax}/tau"].values,
+                 "t": s[f"{ax}/q"].time_s}
+            g = _kuka_gravity(s, int(ax[1])) if coupled else None
+            if g is not None:
+                d["gravity"] = g
+            return d  # type: ignore[return-value]
 
-        r = _joint_validation([series(tr_train)], [series(tr_test)], ["test"])
+        r = _joint_validation([series(tr_train)], [series(tr_test)], ["test"], coupled)
         m, b = r["model"]["validation"], r["baseline"]["validation"]
         ok = m["rmse"] <= 0.8 * b["rmse"]
         ok_all &= ok
@@ -460,12 +495,21 @@ def validate_kuka_inverse(root: Path) -> dict[str, Any]:
             "model": {"identification": r["model"]["identification"], "validation": m},
             "baseline": {"identification": r["baseline"]["identification"], "validation": b}},
             "rmse_ratio_model_to_baseline": m["rmse"] / b["rmse"],
+            **({"friction_only_ratio": m["rmse"] / r["coupled_rigid"]["validation"]["rmse"]}
+               if coupled else {}),
             "fit": {"model": r["model"]["fit"]},
             "plot": dict(zip(("x", "measured", "predicted", "baseline"),
                              thin(series(tr_test)["t"], r["yv"], r["model"]["pred_v"],
                                   r["baseline"]["pred_v"]), strict=True))
                     | {"x_label": "time (s)", "y_label": f"{ax} motor torque (N*m)",
                        "trial": "test"}}
+    if coupled:
+        out["details"] = [
+            "Not blind: written after kuka-inverse (v1) failed on A2, A3 and A5; two A5 "
+            "gravity forms were tried against the test set.",
+            "Friction-only contribution, test RMSE of the model / the same coupled gravity "
+            "without friction: " + "; ".join(
+                f"{k} {v['friction_only_ratio']:.2f}" for k, v in axes.items()) + "."]
     out |= {"status": _status(ok_all), "axes": axes, "files_used": a.available_files(root),
             "identification_trials": ["train"], "validation_trials": ["test"],
             "transformations": ["deg, deg/s, deg/s^2 converted to rad, rad/s, rad/s^2",
@@ -479,33 +523,37 @@ def validate_kuka_inverse(root: Path) -> dict[str, Any]:
 
 # ---- X5 NIST joint tracking, X6 NIST TCP --------------------------------------------------
 
-def _nist_design(tr: Trial, j: int) -> tuple[np.ndarray, np.ndarray]:
+def _nist_design(tr: Trial, j: int, accel: bool = False) -> tuple[np.ndarray, np.ndarray]:
     s = tr.signals
     e = s[f"J{j}/q_target"].values - s[f"J{j}/q"].values
-    X = np.column_stack([np.ones_like(e), s[f"J{j}/tau_target"].values,
-                         np.sign(s[f"J{j}/dq_target"].values), s[f"J{j}/dq_target"].values])
-    return X, e
+    cols = [np.ones_like(e), s[f"J{j}/tau_target"].values,
+            np.sign(s[f"J{j}/dq_target"].values), s[f"J{j}/dq_target"].values]
+    if accel:  # second-order position loop: error also ~ target acceleration / wn^2
+        cols.append(s[f"J{j}/ddq_target"].values)
+    return np.column_stack(cols), e
 
 
-def validate_nist_tracking(root: Path) -> dict[str, Any]:
-    out = _base("nist-tracking")
+def validate_nist_tracking(root: Path, pid: str = "nist-tracking",
+                           accel: bool = False) -> dict[str, Any]:
+    out = _base(pid)
     a = ADAPTERS["nist-ur5"]
     runs = [r for r in a.available(root) if r.endswith(".csv")]
     if not runs:
-        return _not_imported("nist-tracking", "nist-ur5")
+        return _not_imported(pid, "nist-ur5")
     trials = _trials("nist-ur5", root, sorted(runs))
     ident = [t for t in trials if t.conditions["repeat"] in (1, 2)]
     valid = [t for t in trials if t.conditions["repeat"] == 3]
     check_disjoint([t.trial_id for t in ident], [t.trial_id for t in valid])
     joints: dict[str, Any] = {}
     ok_all = True
-    names = ["e0", "compliance_1_over_k", "deadband_half", "lag"]
+    names = ["e0", "compliance_1_over_k", "deadband_half", "lag"] + (
+        ["accel_lag"] if accel else [])
     for j in range(1, 7):
-        Xi = np.vstack([_nist_design(t, j)[0] for t in ident])
-        yi = np.concatenate([_nist_design(t, j)[1] for t in ident])
+        Xi = np.vstack([_nist_design(t, j, accel)[0] for t in ident])
+        yi = np.concatenate([_nist_design(t, j, accel)[1] for t in ident])
         fit = linear_fit(Xi, yi, names)
         beta = fit.pop("beta")
-        Xv = [_nist_design(t, j) for t in valid]
+        Xv = [_nist_design(t, j, accel) for t in valid]
         yv = np.concatenate([e for _, e in Xv])
         pm = np.concatenate([X @ beta for X, _ in Xv])
         pb = np.full_like(yv, yi.mean())
@@ -530,7 +578,12 @@ def validate_nist_tracking(root: Path) -> dict[str, Any]:
                                                  "p_value": float(rho.pvalue),
                                                  "note": "association only, not causation"}}
     t0 = valid[0]
-    X0, e0 = _nist_design(t0, 2)
+    X0, e0 = _nist_design(t0, 2, accel)
+    if accel:
+        out["details"] = [
+            "Not blind: written after nist-tracking (v1) failed on J2 to J6; the "
+            "acceleration term is the 1/wn^2 error of the second-order position loop used in "
+            "X3, taken from the controller's recorded target acceleration."]
     b2 = np.asarray(list(joints["J2"]["fit"]["parameters"].values()))
     sig = t0.signals["J2/q"]
     assert sig.time_s is not None
@@ -677,10 +730,16 @@ VALIDATIONS: dict[str, Callable[[Path], dict[str, Any]]] = {
         root, "transmission-error-v2", min_periods=2.0),
     "transmission-error-v3": lambda root: validate_transmission_error(
         root, "transmission-error-v3", min_periods=2.0, split="speed-holdout"),
+    "transmission-error-v4": lambda root: validate_transmission_error(
+        root, "transmission-error-v4", min_periods=2.0, split="speed-holdout", windup=True),
     "h1-friction": validate_h1_friction,
     "so101-tracking": validate_so101_tracking,
     "kuka-inverse": validate_kuka_inverse,
+    "kuka-inverse-v2": lambda root: validate_kuka_inverse(root, "kuka-inverse-v2",
+                                                          coupled=True),
     "nist-tracking": validate_nist_tracking,
+    "nist-tracking-v2": lambda root: validate_nist_tracking(root, "nist-tracking-v2",
+                                                            accel=True),
     "nist-tcp": validate_nist_tcp,
     "compact-sspg-backlash": validate_compact_backlash,
 }

@@ -11,10 +11,18 @@ backlash; internal mesh: the opposite sign).
 With the sun and ring held, a planet centre can travel tangentially by ``d`` until both meshes
 close. The planet rolls, so its pitch point moves ``d + r*phi`` at the sun and ``d - r*phi`` at
 the ring; both gaps are used up when ``2*d = j_sun_planet + j_planet_ring``. Diametral
-clearance ``c`` in the planet bearing adds directly. The carrier free play of planet k is
+clearance ``c`` in the planet bearing, and ``c_pin`` of the planet pin in its carrier hole, add
+directly. The carrier free play of planet k is
 
-    d_k = (j_sp_k + j_pr_k) / 2 + c
-    stage backlash angle = min_k(d_k) / a        (the first planet to engage carries load)
+    d_k = (j_sp_k + j_pr_k) / 2 + c + c_pin
+    stage backlash angle = min_k(d_k) / a + p_sun / ratio
+
+where ``p_sun`` is torsional play between motor shaft and sun (rad), seen at the carrier through
+the stage ratio. The first planet to engage carries the load, hence the minimum.
+
+Radial errors of a planet pin, or an eccentric planet, move the planet towards one mesh and
+away from the other by the same amount: they change where the free play sits, and can make a
+mesh bind, but do not change its size.
 
 Assumptions: rigid teeth, equal load sharing ignored, tooth-thickness errors lumped into the
 design backlash, errors small against the tooth depth.
@@ -80,6 +88,16 @@ def evaluate_stage(
     j0_sp = mm(inp.design_backlash_sun_planet, "sun-planet design backlash")
     j0_pr = mm(inp.design_backlash_planet_ring, "planet-ring design backlash")
     c_bearing = mm(inp.planet_bearing_clearance, "planet bearing clearance")
+    c_pin = (mm(inp.carrier_pin_clearance, "planet pin clearance in the carrier")
+             if inp.carrier_pin_clearance else 0.0)
+    sun_play = 0.0
+    if inp.sun_coupling_play:
+        sun_play = values[inp.sun_coupling_play]
+        unit = spec.tolerance(inp.sun_coupling_play).unit
+        if unit in ("deg", "degree", "degrees"):
+            sun_play = float(np.radians(sun_play))
+        elif unit != "rad":
+            raise ValueError(f"sun coupling play {inp.sun_coupling_play!r} must be in rad or deg")
     ecc = mm(inp.sun_runout, "sun runout") / 2.0  # runout is a total indicator reading
     phase = values[inp.sun_runout_phase] if inp.sun_runout_phase else 0.0
     off = np.array([mm(inp.ring_offset_x, "ring offset x", True),
@@ -101,7 +119,7 @@ def evaluate_stage(
         j_sp_min = j0_sp + 2 * tan_a * (dr - abs(ecc))
         j_pr_min = j0_pr - 2 * tan_a * (dr + off_mag)
         mesh_min = min(mesh_min, j_sp_min, j_pr_min)
-        d = (max(j_sp, 0.0) + max(j_pr, 0.0)) / 2 + max(c_bearing, 0.0)
+        d = (max(j_sp, 0.0) + max(j_pr, 0.0)) / 2 + max(c_bearing, 0.0) + max(c_pin, 0.0)
         travel.append(d)
         per_planet.append({"planet": k, "pin_radial_dev_mm": dr, "j_sun_planet_mm": j_sp,
                            "j_planet_ring_mm": j_pr, "free_travel_mm": d})
@@ -112,7 +130,7 @@ def evaluate_stage(
         stage=stage.id,
         ratio=stage.ratio,
         centre_distance_mm=a,
-        backlash_angle=float(min(travel) / a),
+        backlash_angle=float(min(travel) / a + max(sun_play, 0.0) / stage.ratio),
         min_mesh_backlash_mm=float(mesh_min),
         binding=bool(mesh_min < 0.0),
         te_amplitude_input=float(abs(ecc) / r_sun),

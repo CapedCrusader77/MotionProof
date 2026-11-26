@@ -9,7 +9,8 @@ reliability.
 * Backlash is a lost-motion relation from centre distance and clearance. Tooth profile, pitch
   and lead errors are not modelled; load sharing between planets is ignored.
 * Radial play uses a fixed worst-case seating of the shaft.
-* Trapped friction windup is under-estimated (soft friction constraint).
+* Static friction is a stick/slip switch with one friction level (no Stribeck curve, no
+  pre-sliding displacement).
 * The motor is an ideal position-controlled torque source within its torque-speed limit; no
   electrical, step-loss or thermal model.
 * Geometric tolerances are scalar deviations, not full GD&T zones.

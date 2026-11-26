@@ -275,14 +275,17 @@ def bench_d() -> dict[str, Any]:
     from motionproof.simulation.tasks import Reversal
 
     checks = []
+    # slow moves end with the output stuck at a spring windup of about f/k on each side
+    windup = 2 * 0.4 / 2000.0
     for b in (0.0, 0.005, 0.012):
         m = single_joint(gravity=False, friction=0.4, backlash=b, backlash_range=(0.0, 0.0))
         res = m.simulate(Reversal(target={"j": 0.3}, joint="j", excursion=0.2, move_time=0.8,
                                   settle=0.6))
-        checks.append(check(f"lost motion = b for b = {b}", b, res.metrics["lost_motion"], 2e-5,
-                            unit="rad"))
-        checks.append(check(f"direction error at the tip = L b for b = {b}", L_ARM * b,
-                            res.metrics["direction_error_ee"], 2e-5 * L_ARM, unit="m"))
+        checks.append(check(f"lost motion = b + 2f/k for b = {b}", b + windup,
+                            res.metrics["lost_motion"], 0.2 * windup, unit="rad"))
+        checks.append(check(f"direction error at the tip = L (b + 2f/k) for b = {b}",
+                            L_ARM * (b + windup), res.metrics["direction_error_ee"],
+                            0.2 * windup * L_ARM, unit="m"))
     m = single_joint(gravity=False, friction=0.4)
     cfg = ExperimentConfig.model_validate({
         "name": "replay", "task": {"type": "reversal", "target": {"j": 0.3}, "joint": "j"},
@@ -295,8 +298,9 @@ def bench_d() -> dict[str, Any]:
     return {"title": "Joint reversal and replay", "area": "transmission",
             "fidelity": "F2 reduced order", "synthetic": True,
             "purpose": "Dead-band lost motion on reversal and bit-exact replay.",
-            "formulation": "no gravity: lost motion = b (friction windup relaxes, see "
-                           "limitations); tip error = L b",
+            "formulation": "no gravity, output friction f, stiffness k: lost motion = b + 2f/k "
+                           "(friction traps spring windup f/k on each approach; the slow "
+                           "move ends close to that bound); tip error = L (b + 2f/k)",
             "checks": checks}
 
 

@@ -47,6 +47,7 @@ VEL_SMOOTH = 0.01  # rad/s, sign smoothing used when reporting friction torque
 ROTOR_SMOOTH = 0.05  # rad/s (output-referred), smoothing of motor friction
 MAX_TRACE = 400
 HELD_BAND = 1e-7  # rad, half-width of the range that locks an ideally held joint
+STICK_SPEED = 1e-3  # rad/s: below this an output whose net torque is within friction sticks
 
 
 class SimulationError(RuntimeError):
@@ -140,6 +141,10 @@ class _Drive:
         self.kd = ctl.kd if ctl.kd is not None else 1.8 * j_total * w
         self.th_r = 0.0
         self.w_r = 0.0
+        # static friction: while stuck the joint is held by a narrow range (see Engine._run)
+        self.stuck = False
+        self.free_limit = (int(model.jnt_limited[self.jid]), model.jnt_range[self.jid].copy(),
+                           model.jnt_solref[self.jid].copy(), model.jnt_solimp[self.jid].copy())
 
     def te(self, th_r: float) -> float:
         return sum(a * math.sin(c * th_r + ph) for a, c, ph in self.jv.te)
@@ -196,6 +201,11 @@ class Engine:
             dof = model.jnt_dofadr[jid]
             model.dof_frictionloss[dof] = jv.friction  # updated every step by the drive
             model.dof_damping[dof] = jv.damping
+            # Coulomb friction is hard: MuJoCo's default friction constraint (time constant
+            # 0.02 s) lets a slowly sliding output run on below the friction limit and so
+            # releases spring windup that friction would trap.
+            model.dof_solref[dof] = (2.0 * model.opt.timestep, 1.0)
+            model.dof_solimp[dof, :3] = (0.999, 0.9999, 1e-6)
         # Held joints (ideal servo): a zero-width joint range enforced by the constraint
         # solver. This is unconditionally stable, unlike a stiff explicit PD loop.
         for name, value in self.spec.held_joints.items():
@@ -284,10 +294,28 @@ class Engine:
                     tau_c = d.k * s + d.c * (d.w_r - w_o)
                     if tau_c * s < 0.0:  # a flank can push, never pull
                         tau_c = 0.0
-                # Friction is solved implicitly by MuJoCo (stable, with true stiction): constant
-                # output friction plus the load-dependent mesh loss (1 - eta) * |tau_c|.
+                # Output friction: constant friction plus the load-dependent mesh loss
+                # (1 - eta) * |tau_c|. While sliding MuJoCo solves it implicitly. MuJoCo's
+                # friction constraint is soft, so at rest a torque below the friction limit
+                # (spring windup trapped by friction) would slowly creep out; a stuck output is
+                # therefore held in place instead, until the torque on it exceeds friction.
                 loss = jv.friction + (1.0 - jv.efficiency) * abs(tau_c)
-                model.dof_frictionloss[d.dadr] = loss
+                net = tau_c - float(data.qfrc_bias[d.dadr])
+                if d.stuck and abs(net) > loss:
+                    d.stuck = False
+                    lim, rng, sref, simp = d.free_limit
+                    model.jnt_limited[d.jid] = lim
+                    model.jnt_range[d.jid] = rng
+                    model.jnt_solref[d.jid] = sref
+                    model.jnt_solimp[d.jid] = simp
+                elif (not d.stuck and loss > 0.0 and abs(w_o) < STICK_SPEED
+                      and abs(net) <= loss):
+                    d.stuck = True
+                    model.jnt_limited[d.jid] = 1
+                    model.jnt_range[d.jid] = (th_o - HELD_BAND, th_o + HELD_BAND)
+                    model.jnt_solref[d.jid] = (2.0 * dt, 1.0)
+                    model.jnt_solimp[d.jid, :3] = (0.999, 0.9999, 1e-6)
+                model.dof_frictionloss[d.dadr] = 0.0 if d.stuck else loss
                 qfrc[d.dadr] = tau_c
                 tau_out = tau_c - loss * math.tanh(w_o / VEL_SMOOTH)
 

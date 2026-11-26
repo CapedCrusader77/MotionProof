@@ -54,7 +54,11 @@ def write_results(records: list[dict[str, Any]], path: Path,
          "(`motionproof/external_validation/experiments/protocols.py`), except for X7: it "
          "was written after its published value was known, and only its tolerance model "
          "was fixed beforehand. X7 compares with one published number, not with "
-         "measurement series.", "",
+         "measurement series. X1 (transmission-error-v4), X4 (kuka-inverse-v2) and X5 "
+         "(nist-tracking-v2) are revisions written after their earlier versions had run and "
+         "failed: each adds one physical effect the earlier residuals showed to be missing, "
+         "with data split and acceptance unchanged. They are not blind; the earlier runs are "
+         "listed under superseded protocols.", "",
          "| ID | Validation | System | Status | Headline | Run |", "|---|---|---|---|---|---|"]
     for rec in records:
         r = rec["result"]
@@ -81,13 +85,15 @@ def write_results(records: list[dict[str, Any]], path: Path,
                   "Ratio | Model NRMSE |", "|---|---|---|---|---|---|"]
             for name, sub in rows:
                 m = sub.get("metrics", {})
-                mv = m.get("model", {}).get("validation", {})
-                bv = m.get("baseline", {}).get("validation", {})
+                mv = (m.get("model", {}).get("validation")
+                      or m.get("validation", {}).get("model", {}))
+                bv = (m.get("baseline", {}).get("validation")
+                      or m.get("validation", {}).get("baseline", {}))
                 if mv:
                     L.append(f"| {name} | {sub.get('status', r['status'])} | {mv['rmse']:.4g} | "
                              f"{bv.get('rmse', float('nan')):.4g} | "
                              f"{sub['rmse_ratio_model_to_baseline']:.3f} | "
-                             f"{(mv['nrmse'] or float('nan')):.3f} |")
+                             f"{(mv.get('nrmse') or float('nan')):.3f} |")
         info = DATASETS[r["dataset"]]
         L += ["", f"- Data: {info.citation}", f"- Licence: {info.licence}",
               f"- Report: `external_data/runs/{rec['id']}/report.md`; reproduce: "

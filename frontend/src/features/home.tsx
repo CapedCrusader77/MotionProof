@@ -139,7 +139,7 @@ const ENG_CAPS: Cap[] = [
   { id: "e3", w: [0.39, 0.42, 0.51, 0.54], eyebrow: "Turbo", title: "Stack-ups decide how it fits.", body: "Small deviations add up across flanges, housings and shafts." },
   { id: "e2", w: [0.74, 0.78, 0.87, 0.90], eyebrow: "Bore", title: "Every bore, pin and journal has a tolerance.", body: "Pistons, rods and crank follow slider-crank geometry. Each dimension can vary from part to part, down to this Ø86 H7 bore." },
   { id: "e5", w: [0.93, 0.955, 1.0, 1.02], eyebrow: "Results", title: "A thousand virtual copies. One pass rate.", body: "The numbers below come from MotionProof's reference design, a two-stage planetary robot joint, sampled and simulated 1000 times.", cta: true,
-    stats: [["1000", "virtual assemblies"], ["79.9 %", "meet every requirement"], ["4", "requirements checked"]] },
+    stats: [["1000", "virtual assemblies"], ["73.9 %", "meet every requirement"], ["4", "requirements checked"]] },
 ];
 /* ------------------------------------------------------------------ parts: the engine's toleranced features */
 const PARTS: { key: string; name: string; alt: string; feats: [string, string][] }[] = [
@@ -315,11 +315,11 @@ const PRODUCTS: Product[] = [
   { key: "robustness", cat: "Analysis", name: "Robustness", lead: "How many virtual copies still meet the requirement, with an honest interval.",
     general: "Pass rate across every sampled assembly, the constraints that fail, and the distribution of each metric.",
     features: ["Wilson and Clopper-Pearson intervals", "Failure categories you can drill into", "Histograms with the limit drawn"],
-    specs: [["Reference run", "1000 scenarios"], ["Pass rate", "79.9 % (799 of 1000)"], ["Interval", "77.3 to 82.3 %"], ["Requirements", "Four constraints"]] },
+    specs: [["Reference run", "1000 scenarios"], ["Pass rate", "73.9 % (739 of 1000)"], ["Interval", "71.1 to 76.5 %"], ["Requirements", "Four constraints"]] },
   { key: "sensitivity", cat: "Analysis", name: "Sensitivity", lead: "Which tolerances drive the error, and how sure we are.",
     general: "Rank every tolerance by its effect on a chosen metric, with intervals and the raw scatter behind each ranking.",
     features: ["Spearman rank correlation", "Standardised regression", "Sobol indices"],
-    specs: [["Reference run", "1000 scenarios"], ["Top driver", "Output friction, rho 0.45"], ["Caveat", "Association, not causation"], ["Also", "Worst-case search"]] },
+    specs: [["Reference run", "1000 scenarios"], ["Top driver", "Output friction, rho 0.44"], ["Caveat", "Association, not causation"], ["Also", "Worst-case search"]] },
   { key: "trust", cat: "Evidence", name: "Model trust", lead: "The evidence behind every parameter.",
     general: "Every value is marked generated, estimated, assumed or measured, and the model's overall trust follows the weakest link.",
     features: ["Evidence level per parameter", "Calibration reports attached", "Nothing certified without measurement"],

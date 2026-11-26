@@ -333,15 +333,19 @@ def test_calibration_recovers_known_backlash_on_separate_holdout(
 
 def test_calibration_flags_unidentifiable_parameter_and_weak_holdout(
         single_joint, tmp_path: Path) -> None:  # type: ignore[no-untyped-def]
-    """Gearbox efficiency cannot be seen in an output-angle trace without load."""
-    model = single_joint(gravity=False, friction=0.0)
-    _record(model, tmp_path / "cal.csv", 0.006, 0.0, 2e-5, 3, CAL_TASK)
-    cfg = _cal_config([{"joint": "j", "name": "backlash", "lower": 0.0, "upper": 0.02},
-                       {"joint": "j", "name": "efficiency", "lower": 0.5, "upper": 1.0}])
+    """A static hold under gravity shows only b/2 + m g L / k: backlash and stiffness cannot
+    be told apart. (A frictionless output rattling in its dead band is no test case: where it
+    stops is chaotic.)"""
+    model = single_joint(friction=0.0)
+    hold = {"type": "static_hold", "pose": {"j": 0.0}, "duration": 1.0}
+    _record(model, tmp_path / "cal.csv", 0.006, 0.0, 2e-5, 3, hold)
+    cfg = CalibrationConfig.model_validate(_cal_config(
+        [{"joint": "j", "name": "backlash", "lower": 0.0, "upper": 0.02},
+         {"joint": "j", "name": "stiffness", "lower": 1000.0, "upper": 4000.0}]
+    ).model_dump() | {"task": hold})
     res = calibrate(model, cfg, read_csv(tmp_path / "cal.csv", cfg))
     text = " ".join(res["warnings"])
-    assert "efficiency" in text and any(k in text for k in (
-        "not identifiable", "poorly identified", "strongly correlated"))
+    assert "backlash and j.stiffness are strongly correlated" in text
     assert res["holdout"]["split"] == "same_recording_tail"
     assert "not an independent recording" in text
 

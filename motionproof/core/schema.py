@@ -227,6 +227,12 @@ class StageInputs(_Model):
     design_backlash_planet_ring: str | None = None
     carrier_pin_radial: list[str] = Field(default_factory=list)
     planet_bearing_clearance: str | None = None
+    # diametral clearance of the planet pins in their carrier holes (a printed carrier, a
+    # slip fit); adds to the planets' free travel like the bearing clearance
+    carrier_pin_clearance: str | None = None
+    # torsional play between the motor shaft and the sun (set screw, D flat, key), rad at the
+    # sun; appears at the stage output divided by the stage ratio
+    sun_coupling_play: str | None = None
     sun_runout: str | None = None
     sun_runout_phase: str | None = None
     ring_offset_x: str | None = None

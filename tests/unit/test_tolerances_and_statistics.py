@@ -273,6 +273,38 @@ def test_stage_backlash_formula_and_radial_cancellation() -> None:
     assert evaluate_stage(st, spec, vals | {"s2_pin_radial_1": 0.06}).binding
 
 
+
+def test_pin_clearance_and_sun_coupling_play_add_lost_motion() -> None:
+    """Pin clearance in the carrier adds to the planets' free travel like bearing clearance;
+    torsional play at the sun appears at the carrier divided by the stage ratio."""
+    from motionproof.core.schema import MechanicalModelSpec, Tolerance
+
+    spec = _ref_spec()
+    vals = nominal_values(spec)
+    st = next(s for s in spec.gear_stages if s.id == "stage2")
+    base = evaluate_stage(st, spec, vals).backlash_angle
+
+    def tol(tid: str, value: float, unit: str) -> Tolerance:
+        return Tolerance.model_validate({
+            "id": tid, "component": "stage2", "parameter": tid, "characteristic": "radial_clearance" if unit == "mm" else "backlash",
+            "category": "assembly", "nominal": value, "lower": 0.0, "upper": 2 * value,
+            "unit": unit, "distribution": {"type": "uniform", "low": 0.0, "high": 2 * value},
+            "source": "test", "confidence": "assumed"})
+
+    data = spec.model_dump(mode="json", by_alias=True)
+    data["tolerances"] += [tol("pin_fit", 0.03, "mm").model_dump(mode="json", by_alias=True),
+                           tol("sun_key", 0.6, "deg").model_dump(mode="json", by_alias=True)]
+    for g in data["gear_stages"]:
+        if g["id"] == "stage2":
+            g["inputs"] |= {"carrier_pin_clearance": "pin_fit", "sun_coupling_play": "sun_key"}
+    spec2 = MechanicalModelSpec.model_validate(data)
+    st2 = next(s for s in spec2.gear_stages if s.id == "stage2")
+    vals2 = nominal_values(spec2)
+    got = evaluate_stage(st2, spec2, vals2).backlash_angle
+    assert got == pytest.approx(base + 0.03 / st2.centre_distance + math.radians(0.6) / st2.ratio)
+    zero = evaluate_stage(st2, spec2, vals2 | {"pin_fit": 0.0, "sun_key": 0.0}).backlash_angle
+    assert zero == pytest.approx(base)
+
 def test_total_backlash_reflects_stage_one_through_stage_two() -> None:
     spec = _ref_spec()
     v = resolve_variant(spec, nominal_values(spec))

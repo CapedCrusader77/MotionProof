@@ -9,12 +9,18 @@ realised by chosen tooth counts, not a measurement of any gearbox.
 mesh: more distance, more backlash; internal mesh: less).
 
 With sun and ring held, a planet centre can travel tangentially by `d` until both meshes close:
-`2d = j_sun-planet + j_planet-ring`. Diametral clearance `c` in the planet bearing adds directly:
+`2d = j_sun-planet + j_planet-ring`. Diametral clearance `c` in the planet bearing, and
+`c_pin` of the planet pin in its carrier hole (`carrier_pin_clearance`, typical of a printed
+carrier), add directly. Torsional play `p_sun` between motor shaft and sun
+(`sun_coupling_play`: set screw, D flat, key; rad or deg) appears at the carrier through the
+stage ratio:
 
 ```
-d_k   = (j_sp,k + j_pr,k) / 2 + c
-stage backlash angle = min_k(d_k) / a      (a = pin circle radius)
+d_k   = (j_sp,k + j_pr,k) / 2 + c + c_pin
+stage backlash angle = min_k(d_k) / a + p_sun / i      (a = pin circle radius)
 ```
+
+Both inputs are optional and zero when not mapped.
 
 A pin displaced radially loosens one mesh and tightens the other by the same amount, so it does
 not change lost motion but can make a mesh **bind**; binding is reported when a mesh backlash

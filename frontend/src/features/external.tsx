@@ -120,7 +120,7 @@ export function ExternalValidationScreen() {
   return (
     <div className="page">
       <div className="page-head"><h1>External validation</h1><span className="sub">public experimental robot datasets, holdout predictions</span><span className="spacer" />
-        <button className="btn primary" disabled={isActive(job)} onClick={() => launch(ext.validate("transmission-error-v3"))}><Play />Run X1</button></div>
+        <button className="btn primary" disabled={isActive(job)} onClick={() => launch(ext.validate("transmission-error-v4"))}><Play />Run X1</button></div>
       {isActive(job) && <Spinner label="Running on the backend" />}
       <Alert kind="info">These are measurements of other people's robots (Stäubli, Unitree H1, SO-101, KUKA, UR5). They test how well MotionProof's model components reproduce real behaviour; they are not measurements of your gearbox and do not validate it. Failed validations are shown, not hidden.</Alert>
       <Panel title="Datasets" flush>

@@ -26,7 +26,7 @@ On the published data this becomes, per axis,
 
 Baseline B0: a constant equal to the mean identification transmission error.
 
-## Protocol (current: `transmission-error-v3`)
+## Protocol (current: `transmission-error-v4`, as v3 plus one windup term)
 
 * Identification: recordings in `identification/axis_2` and `identification/axis_3` whose
   velocity setpoint has an even rank when the setpoints of each sign are sorted by magnitude.
@@ -49,17 +49,23 @@ plot along `q_set`, and the fit's conditioning.
 |---|---|---|---|
 | `transmission-error` (v1) | VALIDATION_001 | FAIL | Orders 1–17 complete less than one period over the 3.4 rad joint range, are nearly collinear with the offset (scaled condition number about 4e11) and extrapolate badly. |
 | `transmission-error-v2` | VALIDATION_003 | FAIL | Orders limited to at least 2 periods. Same validation error, which led to the real cause: the dataset's own `plot_figures.m` shows the published validation recordings were made **with the authors' Fourier compensation active**. Their θ_TE is the residual after compensation, about 6.5× smaller than in the identification recordings. Comparing a predicted uncompensated TE with it compares different quantities, so v1 and v2 are invalid comparisons. |
-| `transmission-error-v3` | VALIDATION_004, VALIDATION_008 | FAIL | Holdout of whole uncompensated recordings at alternate velocity setpoints. Axis 2 PASS (validation RMSE 0.175× baseline); axis 3 FAIL (0.822×, criterion 0.5×). |
+| `transmission-error-v3` | VALIDATION_004, VALIDATION_008, VALIDATION_016 | FAIL | Holdout of whole uncompensated recordings at alternate velocity setpoints. Axis 2 PASS (validation RMSE 0.175× baseline); axis 3 FAIL (0.822×, criterion 0.5×). |
+| `transmission-error-v4` | VALIDATION_023 | PASS | v3 plus `w · q_set_dot`, the twist of the gearbox under viscous friction torque. Axis 2 0.037×, axis 3 0.281×; validation RMSE 1.2× identification on both. Not blind: written after the v3 residuals were seen. |
 
-Each new protocol was committed before it ran, with unchanged acceptance thresholds.
+v1–v3 were each committed before they ran, with unchanged acceptance thresholds. v4 was written
+after v3 ran; split, orders and thresholds are unchanged and the windup term is fitted on the
+identification recordings only.
 
 ## Finding
 
 The periodic TE term and direction offset reproduce the position-dependent shape well (axis 2
 error 1.8e-3 rad against 1.0e-2 rad for the baseline). The remaining error grows steadily with
-speed on both axes (axis 3: 0.2 mrad at 0.20 rad/s, 3.8 mrad at 0.67 rad/s). The drive model
-has no speed-dependent transmission-error term, so it cannot represent this. Adding one would be
-a new model and a new protocol; it has not been done.
+speed on both axes (axis 3: 0.2 mrad at 0.20 rad/s, 3.8 mrad at 0.67 rad/s). The mean residual
+of each recording falls almost linearly with the velocity setpoint: the gearbox twists under
+viscous friction torque, which is the drive model's damping acting through its stiffness. v4
+adds that one term (fitted windup: axis 2 −8.3e-3, axis 3 −5.6e-3 rad per rad/s) and passes on
+both axes. Because v4 was chosen after seeing the v3 residuals, it is not blind; a blind test of
+it needs recordings at speeds outside the identification range, or another gearbox.
 
 ## Reproduce
 
@@ -68,7 +74,7 @@ uv run motionproof external import stuttgart-te --group axis_2 --group axis_3
 ```
 
 ```bash
-uv run motionproof external validate transmission-error-v3
+uv run motionproof external validate transmission-error-v4
 ```
 
 ## Limitations

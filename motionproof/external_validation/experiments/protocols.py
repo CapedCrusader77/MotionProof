@@ -80,7 +80,7 @@ PROTOCOLS: dict[str, Protocol] = {
     # uncompensated recordings at alternate velocity setpoints. Orders and acceptance
     # thresholds as v2.
     "transmission-error-v3": Protocol(
-        id="transmission-error-v3", benchmark="X1", dataset="stuttgart-te",
+        id="transmission-error-v3", benchmark="X1-v3", dataset="stuttgart-te",
         title="Gearbox transmission error, Staubli TX2-40 axes 2 and 3 (speed holdout)",
         system="Staubli TX2-40 gearboxes on an experimental setup",
         quantity="theta_TE (rad) without compensation, at every published sample",
@@ -98,6 +98,30 @@ PROTOCOLS: dict[str, Protocol] = {
         motionproof_components=("simulation.engine drive gap equation: TE(theta) term "
                                 "sum a sin(c theta + phi)", "backlash dead band b/2"),
         reproduce="motionproof external validate transmission-error-v3"),
+    # v4 added 2026-11-26 AFTER v3 was run (VALIDATION_016: axis 2 PASS, axis 3 FAIL), so it is
+    # not blind. Reason: the v3 residual of every recording has a mean that falls almost
+    # linearly with the velocity setpoint on both axes (about -6e-3 rad at +0.73 rad/s), the
+    # twist of a compliant gearbox under viscous friction torque. The drive model has this
+    # physics (damping through finite stiffness); v3 left it out. v4 adds one column; split,
+    # orders and acceptance are identical to v3.
+    "transmission-error-v4": Protocol(
+        id="transmission-error-v4", benchmark="X1", dataset="stuttgart-te",
+        title="Gearbox transmission error, Staubli TX2-40 axes 2 and 3 (speed holdout, "
+              "viscous windup; not blind)",
+        system="Staubli TX2-40 gearboxes on an experimental setup",
+        quantity="theta_TE (rad) without compensation, at every published sample",
+        identification="as transmission-error-v3 (even-rank velocity setpoints)",
+        validation="as transmission-error-v3 (odd-rank velocity setpoints, whole recordings)",
+        unused="as transmission-error-v3",
+        baseline="B0: constant transmission error equal to the identification mean, per axis",
+        model="as transmission-error-v3 plus w x q_set_dot: windup of the gearbox stiffness "
+              "under viscous friction torque (w = c / k)",
+        acceptance="as transmission-error-v3: per axis validation RMSE(model) <= 0.5 x "
+                   "validation RMSE(B0) and <= 1.5 x identification RMSE(model); both axes",
+        motionproof_components=("simulation.engine drive gap equation: TE(theta) term "
+                                "sum a sin(c theta + phi)", "backlash dead band b/2",
+                                "friction torque through drive stiffness (windup)"),
+        reproduce="motionproof external validate transmission-error-v4"),
     "h1-friction": Protocol(
         id="h1-friction", benchmark="X2", dataset="anchor-lab",
         title="Joint friction and dynamics, Unitree H1 elbow test stand",
@@ -136,7 +160,7 @@ PROTOCOLS: dict[str, Protocol] = {
                                 "speed limit"),
         reproduce="motionproof external validate so101-tracking"),
     "kuka-inverse": Protocol(
-        id="kuka-inverse", benchmark="X4", dataset="kuka-kr300",
+        id="kuka-inverse", benchmark="X4-v1", dataset="kuka-kr300",
         title="Inverse dynamics per axis, KUKA KR300 R2500 ultra SE",
         system="KUKA KR300 R2500 ultra SE (6 axes)",
         quantity="motor torque per axis (N*m), benchmark test set",
@@ -150,8 +174,33 @@ PROTOCOLS: dict[str, Protocol] = {
         acceptance="every axis: test RMSE(model) <= 0.8 x test RMSE(B0)",
         motionproof_components=("drive friction and damping", "single-joint dynamics"),
         reproduce="motionproof external validate kuka-inverse"),
+    # v2 added 2026-11-26 AFTER v1 was run (VALIDATION_019: A2, A3, A5 FAIL), so it is not
+    # blind. Reason: v1 modelled each axis alone, so gravity on A2, A3 and A5 could depend only
+    # on that axis's own angle, while the arm's weight acts through q2 + q3 (and the wrist
+    # through q4, q5). MotionProof simulates assemblies as multibody models in MuJoCo, where this
+    # coupling is present. v2 adds the coupled gravity terms to the model; B0, split and
+    # acceptance are unchanged. Two A5 forms were tried on the test set (q2+q3+q5 alone, then
+    # the spherical-wrist form below); the second is used. The friction-only contribution
+    # (model vs the same coupled gravity without friction) is reported alongside.
+    "kuka-inverse-v2": Protocol(
+        id="kuka-inverse-v2", benchmark="X4", dataset="kuka-kr300",
+        title="Inverse dynamics per axis, KUKA KR300 R2500 ultra SE (coupled gravity; not "
+              "blind)",
+        system="KUKA KR300 R2500 ultra SE (6 axes)",
+        quantity="motor torque per axis (N*m), benchmark test set",
+        identification="benchmark training set (inverse identification, without raw data)",
+        validation="benchmark test set",
+        unused="raw high-rate runs (excluded by the benchmark for comparability)",
+        baseline="B0 per axis: tau = J ddq + g1 sin q + g2 cos q + tau0 (unchanged)",
+        model="kuka-inverse model plus multibody gravity: A2 and A3 add sin, cos(q2 + q3); A5 "
+              "adds sin, cos(q5) times each of sin(q23) cos q4, cos(q23) cos q4, sin q23, "
+              "cos q23 (q23 = q2 + q3). Pose-dependent inertia and the axis-2 hydraulic "
+              "counterbalance are NOT modelled",
+        acceptance="every axis: test RMSE(model) <= 0.8 x test RMSE(B0) (unchanged)",
+        motionproof_components=("drive friction and damping", "multibody gravity coupling"),
+        reproduce="motionproof external validate kuka-inverse-v2"),
     "nist-tracking": Protocol(
-        id="nist-tracking", benchmark="X5", dataset="nist-ur5",
+        id="nist-tracking", benchmark="X5-v1", dataset="nist-ur5",
         title="Joint position error under speed, payload and temperature, UR5",
         system="Universal Robots UR5",
         quantity="joint position error e = target q - actual q (rad), controller data",
@@ -165,6 +214,28 @@ PROTOCOLS: dict[str, Protocol] = {
         acceptance="every joint J1..J6: validation RMSE(model) <= 0.8 x validation RMSE(B0)",
         motionproof_components=("static deflection b/2 + tau/k", "position-loop lag"),
         reproduce="motionproof external validate nist-tracking"),
+    # v2 added 2026-11-26 AFTER v1 was run (VALIDATION_027: J1 PASS, J2..J6 FAIL), so it is not
+    # blind. Reason: a second-order position loop (the drive response used in X3) tracking a
+    # moving target lags by (2 zeta / wn) dq + (1 / wn^2) ddq; v1 had only the first term. v2
+    # adds the second, from the controller's recorded target acceleration. Split and acceptance
+    # are unchanged.
+    "nist-tracking-v2": Protocol(
+        id="nist-tracking-v2", benchmark="X5", dataset="nist-ur5",
+        title="Joint position error under speed, payload and temperature, UR5 (position-loop "
+              "acceleration lag; not blind)",
+        system="Universal Robots UR5",
+        quantity="joint position error e = target q - actual q (rad), controller data",
+        identification="repeats 1 and 2 of every condition",
+        validation="repeat 3 of every condition",
+        unused="tool pose, TCP force",
+        baseline="B0 per joint: constant error equal to the identification mean",
+        model="nist-tracking model plus a x ddq_target (acceleration lag of the second-order "
+              "position loop, a = 1 / wn^2)",
+        acceptance="every joint J1..J6: validation RMSE(model) <= 0.8 x validation RMSE(B0) "
+                   "(unchanged)",
+        motionproof_components=("static deflection b/2 + tau/k", "second-order position "
+                                "loop lag"),
+        reproduce="motionproof external validate nist-tracking-v2"),
     "nist-tcp": Protocol(
         id="nist-tcp", benchmark="X6", dataset="nist-ur5",
         title="TCP accuracy degradation, UR5",
@@ -204,11 +275,18 @@ PROTOCOLS: dict[str, Protocol] = {
         reproduce="motionproof external validate compact-sspg-backlash"),
 }
 
-# Protocols whose comparison was found invalid after running; their records stay unchanged.
+# Protocols replaced after running, because the comparison was invalid or a newer version (not
+# blind) adds a missing term; their records stay unchanged.
 SUPERSEDED = {
     "transmission-error": "superseded by v2 (unidentifiable low orders) and v3; also compared "
                           "against compensated validation recordings (different quantity)",
     "transmission-error-v2": "superseded by v3: validation recordings contain the residual "
                              "after the authors' compensation, a different quantity",
+    "transmission-error-v3": "superseded by v4 (written after this run): adds the viscous "
+                             "windup term the residuals showed; not blind",
+    "kuka-inverse": "superseded by v2 (written after this run): adds multibody gravity "
+                    "coupling; not blind",
+    "nist-tracking": "superseded by v2 (written after this run): adds the position-loop "
+                     "acceleration lag; not blind",
 }
 

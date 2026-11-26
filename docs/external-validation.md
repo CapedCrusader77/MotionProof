@@ -25,7 +25,7 @@ uv run motionproof external inspect stuttgart-te
 ```
 
 ```bash
-uv run motionproof external validate transmission-error-v3
+uv run motionproof external validate transmission-error-v4
 ```
 
 ```bash
@@ -87,15 +87,15 @@ transformation, and the scope statement "external system; not a measurement of t
 reference gearbox or of any user hardware". They never enter a MotionProof model as measured
 values of the user's parts.
 
-## Current results (2026-11-16)
+## Current results (2026-11-26)
 
 | ID | Case | Status | In one line |
 |---|---|---|---|
-| X1 | Stäubli TX2-40 transmission error | FAIL | Axis 2 passes (0.18× baseline); axis 3 0.82× (needs ≤ 0.5×). Error grows with speed, which the model has no term for. |
-| X2 | H1 elbow friction | FAIL | Rigid model and friction model both explain about 22 % of the torque-estimate variance; friction adds 1 %. |
+| X1 | Stäubli TX2-40 transmission error (v4, not blind) | PASS | v3 failed on axis 3 (0.82×, needs ≤ 0.5×): the error grew linearly with speed. v4 adds the gearbox windup under viscous friction (one coefficient per axis): axis 2 0.04×, axis 3 0.28×. |
+| X2 | H1 elbow friction | FAIL | Rigid model and friction model both explain about 22 % of the torque-estimate variance; friction adds 1 %. Most of the rest is a ~200 Hz oscillation fixed in time (controller or sensor), which no joint model predicts; even with it filtered out, friction on this stand is about 0.1 N·m and adds about 4 %. No revision made. |
 | X3 | SO-101 elbow response | PASS | Simulated servo with dead band: 0.32× baseline RMSE on 6 heldout trials; fitted dead band 0.056 rad. |
-| X4 | KUKA per-axis torque | FAIL | A1, A4, A6 pass; A2, A3, A5 do not (axis coupling and the A2 counterbalance are not modelled). |
-| X5 | UR5 joint tracking error | FAIL | J1 passes (0.73×); J2–J6 0.89–1.00×. No temperature association (abs(rho) ≤ 0.12). |
+| X4 | KUKA per-axis torque (v2, not blind) | PASS | v1 failed on A2, A3, A5: each axis saw gravity through its own angle only. v2 adds multibody gravity (q2 + q3, and the wrist on A5): all axes 0.66–0.80×. Friction alone, against the same coupled gravity without friction: 0.69–0.88×. |
+| X5 | UR5 joint tracking error (v2, not blind) | FAIL | v1: J1 passed (0.73×), J2–J6 0.89–1.00×. v2 adds the position loop's acceleration lag (1/ωn² × target acceleration): J1, J3 (0.799×) and J4 pass; J2 0.86×, J5 0.97×, J6 1.00× do not. J5 and J6 errors are near the controller's resolution. No temperature association (abs(rho) ≤ 0.12). |
 | X6 | UR5 TCP accuracy | INSUFFICIENT DATA | No per-run TCP measurements are published. |
 | X7 | COMPAct 3D-printed planetary, no-load backlash (added 2026-11-26, not blind) | FAIL | Print files alone give 0.6 mrad; with the project's FDM tolerance assumptions 1.4–5.5 mrad (5–95 %); published 10.3 mrad. |
 

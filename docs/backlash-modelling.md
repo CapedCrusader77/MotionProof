@@ -22,10 +22,13 @@ Validation (tests in `tests/physics`, point mass on a massless arm):
 |---|---|---|
 | Static hold | motor torque = m·g·L / N | 0.2 % |
 | Static deflection under gravity | b/2 + τ/k | 0.5 % |
-| Reversal without gravity | lost motion = b (bounded above by b + 2f/k) | 20 µrad |
+| Reversal without gravity | lost motion = b + 2f/k (friction traps windup f/k per side) | 20 % of 2f/k |
 | Reversal with one-sided gravity load | no lost motion (flanks never separate) | < 0.2 mrad |
 | Mid-stroke torque with friction f, efficiency η | f / (η·N) | 3 % |
 | Overload | torque saturates, position is lost | — |
 
-Known caveat: sub-threshold spring preload creeps out through the soft friction constraint, so
-trapped windup is under-estimated.
+Friction windup: an output stuck by friction keeps the spring deflection it had when it
+stopped, up to f/k. MuJoCo's friction constraint is soft and would let that preload creep out,
+so the engine holds a stuck output in place until the torque on it exceeds friction, and makes
+the sliding friction constraint stiff (time constant 2 time steps). On a slow reversal about
+90 % of the 2f/k bound is trapped. Before 0.5 the windup crept out and lost motion sat at b.

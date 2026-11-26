@@ -236,7 +236,9 @@ def test_model_independent_session_analysis(single_joint, tmp_path: Path) -> Non
     s = run_test(dev, TEST, LIMITS, confirm_actuation=True)
     data = load_session_csv(s.write_csv(tmp_path / "s.csv"))
     res = analyse(TEST, data, motor_counts_per_rev=65536, nominal_ratio=20.0)
-    assert res["lost_motion"] == pytest.approx(0.008, abs=2e-4)
+    # backlash plus the spring windup friction traps on each approach (up to 2 f / k)
+    windup = 2 * 0.4 / 2000.0
+    assert 0.008 <= res["lost_motion"] <= 0.008 + windup + 2e-4
     assert res["measured_ratio"] == pytest.approx(20.0, rel=1e-3)
     assert abs(res["ratio_error"]) < 1e-3
     assert res["output_resolution_rad"] == pytest.approx(2 * np.pi / 65536, rel=0.01)

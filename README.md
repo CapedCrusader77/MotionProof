@@ -34,8 +34,8 @@ friction, and tells you **which copies fail, how often, and which tolerances are
 The reference elbow (a NEMA 17 motor and a two-stage 33:1 planetary gearbox), 1000 virtual
 assemblies reversing the joint:
 
-* **79.9 % pass** (95 % interval 77.3 to 82.3 %); 201 miss a requirement.
-* Most failures are a direction error above 2 mm.
+* **73.9 % pass** (95 % interval 71.1 to 76.5 %); 261 miss a requirement.
+* Almost all failures (259 of 261) are a direction error above 2 mm.
 * Output friction and the stage 2 planet bearing clearance drive the error most.
 
 ## How it works
@@ -89,9 +89,10 @@ machine in about a minute. Open **Robustness** to see which virtual assemblies f
 * **No physical measurement yet.** The reference design is synthetic and several of its values
   are assumed. The rig procedure, with predictions recorded before measuring, is in
   [docs/rig-build-and-test.md](docs/rig-build-and-test.md); it has not been carried out.
-* **External validation is mixed.** Against public data from other robots, with criteria fixed
-  before the first run: 1 pass, 4 fail, 1 with too little data
-  ([results](EXTERNAL_VALIDATION_RESULTS.md)). A further, non-blind check against a published
+* **External validation is mixed.** Against public data from other robots: 3 pass, 2 fail, 1
+  with too little data ([results](EXTERNAL_VALIDATION_RESULTS.md)). X1, X4 and X5 are revised
+  protocols written after their first versions failed, each adding one physical effect the
+  residuals showed missing; they are not blind. X1 and X4 now pass, X5 still fails. A further, non-blind check against a published
   3D-printed planetary gearbox also fails: the model predicts 1.4 to 5.5 mrad of backlash where
   10.3 mrad was measured (X7).
 * **Reduced-order physics.** Rigid bodies and a drive train with backlash, stiffness and

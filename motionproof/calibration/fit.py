@@ -201,8 +201,9 @@ def calibrate(model: MechanicalModel, config: CalibrationConfig, calibration: Da
         return np.concatenate([(_predict(trace, calibration, s) - m) / scales[s]
                                for s, m in calibration.signals.items()])
 
-    # a coarse multi-start guards against the non-smooth dead band trapping the solver
-    starts = [np.full(len(lo), 0.5), np.full(len(lo), 0.2), np.full(len(lo), 0.8)]
+    # a coarse multi-start guards against the non-smooth dead band trapping the solver; the
+    # starts near the bounds reach values that sit on a bound (an ideal efficiency of 1)
+    starts = [np.full(len(lo), u) for u in (0.5, 0.2, 0.8, 0.02, 0.98)]
     best = None
     for u0 in starts:
         sol = least_squares(residual, u0, bounds=(0.0, 1.0), diff_step=2e-2, xtol=1e-10,
@@ -288,7 +289,7 @@ def calibrate(model: MechanicalModel, config: CalibrationConfig, calibration: Da
         "parameters": params,
         "correlation": None if corr is None else np.nan_to_num(corr).tolist(),
         "condition_number": cond,
-        "solver": {"method": "bounded nonlinear least squares (SciPy trf), 3 starts",
+        "solver": {"method": "bounded nonlinear least squares (SciPy trf), 5 starts",
                    "evaluations": int(best.nfev), "cost": float(best.cost),
                    "status": str(best.message)},
         "calibration": {"errors": err_cal, **series(calibration, cstep)},

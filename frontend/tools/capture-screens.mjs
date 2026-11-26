@@ -31,7 +31,7 @@ await page.addInitScript(([t, e]) => localStorage.setItem("motionproof.ui", JSON
 for (const key of SCREENS) {
   await page.goto(`${base}/#/${key}`);
   if (key === "workbench") await page.waitForResponse((r) => r.url().includes("/meshes/"), { timeout: 120000 }).catch(() => undefined);
-  await page.waitForFunction(() => !document.body.innerText.includes("Loading"), null, { timeout: 120000 }).catch(() => console.log("still loading:", key));
+  await page.waitForFunction(() => !/Loading|Analysing/.test(document.body.innerText), null, { timeout: 300000 }).catch(() => console.log("still loading:", key));
   await page.waitForTimeout(key === "workbench" ? 8000 : 2500);
   await page.screenshot({ path: `${out}/${key}.png` });
   console.log("captured", key);

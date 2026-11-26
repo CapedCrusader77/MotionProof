@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+* Product screenshots, homepage images and the workflow tour retaken with the current engine
+  (reference run 73.9 % pass, real benchmark timings). `frontend/tools/capture-screens.mjs` now
+  also waits for "Analysing", so a screen is not captured before its analysis finishes.
+
+* External benchmarks X1 and X4 revised (not blind; the earlier runs stay on record as
+  superseded). X1 `transmission-error-v4` adds the gearbox windup under viscous friction, which
+  the v3 residuals showed growing linearly with speed: axis 3 0.82× to 0.28× baseline, PASS.
+  X4 `kuka-inverse-v2` adds multibody gravity coupling (q2 + q3, wrist on A5): A2, A3, A5 pass,
+  all axes 0.66–0.80×, PASS; friction alone gives 0.69–0.88×, reported alongside. X5
+  `nist-tracking-v2` adds the position loop's acceleration lag: J3 and J4 now pass, J2, J5, J6
+  do not, still FAIL. X2 stays FAIL: its torque is dominated by a ~200 Hz oscillation no joint
+  model predicts, and the stand's friction is about 0.1 N·m.
+
+* Friction windup is now kept: a stuck output is held until the torque on it exceeds friction,
+  and the sliding friction constraint is stiff. Before, MuJoCo's soft friction let trapped
+  spring preload creep out and reversal lost motion sat at the backlash; it now reaches about
+  90 % of backlash + 2·friction/stiffness. This changes simulation results wherever output
+  friction and a load reversal meet, including the README reference run (re-run).
+* Planetary stages take two more lost-motion sources: `carrier_pin_clearance` (planet pin in
+  its carrier hole) and `sun_coupling_play` (torsional play between motor shaft and sun).
+  Both are optional; existing models are unchanged.
+* Not done on purpose: X7 is not re-run with these. Its protocol fixed the model inputs, and
+  adding terms after seeing that result would be fitting to it.
 * External benchmark X7 (not blind): the planetary backlash model against the published
   COMPAct 3D-printed planetary gearbox (arXiv:2510.07197, design files MIT, pinned commit). The
   geometry is measured from the print files; the tolerance model is the project's FDM

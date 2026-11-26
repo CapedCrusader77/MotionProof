@@ -18,6 +18,12 @@ Data: NIST "Degradation Measurement of Robot Arm Position Accuracy", Universal R
 * Also reported per joint: validation errors grouped by speed and by payload, and the Spearman
   correlation between the absolute residual and joint temperature. That correlation is an
   association, not evidence of a cause.
+* v1 (`nist-tracking`) FAILED: J1 0.73×, J2–J6 0.89–1.00×.
+* v2 (`nist-tracking-v2`, current, **not blind**: written after v1 ran) adds `a × q̈_target`, the
+  acceleration lag of a second-order position loop (`a = 1/ωn²`, the loop used in X3), from the
+  controller's recorded target acceleration. Split and acceptance are unchanged. Result: FAIL;
+  J1 0.73×, J3 0.799× and J4 0.79× pass; J2 0.86×, J5 0.97× and J6 1.00× do not. On J5 and J6
+  the error is close to the controller's reported resolution, and no term tried explains it.
 
 ## X6. TCP accuracy degradation
 
@@ -41,7 +47,7 @@ uv run motionproof external import nist-ur5
 ```
 
 ```bash
-uv run motionproof external validate nist-tracking
+uv run motionproof external validate nist-tracking-v2
 ```
 
 Results: `EXTERNAL_VALIDATION_RESULTS.md`.

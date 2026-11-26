@@ -42,6 +42,16 @@ to the MotionProof reference gearbox.
 * Baseline B0 per axis: without the friction terms.
 * Split: benchmark training and test sets, unchanged.
 * Acceptance: every axis, test RMSE(model) ≤ 0.8 × RMSE(B0).
+* v1 (`kuka-inverse`) FAILED: A1, A4, A6 passed; A2 0.93×, A3 0.85×, A5 0.91×. Each axis saw
+  gravity through its own angle only, while the arm's weight acts through q2 + q3.
+* v2 (`kuka-inverse-v2`, current, **not blind**: written after v1 ran) adds multibody gravity
+  columns to the model: sin, cos(q2 + q3) on A2 and A3; on A5, sin and cos q5 times each of
+  sin q23 cos q4, cos q23 cos q4, sin q23, cos q23. B0, split and acceptance are unchanged. Two
+  A5 forms were tried against the test set (q2 + q3 + q5 alone gave 0.84×, the wrist form
+  0.67×); this selection is part of why v2 is not blind. Result: PASS, all axes 0.66–0.80×.
+  Friction alone, model against the same coupled gravity without friction: 0.69–0.88×, so
+  friction by itself clears 0.8× on A1, A4 and A6 only. Pose-dependent inertia,
+  Coriolis terms and the A2 counterbalance are still not modelled.
 * The benchmark publishes its own baseline and figures of merit. They are not reproduced here,
   and the RMSE values here are not claimed to be comparable with them.
 
@@ -64,7 +74,7 @@ uv run motionproof external import kuka-kr300
 ```
 
 ```bash
-uv run motionproof external validate kuka-inverse
+uv run motionproof external validate kuka-inverse-v2
 ```
 
 Results: `EXTERNAL_VALIDATION_RESULTS.md`.

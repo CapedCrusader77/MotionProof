@@ -52,10 +52,11 @@ def test_reversal_lost_motion_equals_backlash_plus_friction_windup(
         single_joint, backlash: float) -> None:  # type: ignore[no-untyped-def]
     """No gravity, Coulomb output friction f.
 
-    The dead band contributes exactly b. Friction can additionally trap up to f/k of spring
-    windup on each approach, so b <= lost motion <= b + 2 f / k. In this model the trapped
-    windup relaxes (MuJoCo's friction constraint is soft and lets a sub-threshold preload
-    creep out), so the result sits at the lower bound; accepted error 20 microradians.
+    The dead band contributes exactly b. Friction traps up to f/k of spring windup on each
+    approach, so b <= lost motion <= b + 2 f / k. A slow move ends with the output sliding
+    against friction at a spring deflection of about f/k, where it sticks: the result lies
+    near the upper bound. (Before stiction was modelled, MuJoCo's soft friction let this
+    windup creep out and the result sat at b.)
     """
     friction, stiffness = 0.4, 2000.0
     m = single_joint(gravity=False, friction=friction, backlash=backlash, stiffness=stiffness)
@@ -63,8 +64,8 @@ def test_reversal_lost_motion_equals_backlash_plus_friction_windup(
                               settle=0.6))
     assert res.valid
     lost = res.metrics["lost_motion"]
-    assert backlash - 2e-5 <= lost <= backlash + 2 * friction / stiffness + 2e-5
-    assert lost == pytest.approx(backlash, abs=2e-5)
+    windup = 2 * friction / stiffness
+    assert backlash + 0.8 * windup <= lost <= backlash + windup + 2e-5
     # the motor itself returns to the commanded angle from both directions
     assert abs(res.measurements[-1]["motor"]["j"] - 0.3) < 1e-6
 
