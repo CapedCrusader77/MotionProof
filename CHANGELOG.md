@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+* External benchmark X7 (not blind): the planetary backlash model against the published
+  COMPAct 3D-printed planetary gearbox (arXiv:2510.07197, design files MIT, pinned commit). The
+  geometry is measured from the print files; the tolerance model is the project's FDM
+  assumption of 2026-11-15, unchanged. Predicted 1.4 to 5.5 mrad (5 to 95 %), published
+  10.3 mrad: FAIL. `motionproof external import compact-sspg`, then
+  `motionproof external validate compact-sspg-backlash`.
 * `motionproof hardware predict` records the predicted lost motion of a rig test (5 to 95 % over
   virtual copies, an acceptance margin, the model fingerprint and a hash) before measuring;
   `motionproof hardware check` applies it unchanged to the measured analyses and rejects an

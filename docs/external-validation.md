@@ -97,6 +97,17 @@ values of the user's parts.
 | X4 | KUKA per-axis torque | FAIL | A1, A4, A6 pass; A2, A3, A5 do not (axis coupling and the A2 counterbalance are not modelled). |
 | X5 | UR5 joint tracking error | FAIL | J1 passes (0.73×); J2–J6 0.89–1.00×. No temperature association (abs(rho) ≤ 0.12). |
 | X6 | UR5 TCP accuracy | INSUFFICIENT DATA | No per-run TCP measurements are published. |
+| X7 | COMPAct 3D-printed planetary, no-load backlash (added 2026-11-26, not blind) | FAIL | Print files alone give 0.6 mrad; with the project's FDM tolerance assumptions 1.4–5.5 mrad (5–95 %); published 10.3 mrad. |
+
+X7 differs from X1–X6. It compares with one published value, not measurement series, and its
+protocol was written after that value was known; only the tolerance model (the FDM assumptions
+written on 2026-11-15 for the project's own printed elbow) was fixed beforehand. The geometry is
+measured from the authors' print files (`motionproof external import compact-sspg`, pinned to a
+commit). The published quantity is also wider than the model's backlash: it is the peak-to-peak
+gap between motor and output angle over a slow sine motion, which includes friction windup and
+once-per-revolution errors. Still, the gap is large: the model would need about 0.23 mm of free
+travel at each planet, against 0.08 mm at its median. Either the FDM assumptions are too
+optimistic for printed gears, or real printed gearboxes have lost motion the model leaves out.
 
 What this shows: the dead-band (backlash) and servo model reproduces a real joint's response
 to unseen commands (X3), and the periodic TE term captures the position-dependent transmission

@@ -1,4 +1,4 @@
-"""External experimental benchmark suite X1..X6 (separate from synthetic benchmarks A..N).
+"""External experimental benchmark suite X1..X7 (separate from synthetic benchmarks A..N).
 
 Statuses: PASS, FAIL, NOT RUN, INCOMPATIBLE DATA, INSUFFICIENT DATA. A benchmark passes only
 when its pre-registered acceptance criterion holds; failures are reported in full.
@@ -27,6 +27,8 @@ def run_all(root: Path) -> list[dict[str, Any]]:
 def _headline(r: dict[str, Any]) -> str:
     if r.get("reason"):
         return str(r["reason"])
+    if r.get("headline"):
+        return str(r["headline"])
     if "rmse_ratio_model_to_baseline" in r:
         return f"validation RMSE model/baseline {r['rmse_ratio_model_to_baseline']:.3f}"
     parts = []
@@ -49,7 +51,10 @@ def write_results(records: list[dict[str, Any]], path: Path,
          "measurements of the MotionProof reference gearbox and do not validate it; "
          "project-specific physical validation (benchmark J) is still NOT RUN.", "",
          "Acceptance criteria were committed before the first run "
-         "(`motionproof/external_validation/experiments/protocols.py`).", "",
+         "(`motionproof/external_validation/experiments/protocols.py`), except for X7: it "
+         "was written after its published value was known, and only its tolerance model "
+         "was fixed beforehand. X7 compares with one published number, not with "
+         "measurement series.", "",
          "| ID | Validation | System | Status | Headline | Run |", "|---|---|---|---|---|---|"]
     for rec in records:
         r = rec["result"]
@@ -64,6 +69,9 @@ def write_results(records: list[dict[str, Any]], path: Path,
               f"- Validation: {r['split']['validation']}"]
         if r.get("reason"):
             L.append(f"- Reason: {r['reason']}")
+        if r.get("headline"):
+            L.append(f"- Result: {r['headline']}")
+        L += [f"- {line}" for line in r.get("details", [])]
         rows = []
         if "metrics" in r:
             rows.append(("all", r))

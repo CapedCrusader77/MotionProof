@@ -79,3 +79,17 @@ licences are reproduced in every run record and report. Keep them when you publi
   `u` = axis position, velocity, acceleration (deg, deg/s, deg/s²; filtered, 10 Hz) and `y` =
   motor torques (N·m), with the benchmark's train/test split.
 * Not used: raw high-rate runs (the benchmark forbids them for comparability), videos.
+
+## COMPAct single-stage planetary actuator (SSPG 7.2:1)
+
+* Source: design files https://github.com/singhaman1750/COMPAct (MIT), pinned to commit
+  `bd88fbe6761aa67d7853c5880e063245b7f252a1`; paper arXiv:2510.07197v2 (CC BY 4.0).
+* Citation: A. Singh, D. Kapa, S. Joshi, S. Kolathaya, "COMPAct: Computational Optimization
+  and Automated Modular design of Planetary Actuators", arXiv:2510.07197v2, 2026.
+* Files used: `CADs/Actuator_STL_files/sspg_7.2/` sun, planet, gearbox casing (holds the ring
+  gear) and carrier STL files. GitHub publishes no checksum; the commit pins the content and
+  SHA-256 is recorded at import.
+* Measured value used: the paper's no-load output backlash of the printed actuator, 0.59°
+  (one value; no repeats, spread or raw data are published).
+* Not used: the compound and Wolfrom actuators, stiffness and efficiency results.
+* Used by X7 (not blind; see `external-validation.md`).

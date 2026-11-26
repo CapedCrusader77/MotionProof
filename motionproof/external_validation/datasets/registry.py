@@ -32,6 +32,7 @@ class DatasetInfo:
     notes: tuple[str, ...] = field(default_factory=tuple)
 
 
+COMPACT_COMMIT = "bd88fbe6761aa67d7853c5880e063245b7f252a1"
 ANCHOR_LAB_REVISION = "647edd5787cd764cdc041103ad282dc59214d919"
 
 DATASETS: dict[str, DatasetInfo] = {
@@ -123,5 +124,32 @@ DATASETS: dict[str, DatasetInfo] = {
         not_measured=("backlash directly", "temperature (raw data only)"),
         notes=("Uses the prepared inverse-identification split (train/test) without raw data, "
                "as the benchmark prescribes for comparability.",),
+    ),
+    "compact-sspg": DatasetInfo(
+        key="compact-sspg",
+        title="COMPAct single-stage planetary actuator (SSPG 7.2:1): print files and "
+              "published backlash",
+        system="3D-printed single-stage planetary gearbox, 7.2:1 (sun 25, planet 65, ring "
+               "155, module 0.5, 3 planets), T-motor MN8014",
+        publisher="A. Singh, D. Kapa, S. Joshi, S. Kolathaya (IISc Bengaluru)",
+        url="https://github.com/singhaman1750/COMPAct",
+        doi=None,
+        version=f"GitHub commit {COMPACT_COMMIT}; paper arXiv:2510.07197v2",
+        licence="MIT (design files); CC BY 4.0 (paper)",
+        licence_url="https://github.com/singhaman1750/COMPAct/blob/main/LICENSE",
+        citation="A. Singh, D. Kapa, S. Joshi, S. Kolathaya, \"COMPAct: Computational "
+                 "Optimization and Automated Modular design of Planetary Actuators\", "
+                 "arXiv:2510.07197v2, 2026 (CC BY 4.0); design files "
+                 "https://github.com/singhaman1750/COMPAct (MIT), commit "
+                 f"{COMPACT_COMMIT}, CADs/Actuator_STL_files/sspg_7.2.",
+        measured=("no-load output backlash of the printed SSPG, one published value: "
+                  "0.59 deg (abstract), 0.010 rad (text)",),
+        not_measured=("raw measurements", "repetitions or spread", "dimensions of the "
+                      "printed parts", "encoder resolution"),
+        notes=("Only the published value is compared; the geometry comes from the print "
+               "files, not from the printed parts.",
+               "Backlash in the paper is max minus min of motor angle / 7.2 minus output "
+               "angle over a slow sinusoidal motion, so it also contains friction windup "
+               "and once-per-revolution errors that the model's backlash does not."),
     ),
 }

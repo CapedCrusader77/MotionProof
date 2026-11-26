@@ -91,7 +91,9 @@ machine in about a minute. Open **Robustness** to see which virtual assemblies f
   [docs/rig-build-and-test.md](docs/rig-build-and-test.md); it has not been carried out.
 * **External validation is mixed.** Against public data from other robots, with criteria fixed
   before the first run: 1 pass, 4 fail, 1 with too little data
-  ([results](EXTERNAL_VALIDATION_RESULTS.md)).
+  ([results](EXTERNAL_VALIDATION_RESULTS.md)). A further, non-blind check against a published
+  3D-printed planetary gearbox also fails: the model predicts 1.4 to 5.5 mrad of backlash where
+  10.3 mrad was measured (X7).
 * **Reduced-order physics.** Rigid bodies and a drive train with backlash, stiffness and
   friction; no gear-tooth or bearing contact, deformation, heat or wear.
 * **Narrower than a CAD tool.** Only revolute joints can be driven; geometric tolerances are

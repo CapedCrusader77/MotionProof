@@ -1290,7 +1290,7 @@ def external_report(run_id: str, data: DataOpt = DEFAULT_DATA) -> None:
 def external_benchmark(data: DataOpt = DEFAULT_DATA,
                        out: Path = typer.Option(Path("EXTERNAL_VALIDATION_RESULTS.md"),
                                                 help="Results file.")) -> None:
-    """Run external benchmarks X1..X6 and write the results file."""
+    """Run external benchmarks X1..X7 and write the results file."""
     from motionproof.external_validation.benchmark import run_all, write_results
 
     recs = run_all(data)

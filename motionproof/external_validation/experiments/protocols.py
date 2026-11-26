@@ -175,6 +175,33 @@ PROTOCOLS: dict[str, Protocol] = {
         acceptance="requires measured TCP deviation per run and condition",
         motionproof_components=("workspace accuracy, degradation",),
         reproduce="motionproof external validate nist-tcp"),
+    # Written 2026-11-26, AFTER the published value (0.59 deg) was known: this check is not
+    # blind. What is fixed in advance is the tolerance model: the FDM variation below was
+    # written on 2026-11-15 for the project's own printed elbow, before this source was found,
+    # and is used unchanged.
+    "compact-sspg-backlash": Protocol(
+        id="compact-sspg-backlash", benchmark="X7", dataset="compact-sspg",
+        title="No-load backlash of a 3D-printed planetary gearbox, COMPAct SSPG 7.2:1 "
+              "(not blind)",
+        system="COMPAct SSPG 7.2:1, printed PLA planetary actuator",
+        quantity="output backlash at no load (rad); published: 0.59 deg, one value",
+        identification="nothing is fitted; the geometry is measured from the published print "
+                       "files (sun, planet, ring, carrier)",
+        validation="the published no-load backlash of the printed actuator",
+        unused="the compound (CPG) and Wolfrom actuators; stiffness and efficiency",
+        baseline="B0: the print files alone (CAD clearances, no manufacturing variation, no "
+                 "bearing clearance)",
+        model="MotionProof planetary stage model (transmissions.gears.evaluate_stage) with the "
+              "measured CAD clearances and the project's FDM assumptions of 2026-11-15: mesh "
+              "backlash and planet pin position each truncated normal, sd 0.04 mm, within "
+              "+-0.10 mm; planet bearing clearance uniform 0.02 to 0.10 mm; sun runout TIR "
+              "uniform 0 to 0.10 mm with uniform phase; ring offset x, y truncated normal sd "
+              "0.04 mm within +-0.10 mm; 20000 copies, seed 2026",
+        acceptance="PASS if the published value lies within the 5 to 95 % range of the "
+                   "predicted backlash",
+        motionproof_components=("transmissions.gears.evaluate_stage (lost motion from mesh "
+                                "clearances, pin position, bearing clearance, runout)",),
+        reproduce="motionproof external validate compact-sspg-backlash"),
 }
 
 # Protocols whose comparison was found invalid after running; their records stay unchanged.

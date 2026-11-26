@@ -27,7 +27,7 @@ robots. Not physical validation of the reference gearbox (benchmark J remains NO
 |---|---|---|
 | Adapters: Anchor-Lab, Stuttgart DaRUS-5760, NIST UR5, KUKA KR300 | Done | 171 files imported and verified (SHA-256 / MD5 where published); `tests/integration/test_external_validation.py` (13) |
 | Pre-registered protocols X1–X6 | Done | committed before the first run (git history); v1 and v2 of X1 superseded with reasons, records kept |
-| Results | X3 PASS; X1, X2, X4, X5 FAIL; X6 INSUFFICIENT DATA | `EXTERNAL_VALIDATION_RESULTS.md`, `validation/external/runs/` |
+| Results | X3 PASS; X1, X2, X4, X5 FAIL; X6 INSUFFICIENT DATA; X7 (not blind, added later) FAIL | `EXTERNAL_VALIDATION_RESULTS.md`, `validation/external/runs/` |
 | CLI, API, External validation screen | Done | `motionproof external list/inspect/import/validate/report/runs/benchmark`; `/api/v1/external/*`; E2E route sweep |
 
 Not done: Anchor-Lab G1 and H1 multi-joint groups; a speed-dependent TE term; a multibody

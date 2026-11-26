@@ -210,3 +210,67 @@ def test_joint_friction_fit_recovers_known_parameters() -> None:
     assert p["c_viscous"] == pytest.approx(0.3, rel=1e-6)
     assert p["F_coulomb"] == pytest.approx(0.8, rel=1e-6)
     assert r["model"]["validation"]["rmse"] < 1e-9 < r["baseline"]["validation"]["rmse"]
+
+
+def _toothed(teeth: int, r_root: float, r_tip: float, tooth_angle: float, internal: bool,
+             height: float = 4.0):  # type: ignore[no-untyped-def]
+    """A gear with straight-sided sector teeth: the tooth thickness on any circle r is exactly
+    r * tooth_angle, which makes the measurement checkable."""
+    import trimesh
+    from shapely.geometry import Point, Polygon
+
+    sectors = []
+    for k in range(teeth):
+        a = 2 * math.pi * k / teeth
+        arc = np.linspace(a - tooth_angle / 2, a + tooth_angle / 2, 40)
+        lo, hi = (r_tip, r_root) if internal else (r_root, r_tip)
+        pts = [(lo * math.cos(t), lo * math.sin(t)) for t in arc] + \
+              [(hi * math.cos(t), hi * math.sin(t)) for t in arc[::-1]]
+        sectors.append(Polygon(pts))
+    if internal:
+        shape = Point(0, 0).buffer(r_root + 3.0, 2048).difference(Point(0, 0).buffer(r_root, 2048))
+    else:
+        shape = Point(0, 0).buffer(r_root, 2048)
+    for s in sectors:
+        shape = shape.union(s.buffer(1e-6))
+    # side walls only: a horizontal cut through them is exactly the outline of the shape
+    vertices, faces = [], []
+    for ring in [shape.exterior, *shape.interiors]:
+        xy = np.asarray(ring.coords)[:-1]
+        n, base = len(xy), len(vertices)
+        vertices += [(x, y, 0.0) for x, y in xy] + [(x, y, height) for x, y in xy]
+        for i in range(n):
+            j = (i + 1) % n
+            faces += [(base + i, base + j, base + n + j), (base + i, base + n + j, base + n + i)]
+    return trimesh.Trimesh(np.array(vertices), np.array(faces), process=False)
+
+
+@pytest.mark.parametrize("internal", [False, True])
+def test_print_file_tooth_thickness_is_measured_on_the_pitch_circle(internal: bool) -> None:
+    from motionproof.external_validation.adapters import compact_sspg as cs
+
+    teeth, module = 40, 1.0
+    rp = module * teeth / 2
+    angle = 0.9 * math.pi / teeth                      # teeth 10 % thinner than the space
+    mesh = _toothed(teeth, rp + (1.25 if internal else -1.25), rp + (-1.0 if internal else 1.0),
+                    angle, internal)
+    r = cs.tooth_thickness(mesh, 2.0, teeth, module, internal)
+    assert r["teeth"] == teeth and abs(r["centre_x"]) < 1e-3 and abs(r["centre_y"]) < 1e-3
+    assert r["tooth_thickness"] == pytest.approx(rp * angle, rel=2e-3)
+    assert r["space_width"] == pytest.approx(rp * (2 * math.pi / teeth - angle), rel=2e-3)
+
+
+def test_sspg_prediction_follows_the_stage_model() -> None:
+    """With no variation the result is the stage relation (j_sp + j_pr) / 2 / a; the tolerance
+    model only adds play, and the run is fixed by its seed."""
+    pred = runs.predict_sspg_backlash(0.0238, 0.0024, 0.0, samples=400)
+    assert pred["cad_only"] == pytest.approx((0.0238 + 0.0024) / 2 / 22.5, rel=1e-9)
+    assert pred["cad_only"] < pred["q05"] < pred["median"] < pred["q95"]
+    again = runs.predict_sspg_backlash(0.0238, 0.0024, 0.0, samples=400)
+    assert again["q95"] == pred["q95"]
+
+
+def test_compact_check_is_not_run_without_its_print_files(tmp_path: Path) -> None:
+    r = runs.run("compact-sspg-backlash", tmp_path)
+    assert r["status"] == "NOT RUN" and r["benchmark"] == "X7"
+    assert "motionproof external import compact-sspg" in r["reason"]

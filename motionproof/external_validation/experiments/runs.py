@@ -564,6 +564,113 @@ def validate_nist_tcp(root: Path) -> dict[str, Any]:
     return out
 
 
+# ---- X7 COMPAct SSPG backlash (not blind) --------------------------------------------------
+
+
+def _truncnorm(rng: np.random.Generator, mean: float, sd: float, lo: float, hi: float,
+               n: int) -> np.ndarray:
+    out = rng.normal(mean, sd, n)
+    bad = (out < lo) | (out > hi)
+    while bad.any():
+        out[bad] = rng.normal(mean, sd, int(bad.sum()))
+        bad = (out < lo) | (out > hi)
+    return out
+
+
+def predict_sspg_backlash(j_sp: float, j_pr: float, pin_dev: float, samples: int = 20000,
+                          seed: int = 2026) -> dict[str, Any]:
+    """Output backlash of the SSPG under the protocol's tolerance model (mm in, rad out)."""
+    from types import SimpleNamespace
+
+    from motionproof.core.schema import PlanetaryStage, StageInputs
+    from motionproof.external_validation.adapters import compact_sspg as cs
+    from motionproof.transmissions.gears import evaluate_stage
+
+    pins = [f"pin{k}" for k in range(cs.PLANETS)]
+    stage = PlanetaryStage(
+        id="sspg", joint="output", order=1, sun_teeth=cs.SUN, planet_teeth=cs.PLANET,
+        ring_teeth=cs.RING, planets=cs.PLANETS, module=cs.MODULE,
+        pressure_angle=cs.PRESSURE_ANGLE, inputs=StageInputs(
+            design_backlash_sun_planet="jsp", design_backlash_planet_ring="jpr",
+            carrier_pin_radial=pins, planet_bearing_clearance="cb", sun_runout="run",
+            sun_runout_phase="phase", ring_offset_x="rx", ring_offset_y="ry"))
+    nominal = {"jsp": j_sp, "jpr": j_pr, "cb": 0.0, "run": 0.0, "phase": 0.0, "rx": 0.0,
+               "ry": 0.0} | dict.fromkeys(pins, 0.0)
+    # evaluate_stage reads each tolerance's nominal and unit; all lengths here are mm
+    spec = SimpleNamespace(tolerance=lambda i: SimpleNamespace(
+        nominal=nominal[i], unit="rad" if i == "phase" else "mm"))
+
+    def backlash(values: dict[str, float]) -> float:
+        return float(evaluate_stage(stage, spec, values).backlash_angle)  # type: ignore[arg-type]
+
+    cad = backlash(nominal | dict.fromkeys(pins, pin_dev))
+    rng = np.random.default_rng(seed)
+    draw = {"jsp": _truncnorm(rng, j_sp, 0.04, j_sp - 0.10, j_sp + 0.10, samples),
+            "jpr": _truncnorm(rng, j_pr, 0.04, j_pr - 0.10, j_pr + 0.10, samples),
+            "cb": rng.uniform(0.02, 0.10, samples), "run": rng.uniform(0.0, 0.10, samples),
+            "phase": rng.uniform(0.0, 2 * np.pi, samples),
+            "rx": _truncnorm(rng, 0.0, 0.04, -0.10, 0.10, samples),
+            "ry": _truncnorm(rng, 0.0, 0.04, -0.10, 0.10, samples)}
+    for k in pins:
+        draw[k] = pin_dev + _truncnorm(rng, 0.0, 0.04, -0.10, 0.10, samples)
+    values = np.array([backlash({k: float(v[i]) for k, v in draw.items()})
+                       for i in range(samples)])
+    q05, q50, q95 = (float(x) for x in np.quantile(values, [0.05, 0.5, 0.95]))
+    return {"cad_only": cad, "q05": q05, "median": q50, "q95": q95,
+            "mean": float(values.mean()), "samples": samples, "seed": seed,
+            "_values": values}
+
+
+def validate_compact_backlash(root: Path) -> dict[str, Any]:
+    from motionproof.external_validation.adapters import compact_sspg as cs
+
+    pid = "compact-sspg-backlash"
+    a = ADAPTERS["compact-sspg"]
+    assert isinstance(a, cs.CompactSSPG)
+    if len(a.available(root)) < len(cs.PARTS):
+        return _not_imported(pid, "print files")
+    out = _base(pid)
+    m = cs.MODULE
+    sun = cs.tooth_thickness(a.mesh(root, "sun"), 20.0, cs.SUN, m, internal=False)
+    planet = cs.tooth_thickness(a.mesh(root, "planet"), 11.0, cs.PLANET, m, internal=False)
+    ring = cs.tooth_thickness(a.mesh(root, "gearbox_casing"), 27.5, cs.RING, m, internal=True)
+    pins = cs.pin_radius(a.mesh(root, "carrier"), 20.0, cs.PLANETS, m * (cs.SUN + cs.PLANET) / 2)
+    pitch = math.pi * m
+    j_sp = pitch - sun["tooth_thickness"] - planet["tooth_thickness"]
+    j_pr = ring["space_width"] - planet["tooth_thickness"]
+    pin_dev = pins["pin_radius"] - m * (cs.SUN + cs.PLANET) / 2
+    pred = predict_sspg_backlash(j_sp, j_pr, pin_dev)
+    measured = math.radians(cs.PUBLISHED_BACKLASH_DEG)
+    inside = pred["q05"] <= measured <= pred["q95"]
+    percentile = float((pred.pop("_values") < measured).mean() * 100)
+    out |= {"status": _status(inside), "files_used": a.available(root),
+            "headline": f"published {measured * 1e3:.1f} mrad; predicted 5 to 95 % "
+                        f"{pred['q05'] * 1e3:.1f} to {pred['q95'] * 1e3:.1f} mrad "
+                        f"(median {pred['median'] * 1e3:.1f}); print files alone "
+                        f"{pred['cad_only'] * 1e3:.2f} mrad",
+            "measured_backlash_rad": measured, "prediction": pred,
+            "percentile_of_measured": percentile,
+            "geometry": {"sun": sun, "planet": planet, "ring": ring, "carrier": pins,
+                         "j_sun_planet_mm": j_sp, "j_planet_ring_mm": j_pr,
+                         "pin_radius_deviation_mm": pin_dev},
+            "details": [
+                f"Measured from the print files: tooth thickness on the pitch circle sun "
+                f"{sun['tooth_thickness']:.4f}, planet {planet['tooth_thickness']:.4f}, ring "
+                f"{ring['tooth_thickness']:.4f} mm (standard {pitch / 2:.4f}); planet pins at "
+                f"{pins['pin_radius']:.3f} mm (nominal {m * (cs.SUN + cs.PLANET) / 2:.3f}).",
+                f"Designed mesh backlash: sun-planet {j_sp:.4f} mm, planet-ring {j_pr:.4f} mm. "
+                "Faceting of the STL files biases these by a few micrometres.",
+                f"The published value lies at the {percentile:.1f} percentile of the "
+                f"{pred['samples']} predicted copies.",
+                "Not blind: the published value was known when the protocol was written; "
+                "only the tolerance model was fixed beforehand (2026-11-15).",
+                "Not the same quantity: the paper's backlash is the peak-to-peak gap between "
+                "motor angle / 7.2 and output angle over a slow sinusoidal motion, which also "
+                "contains friction windup, eccentricity and encoder error. One value, no "
+                "repeats or spread published."]}
+    return out
+
+
 VALIDATIONS: dict[str, Callable[[Path], dict[str, Any]]] = {
     "transmission-error": validate_transmission_error,
     "transmission-error-v2": lambda root: validate_transmission_error(
@@ -575,6 +682,7 @@ VALIDATIONS: dict[str, Callable[[Path], dict[str, Any]]] = {
     "kuka-inverse": validate_kuka_inverse,
     "nist-tracking": validate_nist_tracking,
     "nist-tcp": validate_nist_tcp,
+    "compact-sspg-backlash": validate_compact_backlash,
 }
 
 
