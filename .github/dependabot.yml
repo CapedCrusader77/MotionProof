@@ -1,9 +1,14 @@
 version: 2
+# One grouped pull request per ecosystem per month, instead of one per package. Security
+# updates still arrive on their own, as soon as they are published.
 updates:
   - package-ecosystem: uv      # also updates uv.lock; CI installs with `uv sync --locked`
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
+    groups:
+      python:
+        patterns: ["*"]
     ignore:
       # every benchmark and validation result was produced on MuJoCo 3.x; move to 4.x on purpose
       - dependency-name: mujoco
@@ -11,7 +16,10 @@ updates:
   - package-ecosystem: npm
     directory: /frontend
     schedule:
-      interval: weekly
+      interval: monthly
+    groups:
+      frontend:
+        patterns: ["*"]
     ignore:
       # types should match the Node version the project runs on, not the newest release
       - dependency-name: "@types/node"
@@ -20,3 +28,6 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
