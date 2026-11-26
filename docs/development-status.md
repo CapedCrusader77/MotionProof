@@ -27,7 +27,7 @@ robots. Not physical validation of the reference gearbox (benchmark J remains NO
 |---|---|---|
 | Adapters: Anchor-Lab, Stuttgart DaRUS-5760, NIST UR5, KUKA KR300 | Done | 171 files imported and verified (SHA-256 / MD5 where published); `tests/integration/test_external_validation.py` (13) |
 | Pre-registered protocols X1–X6 | Done | committed before the first run (git history); v1 and v2 of X1 superseded with reasons, records kept |
-| Results | X3 PASS; X1 and X4 PASS as non-blind revisions (v4 adds gearbox windup, v2 adds multibody gravity; earlier versions FAIL, on record); X2 FAIL; X5 FAIL (v2, not blind, adds position-loop acceleration lag: J1, J3, J4 pass); X6 INSUFFICIENT DATA; X7 (not blind, added later) FAIL; X8 (blind test of X1 v4 on axis 1) PASS; X9 (blind test of the X4 idea on UR5 currents) FAIL, J6 only | `EXTERNAL_VALIDATION_RESULTS.md`, `validation/external/runs/` |
+| Results | X3 PASS; X1 and X4 PASS as non-blind revisions (v4 adds gearbox windup, v2 adds multibody gravity; earlier versions FAIL, on record); X2 FAIL; X5 FAIL (v2, not blind, adds position-loop acceleration lag: J1, J3, J4 pass); X6 INSUFFICIENT DATA; X7 (not blind, added later) FAIL; X8 (blind test of X1 v4 on axis 1) PASS; X9 (blind test of the X4 idea on UR5 currents) FAIL, J6 only; X10 (blind test of X3 on three more SO-101 joints) PASS | `EXTERNAL_VALIDATION_RESULTS.md`, `validation/external/runs/` |
 | CLI, API, External validation screen | Done | `motionproof external list/inspect/import/validate/report/runs/benchmark`; `/api/v1/external/*`; E2E route sweep |
 
 Not done: Anchor-Lab G1 and H1 multi-joint groups; a speed-dependent TE term; a multibody

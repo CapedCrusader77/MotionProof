@@ -271,6 +271,11 @@ def test_baseline_columns_are_shared_by_every_variant() -> None:
     assert "gc0" not in r["baseline"]["fit"]["parameters"]
 
 
+def test_parallel_map_keeps_order() -> None:
+    assert runs.parallel_map(pow, [(2, 3), (3, 2), (5, 1)]) == [8, 9, 5]
+    assert runs.parallel_map(pow, [(2, 10)]) == [1024]
+
+
 def _toothed(teeth: int, r_root: float, r_tip: float, tooth_angle: float, internal: bool,
              height: float = 4.0):  # type: ignore[no-untyped-def]
     """A gear with straight-sided sector teeth: the tooth thickness on any circle r is exactly

@@ -17,11 +17,24 @@ from motionproof.external_validation.experiments.protocols import PROTOCOLS, SUP
 from motionproof.external_validation.experiments.runs import run
 from motionproof.external_validation.reports.record import list_runs, save
 
+# protocols that spread their own work over processes: run in this process, not in a worker
+_PARALLEL_INSIDE = {"so101-joints"}
+
 
 def run_all(root: Path) -> list[dict[str, Any]]:
-    """Run every current protocol. Superseded protocols are not rerun; their recorded runs
-    are listed by ``write_results``."""
-    return [save(root, run(pid, root)) for pid in PROTOCOLS if pid not in SUPERSEDED]
+    """Run every current protocol, independent ones in worker processes. Superseded
+    protocols are not rerun; their recorded runs are listed by ``write_results``. Runs are
+    saved in protocol order, so run IDs do not depend on which worker finishes first."""
+    from concurrent.futures import ProcessPoolExecutor
+
+    from motionproof.experiments.runner import default_workers
+
+    pids = [p for p in PROTOCOLS if p not in SUPERSEDED]
+    with ProcessPoolExecutor(default_workers()) as ex:
+        futures = {p: ex.submit(run, p, root) for p in pids if p not in _PARALLEL_INSIDE}
+        results = {p: run(p, root) for p in pids if p in _PARALLEL_INSIDE}
+        results |= {p: f.result() for p, f in futures.items()}
+    return [save(root, results[p]) for p in pids]
 
 
 def _headline(r: dict[str, Any]) -> str:
@@ -61,7 +74,9 @@ def write_results(records: list[dict[str, Any]], path: Path,
          "listed under superseded protocols. X8 is a blind test of the X1 revision: its "
          "protocol was committed (40d911f) before any axis 1 file was downloaded. X9 is a "
          "blind test of the X4 revision on a second robot (UR5), committed (99d4c20) before "
-         "any model was fitted to its joint currents.", "",
+         "any model was fitted to its joint currents. X10 is a blind test of the X3 servo model "
+         "on three other SO-101 joints, committed (c198a7d) before their identification "
+         "trials were downloaded.", "",
          "| ID | Validation | System | Status | Headline | Run |", "|---|---|---|---|---|---|"]
     for rec in records:
         r = rec["result"]

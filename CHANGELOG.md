@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+* `motionproof external benchmark` runs independent protocols in worker processes, and the
+  SO-101 servo simulation loop no longer calls numpy per step: the full external suite takes
+  about 2 minutes instead of over 10, with bit-identical results.
+
+* X10, a blind test: the X3 servo model, unchanged, on SO-101 base rotation, wrist pitch and
+  wrist roll, committed (c198a7d) before their identification trials were downloaded. PASS:
+  0.273×, 0.349×, 0.107× baseline.
+
 * X9, a blind test: the X4 multibody-gravity idea on the UR5 joint currents (NIST), committed
   (99d4c20) before any fit. FAIL: J1–J5 pass (0.32–0.79× baseline), J6 0.98×. Friction carries
   most of the gain on this robot; coupled gravity adds to it on J2–J5.

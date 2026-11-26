@@ -32,6 +32,11 @@ to the MotionProof reference gearbox.
   whose elbow command spans at least 0.1 rad; the others are listed as unused.
 * Acceptance: pooled validation RMSE(model) ≤ 0.6 × RMSE(B0).
 
+* Blind follow-up X10 (`so101-joints`, committed in c198a7d before the identification trials
+  were downloaded): the same model, unchanged, on the base rotation, wrist pitch and wrist roll,
+  each fitted on its own single-joint train trial and validated on the heldout trials that
+  move it. PASS: 0.273×, 0.349×, 0.107× baseline; fitted dead bands 0.024, 0.020, 0.012 rad.
+
 ## X4. KUKA KR300 R2500 ultra SE, per-axis inverse dynamics
 
 * Quantity: motor torque of each axis (N·m), on the benchmark's test set.

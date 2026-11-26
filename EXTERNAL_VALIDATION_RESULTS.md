@@ -1,22 +1,23 @@
 # External validation results
 
-Generated 2026-11-26T18:47:16+00:00 with MotionProof 0.4.0 (adapter 1.0.0) on Windows-11-10.0.26300-SP0, by `uv run motionproof external benchmark`.
+Generated 2026-11-26T20:07:04+00:00 with MotionProof 0.4.0 (adapter 1.0.0) on Windows-11-10.0.26300-SP0, by `uv run motionproof external benchmark`.
 
 Every number below comes from these runs on **public experimental data of other robots**. They show how well MotionProof's model components reproduce measured behaviour of those systems on trials that were not used for fitting. They are not measurements of the MotionProof reference gearbox and do not validate it; project-specific physical validation (benchmark J) is still NOT RUN.
 
-Acceptance criteria were committed before the first run (`motionproof/external_validation/experiments/protocols.py`), except for X7: it was written after its published value was known, and only its tolerance model was fixed beforehand. X7 compares with one published number, not with measurement series. X1 (transmission-error-v4), X4 (kuka-inverse-v2) and X5 (nist-tracking-v2) are revisions written after their earlier versions had run and failed: each adds one physical effect the earlier residuals showed to be missing, with data split and acceptance unchanged. They are not blind; the earlier runs are listed under superseded protocols. X8 is a blind test of the X1 revision: its protocol was committed (40d911f) before any axis 1 file was downloaded. X9 is a blind test of the X4 revision on a second robot (UR5), committed (99d4c20) before any model was fitted to its joint currents.
+Acceptance criteria were committed before the first run (`motionproof/external_validation/experiments/protocols.py`), except for X7: it was written after its published value was known, and only its tolerance model was fixed beforehand. X7 compares with one published number, not with measurement series. X1 (transmission-error-v4), X4 (kuka-inverse-v2) and X5 (nist-tracking-v2) are revisions written after their earlier versions had run and failed: each adds one physical effect the earlier residuals showed to be missing, with data split and acceptance unchanged. They are not blind; the earlier runs are listed under superseded protocols. X8 is a blind test of the X1 revision: its protocol was committed (40d911f) before any axis 1 file was downloaded. X9 is a blind test of the X4 revision on a second robot (UR5), committed (99d4c20) before any model was fitted to its joint currents. X10 is a blind test of the X3 servo model on three other SO-101 joints, committed (c198a7d) before their identification trials were downloaded.
 
 | ID | Validation | System | Status | Headline | Run |
 |---|---|---|---|---|---|
-| X1 | Gearbox transmission error, Staubli TX2-40 axes 2 and 3 (speed holdout, viscous windup; not blind) | Staubli TX2-40 gearboxes on an experimental setup | **PASS** | axis_2 PASS (0.04); axis_3 PASS (0.28) | VALIDATION_047 |
-| X8 | Gearbox transmission error, Staubli TX2-40 axis 1 (blind test of the X1 v4 model) | Staubli TX2-40 gearbox, axis 1, on an experimental setup | **PASS** | axis_1 PASS (0.22) | VALIDATION_048 |
-| X2 | Joint friction and dynamics, Unitree H1 elbow test stand | Unitree H1 elbow actuator on the Anchor-Lab test stand | **FAIL** | validation RMSE model/baseline 0.990 | VALIDATION_049 |
-| X3 | Simulated joint response to the recorded command, SO-101 elbow servo | SO-101 arm, elbow joint (Feetech servo) | **PASS** | validation RMSE model/baseline 0.317 | VALIDATION_050 |
-| X4 | Inverse dynamics per axis, KUKA KR300 R2500 ultra SE (coupled gravity; not blind) | KUKA KR300 R2500 ultra SE (6 axes) | **PASS** | A1 PASS (0.71); A2 PASS (0.66); A3 PASS (0.70); A4 PASS (0.80); A5 PASS (0.67); A6 PASS (0.69) | VALIDATION_051 |
-| X9 | Joint current per axis, UR5 (blind test of the multibody-gravity model) | Universal Robots UR5 | **FAIL** | J1 PASS (0.35); J2 PASS (0.37); J3 PASS (0.32); J4 PASS (0.49); J5 PASS (0.78); J6 FAIL (0.98) | VALIDATION_052 |
-| X5 | Joint position error under speed, payload and temperature, UR5 (position-loop acceleration lag; not blind) | Universal Robots UR5 | **FAIL** | J1 PASS (0.73); J2 FAIL (0.86); J3 PASS (0.80); J4 PASS (0.79); J5 FAIL (0.97); J6 FAIL (1.00) | VALIDATION_053 |
-| X6 | TCP accuracy degradation, UR5 | Universal Robots UR5 | **INSUFFICIENT DATA** | the dataset publishes measured TCP deviation for 6 positions only, without the run, condition or trajectory they belong to; a TCP accuracy or degradation prediction cannot be compared with it | VALIDATION_054 |
-| X7 | No-load backlash of a 3D-printed planetary gearbox, COMPAct SSPG 7.2:1 (not blind) | COMPAct SSPG 7.2:1, printed PLA planetary actuator | **FAIL** | published 10.3 mrad; predicted 5 to 95 % 1.4 to 5.5 mrad (median 3.4); print files alone 0.58 mrad | VALIDATION_055 |
+| X1 | Gearbox transmission error, Staubli TX2-40 axes 2 and 3 (speed holdout, viscous windup; not blind) | Staubli TX2-40 gearboxes on an experimental setup | **PASS** | axis_2 PASS (0.04); axis_3 PASS (0.28) | VALIDATION_061 |
+| X8 | Gearbox transmission error, Staubli TX2-40 axis 1 (blind test of the X1 v4 model) | Staubli TX2-40 gearbox, axis 1, on an experimental setup | **PASS** | axis_1 PASS (0.22) | VALIDATION_062 |
+| X2 | Joint friction and dynamics, Unitree H1 elbow test stand | Unitree H1 elbow actuator on the Anchor-Lab test stand | **FAIL** | validation RMSE model/baseline 0.990 | VALIDATION_063 |
+| X3 | Simulated joint response to the recorded command, SO-101 elbow servo | SO-101 arm, elbow joint (Feetech servo) | **PASS** | validation RMSE model/baseline 0.317 | VALIDATION_064 |
+| X10 | Simulated joint response, SO-101 rotation, wrist pitch and wrist roll (blind test of the X3 servo model) | SO-101 arm, base rotation, wrist pitch and wrist roll (Feetech servos) | **PASS** | rotation PASS (0.27); wrist_pitch PASS (0.35); wrist_roll PASS (0.11) | VALIDATION_065 |
+| X4 | Inverse dynamics per axis, KUKA KR300 R2500 ultra SE (coupled gravity; not blind) | KUKA KR300 R2500 ultra SE (6 axes) | **PASS** | A1 PASS (0.71); A2 PASS (0.66); A3 PASS (0.70); A4 PASS (0.80); A5 PASS (0.67); A6 PASS (0.69) | VALIDATION_066 |
+| X9 | Joint current per axis, UR5 (blind test of the multibody-gravity model) | Universal Robots UR5 | **FAIL** | J1 PASS (0.35); J2 PASS (0.37); J3 PASS (0.32); J4 PASS (0.49); J5 PASS (0.78); J6 FAIL (0.98) | VALIDATION_067 |
+| X5 | Joint position error under speed, payload and temperature, UR5 (position-loop acceleration lag; not blind) | Universal Robots UR5 | **FAIL** | J1 PASS (0.73); J2 FAIL (0.86); J3 PASS (0.80); J4 PASS (0.79); J5 FAIL (0.97); J6 FAIL (1.00) | VALIDATION_068 |
+| X6 | TCP accuracy degradation, UR5 | Universal Robots UR5 | **INSUFFICIENT DATA** | the dataset publishes measured TCP deviation for 6 positions only, without the run, condition or trajectory they belong to; a TCP accuracy or degradation prediction cannot be compared with it | VALIDATION_069 |
+| X7 | No-load backlash of a 3D-printed planetary gearbox, COMPAct SSPG 7.2:1 (not blind) | COMPAct SSPG 7.2:1, printed PLA planetary actuator | **FAIL** | published 10.3 mrad; predicted 5 to 95 % 1.4 to 5.5 mrad (median 3.4); print files alone 0.58 mrad | VALIDATION_070 |
 
 ## X1. Gearbox transmission error, Staubli TX2-40 axes 2 and 3 (speed holdout, viscous windup; not blind)
 
@@ -37,7 +38,7 @@ Acceptance criteria were committed before the first run (`motionproof/external_v
 
 - Data: C. J. E. Bauer et al., "Replication Data for: Transmission Error Compensation for Industrial Robots Using Fourier Series", DaRUS, V1, 2026, doi:10.18419/DARUS-5760 (CC BY 4.0). Supplement to C. Bauer, S. Nowinski, V. Kamm, L. Steinle, A. Lechler, A. Verl, "Transmission Error Compensation for Industrial Robots Using Fourier Series", MHI 2026.
 - Licence: CC BY 4.0
-- Report: `external_data/runs/VALIDATION_047/report.md`; reproduce: `motionproof external validate transmission-error-v4`
+- Report: `external_data/runs/VALIDATION_061/report.md`; reproduce: `motionproof external validate transmission-error-v4`
 
 ## X8. Gearbox transmission error, Staubli TX2-40 axis 1 (blind test of the X1 v4 model)
 
@@ -57,7 +58,7 @@ Acceptance criteria were committed before the first run (`motionproof/external_v
 
 - Data: C. J. E. Bauer et al., "Replication Data for: Transmission Error Compensation for Industrial Robots Using Fourier Series", DaRUS, V1, 2026, doi:10.18419/DARUS-5760 (CC BY 4.0). Supplement to C. Bauer, S. Nowinski, V. Kamm, L. Steinle, A. Lechler, A. Verl, "Transmission Error Compensation for Industrial Robots Using Fourier Series", MHI 2026.
 - Licence: CC BY 4.0
-- Report: `external_data/runs/VALIDATION_048/report.md`; reproduce: `motionproof external validate transmission-error-axis1`
+- Report: `external_data/runs/VALIDATION_062/report.md`; reproduce: `motionproof external validate transmission-error-axis1`
 
 ## X2. Joint friction and dynamics, Unitree H1 elbow test stand
 
@@ -75,7 +76,7 @@ Acceptance criteria were committed before the first run (`motionproof/external_v
 
 - Data: NVIDIA Robotics, "Anchor-Lab Dataset", v1.0, Hugging Face, June 2026, https://huggingface.co/datasets/nvidia/Anchor-Lab (Apache License 2.0).
 - Licence: Apache-2.0
-- Report: `external_data/runs/VALIDATION_049/report.md`; reproduce: `motionproof external validate h1-friction`
+- Report: `external_data/runs/VALIDATION_063/report.md`; reproduce: `motionproof external validate h1-friction`
 
 ## X3. Simulated joint response to the recorded command, SO-101 elbow servo
 
@@ -93,7 +94,28 @@ Acceptance criteria were committed before the first run (`motionproof/external_v
 
 - Data: NVIDIA Robotics, "Anchor-Lab Dataset", v1.0, Hugging Face, June 2026, https://huggingface.co/datasets/nvidia/Anchor-Lab (Apache License 2.0).
 - Licence: Apache-2.0
-- Report: `external_data/runs/VALIDATION_050/report.md`; reproduce: `motionproof external validate so101-tracking`
+- Report: `external_data/runs/VALIDATION_064/report.md`; reproduce: `motionproof external validate so101-tracking`
+
+## X10. Simulated joint response, SO-101 rotation, wrist pitch and wrist roll (blind test of the X3 servo model)
+
+- Status: **PASS**
+- Quantity: <joint>/actual_q (rad) at its own sample instants
+- Baseline: B0 per joint: actual = command held between samples + constant offset fitted on identification (as X3)
+- Model: X3 unchanged: second-order position loop (wn, zeta) with velocity limit vmax through a dead band b, plus offset; fitted per joint on its identification trial
+- Acceptance: per joint: pooled validation RMSE(model) <= 0.6 x pooled validation RMSE(B0); X10 passes if every joint with at least one validation trial passes and at least one joint has one
+- Identification: per joint, the train trial single-joint-rotation, single-joint-wrist-pitch or single-joint-wrist-roll
+- Validation: per joint, every heldout trial in which that joint's command spans >= 0.1 rad
+- Blind: protocol committed before the single-joint identification trials of these joints were downloaded and before any fit to them; the model is X3's, unchanged.
+
+| Part | Status | Validation RMSE model | Validation RMSE baseline | Ratio | Model NRMSE |
+|---|---|---|---|---|---|
+| rotation | PASS | 0.005052 | 0.01849 | 0.273 | 0.033 |
+| wrist_pitch | PASS | 0.007555 | 0.02165 | 0.349 | 0.062 |
+| wrist_roll | PASS | 0.002319 | 0.02166 | 0.107 | 0.021 |
+
+- Data: NVIDIA Robotics, "Anchor-Lab Dataset", v1.0, Hugging Face, June 2026, https://huggingface.co/datasets/nvidia/Anchor-Lab (Apache License 2.0).
+- Licence: Apache-2.0
+- Report: `external_data/runs/VALIDATION_065/report.md`; reproduce: `motionproof external validate so101-joints`
 
 ## X4. Inverse dynamics per axis, KUKA KR300 R2500 ultra SE (coupled gravity; not blind)
 
@@ -118,7 +140,7 @@ Acceptance criteria were committed before the first run (`motionproof/external_v
 
 - Data: J. Weigand, J. Goetz, J. Ulmen, M. Ruskowski, "Dataset and Baseline for an Industrial Robot Identification Benchmark", 6th Workshop on Nonlinear System Identification Benchmarks, Leuven, 2022, urn:nbn:de:hbz:386-kluedo-67317; data doi:10.26204/data/5.
 - Licence: as stated by the publisher at doi:10.26204/data/5 (benchmark data for research use with citation)
-- Report: `external_data/runs/VALIDATION_051/report.md`; reproduce: `motionproof external validate kuka-inverse-v2`
+- Report: `external_data/runs/VALIDATION_066/report.md`; reproduce: `motionproof external validate kuka-inverse-v2`
 
 ## X9. Joint current per axis, UR5 (blind test of the multibody-gravity model)
 
@@ -143,7 +165,7 @@ Acceptance criteria were committed before the first run (`motionproof/external_v
 
 - Data: G. Qiao, NIST, "Degradation Measurement of Robot Arm Position Accuracy", 2018, doi:10.18434/M31962. Related: G. Qiao, B. A. Weiss, J. Manuf. Syst. 48 (2018), doi:10.1016/j.jmsy.2018.04.004.
 - Licence: NIST licence statement (linked from the data.gov record): https://www.nist.gov/open/license
-- Report: `external_data/runs/VALIDATION_052/report.md`; reproduce: `motionproof external validate nist-dynamics`
+- Report: `external_data/runs/VALIDATION_067/report.md`; reproduce: `motionproof external validate nist-dynamics`
 
 ## X5. Joint position error under speed, payload and temperature, UR5 (position-loop acceleration lag; not blind)
 
@@ -167,7 +189,7 @@ Acceptance criteria were committed before the first run (`motionproof/external_v
 
 - Data: G. Qiao, NIST, "Degradation Measurement of Robot Arm Position Accuracy", 2018, doi:10.18434/M31962. Related: G. Qiao, B. A. Weiss, J. Manuf. Syst. 48 (2018), doi:10.1016/j.jmsy.2018.04.004.
 - Licence: NIST licence statement (linked from the data.gov record): https://www.nist.gov/open/license
-- Report: `external_data/runs/VALIDATION_053/report.md`; reproduce: `motionproof external validate nist-tracking-v2`
+- Report: `external_data/runs/VALIDATION_068/report.md`; reproduce: `motionproof external validate nist-tracking-v2`
 
 ## X6. TCP accuracy degradation, UR5
 
@@ -182,7 +204,7 @@ Acceptance criteria were committed before the first run (`motionproof/external_v
 
 - Data: G. Qiao, NIST, "Degradation Measurement of Robot Arm Position Accuracy", 2018, doi:10.18434/M31962. Related: G. Qiao, B. A. Weiss, J. Manuf. Syst. 48 (2018), doi:10.1016/j.jmsy.2018.04.004.
 - Licence: NIST licence statement (linked from the data.gov record): https://www.nist.gov/open/license
-- Report: `external_data/runs/VALIDATION_054/report.md`; reproduce: `motionproof external validate nist-tcp`
+- Report: `external_data/runs/VALIDATION_069/report.md`; reproduce: `motionproof external validate nist-tcp`
 
 ## X7. No-load backlash of a 3D-printed planetary gearbox, COMPAct SSPG 7.2:1 (not blind)
 
@@ -202,7 +224,7 @@ Acceptance criteria were committed before the first run (`motionproof/external_v
 
 - Data: A. Singh, D. Kapa, S. Joshi, S. Kolathaya, "COMPAct: Computational Optimization and Automated Modular design of Planetary Actuators", arXiv:2510.07197v2, 2026 (CC BY 4.0); design files https://github.com/singhaman1750/COMPAct (MIT), commit bd88fbe6761aa67d7853c5880e063245b7f252a1, CADs/Actuator_STL_files/sspg_7.2.
 - Licence: MIT (design files); CC BY 4.0 (paper)
-- Report: `external_data/runs/VALIDATION_055/report.md`; reproduce: `motionproof external validate compact-sspg-backlash`
+- Report: `external_data/runs/VALIDATION_070/report.md`; reproduce: `motionproof external validate compact-sspg-backlash`
 
 ## Superseded protocols (kept on record)
 

@@ -345,19 +345,37 @@ def _servo_sim(p: np.ndarray, t: np.ndarray, t_cmd: np.ndarray, cmd: np.ndarray,
     wn, zeta, vmax, b, off = p
     tt = np.arange(t[0], t[-1] + dt, dt)
     idx = np.clip(np.searchsorted(t_cmd, tt, side="right") - 1, 0, len(cmd) - 1)
-    u = cmd[idx] + off  # zero-order hold of the recorded command
-    x, v, q = q0, 0.0, q0
-    out = np.empty(len(tt))
+    u = (cmd[idx] + off).tolist()  # zero-order hold of the recorded command
+    # plain Python floats in the loop: numpy scalar calls per step dominated the run time;
+    # the arithmetic and its order are unchanged, so results are identical
+    kp, kd, vm, half, h = float(wn * wn), float(2 * zeta * wn), float(vmax), float(b / 2), dt
+    x, v, q = float(q0), 0.0, float(q0)
+    out = [0.0] * len(u)
     for i, ui in enumerate(u):
-        acc = wn * wn * (ui - x) - 2 * zeta * wn * v
-        v = float(np.clip(v + acc * dt, -vmax, vmax))
-        x += v * dt
-        if x - q > b / 2:            # dead band between servo output and joint
-            q = x - b / 2
-        elif x - q < -b / 2:
-            q = x + b / 2
+        acc = kp * (ui - x) - kd * v
+        v = min(max(v + acc * h, -vm), vm)
+        x += v * h
+        if x - q > half:            # dead band between servo output and joint
+            q = x - half
+        elif x - q < -half:
+            q = x + half
         out[i] = q
-    return np.asarray(np.interp(t, tt, out), dtype=float)
+    return np.asarray(np.interp(t, tt, np.asarray(out)), dtype=float)
+
+
+def parallel_map(fn: Callable[..., Any], items: list[tuple[Any, ...]]) -> list[Any]:
+    """``[fn(*a) for a in items]`` in worker processes (``default_workers()``), or serially
+    when there is one item or this already is a worker process. Order is kept."""
+    import multiprocessing as mp
+    from concurrent.futures import ProcessPoolExecutor
+
+    from motionproof.experiments.runner import default_workers
+
+    n = min(len(items), default_workers())
+    if n <= 1 or mp.parent_process() is not None:
+        return [fn(*a) for a in items]
+    with ProcessPoolExecutor(n) as ex:
+        return list(ex.map(fn, *zip(*items, strict=True)))
 
 
 def _so101_series(tr: Trial, joint: str = "elbow") -> dict[str, np.ndarray]:
@@ -468,8 +486,9 @@ def validate_so101_joints(root: Path) -> dict[str, Any]:
     single-joint identification trial."""
     pid = "so101-joints"
     out = _base(pid)
-    joints = {j: validate_so101_tracking(root, pid, j, trial)
-              for j, trial in SO101_BLIND_JOINTS.items()}
+    joints = dict(zip(SO101_BLIND_JOINTS, parallel_map(
+        validate_so101_tracking,
+        [(root, pid, j, trial) for j, trial in SO101_BLIND_JOINTS.items()]), strict=True))
     if all(r["status"] == "NOT RUN" for r in joints.values()):
         return _not_imported(pid, "anchor-lab so101 single-joint trials")
     evaluated = {j: r for j, r in joints.items() if "metrics" in r}

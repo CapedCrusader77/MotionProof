@@ -89,13 +89,14 @@ machine in about a minute. Open **Robustness** to see which virtual assemblies f
 * **No physical measurement yet.** The reference design is synthetic and several of its values
   are assumed. The rig procedure, with predictions recorded before measuring, is in
   [docs/rig-build-and-test.md](docs/rig-build-and-test.md); it has not been carried out.
-* **External validation is mixed.** Against public data from other robots: 4 pass, 3 fail, 1
+* **External validation is mixed.** Against public data from other robots: 5 pass, 3 fail, 1
   with too little data ([results](EXTERNAL_VALIDATION_RESULTS.md)). X1, X4 and X5 are revised
   protocols written after their first versions failed, each adding one physical effect the
   residuals showed missing; they are not blind. X1 and X4 now pass, X5 still fails. X8, a blind
   test of the X1 revision on a gearbox axis it had never seen (protocol committed before the
   data was downloaded), passes. X9, a blind test of the X4 revision on a second robot (UR5),
-  passes on five of six joints and so fails. A further, non-blind check against a published
+  passes on five of six joints and so fails. X10, a blind test of the X3 servo model on three
+  more SO-101 joints, passes. A further, non-blind check against a published
   3D-printed planetary gearbox also fails: the model predicts 1.4 to 5.5 mrad of backlash where
   10.3 mrad was measured (X7).
 * **Reduced-order physics.** Rigid bodies and a drive train with backlash, stiffness and
