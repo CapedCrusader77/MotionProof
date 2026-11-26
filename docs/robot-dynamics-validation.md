@@ -52,6 +52,11 @@ to the MotionProof reference gearbox.
   Friction alone, model against the same coupled gravity without friction: 0.69–0.88×, so
   friction by itself clears 0.8× on A1, A4 and A6 only. Pose-dependent inertia,
   Coriolis terms and the A2 counterbalance are still not modelled.
+* Blind follow-up X9 (`nist-dynamics`, UR5, committed in 99d4c20 before any fit): the same
+  idea applied to the UR5 joint currents, with column sets fixed from the UR5 kinematics and
+  payload terms in both baseline and model. FAIL: J1–J5 pass (0.32–0.79×), J6 0.98×. On the UR5,
+  friction carries most of the gain (0.35–0.66× alone on J1–J4); coupled gravity adds to it on
+  J2–J5. See `position-accuracy-validation.md` for the same dataset's position data (X5).
 * The benchmark publishes its own baseline and figures of merit. They are not reproduced here,
   and the RMSE values here are not claimed to be comparable with them.
 

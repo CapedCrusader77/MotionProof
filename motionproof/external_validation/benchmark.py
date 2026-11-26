@@ -59,7 +59,9 @@ def write_results(records: list[dict[str, Any]], path: Path,
          "failed: each adds one physical effect the earlier residuals showed to be missing, "
          "with data split and acceptance unchanged. They are not blind; the earlier runs are "
          "listed under superseded protocols. X8 is a blind test of the X1 revision: its "
-         "protocol was committed (40d911f) before any axis 1 file was downloaded.", "",
+         "protocol was committed (40d911f) before any axis 1 file was downloaded. X9 is a "
+         "blind test of the X4 revision on a second robot (UR5), committed (99d4c20) before "
+         "any model was fitted to its joint currents.", "",
          "| ID | Validation | System | Status | Headline | Run |", "|---|---|---|---|---|---|"]
     for rec in records:
         r = rec["result"]

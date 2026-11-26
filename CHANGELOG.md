@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+* X9, a blind test: the X4 multibody-gravity idea on the UR5 joint currents (NIST), committed
+  (99d4c20) before any fit. FAIL: J1–J5 pass (0.32–0.79× baseline), J6 0.98×. Friction carries
+  most of the gain on this robot; coupled gravity adds to it on J2–J5.
+
 * X8, a blind test: the X1 v4 transmission-error model, chosen on Stäubli axes 2 and 3, applied
   unchanged to axis 1. The protocol was committed (40d911f) before any axis 1 file was
   downloaded. PASS, 0.223× baseline; without the windup term the same fit gives 0.863×.
