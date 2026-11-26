@@ -10,9 +10,11 @@ import yaml
 
 from motionproof.cad.importers import detect_format, import_file, safe_name
 from motionproof.core.schema import Confidence, MechanicalModelSpec
+from motionproof.experiments.runner import Experiment, ExperimentConfig
 from motionproof.manufacturing.variants import fit_range
 from motionproof.model import MechanicalModel, ModelError
 from motionproof.persistence.store import Store
+from motionproof.statistics.robustness import summarise
 from motionproof.tolerances import distributions as D
 from motionproof.tolerances.capability import capability, review_tolerances
 from motionproof.tolerances.sampling import SamplingMethod, VariableSpace, design_value
@@ -28,8 +30,42 @@ def create_reference_model(store: Store, project_id: str) -> dict[str, Any]:
                                 directory)
 
 
-def seed_demo(store: Store) -> bool:
-    """Give a brand-new workspace one project holding the synthetic reference design.
+def run_experiment(store: Store, experiment_id: str, exp: Experiment, **options: Any
+                   ) -> dict[str, Any]:
+    """Run an experiment and record its status and headline numbers in the workspace."""
+    store.update_experiment(experiment_id, "running")
+    try:
+        out = exp.run(**options)
+    except Exception:
+        store.update_experiment(experiment_id, "failed")
+        raise
+    summary = summarise(exp.manifest, exp.results())
+    store.update_experiment(experiment_id, out["status"],
+                            {key: summary[key] for key in
+                             ("scenarios", "all_constraints", "failure_categories")})
+    return out
+
+
+# the shape of examples/experiment_reversal_1000.yaml, small enough to finish in under a minute;
+# the limits are example values for the synthetic reference design
+DEMO_EXPERIMENT: dict[str, Any] = {
+    "task": {"type": "reversal", "joint": "shoulder", "target": {"shoulder": 1.5708},
+             "excursion": 0.2, "payload_mass": 0.2},
+    "operating": {"payload_mass": {"type": "uniform", "low": 0.0, "high": 0.5}},
+    "constraints": [
+        {"name": "bidirectional_positioning", "metric": "direction_error_ee", "op": "<=",
+         "limit": 0.002},
+        {"name": "lost_motion", "metric": "lost_motion", "op": "<=", "limit": 0.0065},
+        {"name": "torque_margin", "metric": "torque_utilisation_peak", "op": "<=",
+         "limit": 0.8},
+        {"name": "mesh_clearance", "metric": "min_mesh_backlash_mm", "op": ">=", "limit": 0.0},
+    ],
+}
+
+
+def seed_demo(store: Store, samples: int = 64) -> bool:
+    """Give a brand-new workspace one project: the synthetic reference design and a finished
+    robustness experiment on it, computed here and now.
 
     Done once: a marker file stops it coming back after the user deletes the project. Returns
     whether a project was created."""
@@ -40,9 +76,16 @@ def seed_demo(store: Store) -> bool:
     if store.projects():
         return False
     project = store.create_project(
-        "Demo", "The synthetic NEMA 17 planetary joint: open Virtual assemblies or Robustness "
-        "to run it.", demo=True)
-    create_reference_model(store, project["id"])
+        "Demo", "The synthetic NEMA 17 planetary joint with a small finished experiment: open "
+        "Robustness to see which virtual assemblies fail.", demo=True)
+    model_id = create_reference_model(store, project["id"])["id"]
+    config = ExperimentConfig.model_validate(DEMO_EXPERIMENT | {
+        "name": f"Demo: reversal robustness, {samples} scenarios",
+        "sampling": {"method": "monte_carlo", "samples": samples, "seed": 42}})
+    eid, directory = store.new_experiment_dir(project["id"])
+    exp = Experiment.create(load_model(store, model_id), config, directory, eid)
+    store.register_experiment(eid, project["id"], model_id, config.name, directory)
+    run_experiment(store, eid, exp, workers=1)
     return True
 
 

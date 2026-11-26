@@ -421,18 +421,8 @@ def create_app(home: str | Path | None = None) -> FastAPI:
             return running
 
         def work(progress: Any, cancel: Any) -> dict[str, Any]:
-            store.update_experiment(experiment_id, "running")
-            try:
-                out = exp.run(progress=progress, cancel=cancel)
-            except Exception:
-                store.update_experiment(experiment_id, "failed")
-                raise
-            summary = summarise(exp.manifest, exp.results())
-            store.update_experiment(experiment_id, out["status"],
-                                    {"scenarios": summary["scenarios"],
-                                     "all_constraints": summary["all_constraints"],
-                                     "failure_categories": summary["failure_categories"]})
-            return out
+            return services.run_experiment(store, experiment_id, exp, progress=progress,
+                                           cancel=cancel)
         return jobs.submit("experiment", experiment_id, work)
 
     @app.get(f"{API}/experiments/{{experiment_id}}")

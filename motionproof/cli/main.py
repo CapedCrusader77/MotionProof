@@ -210,7 +210,10 @@ def serve(host: str = "127.0.0.1", port: int = 8000, home: HomeOpt = None,
                       "Passwords and session cookies must not cross a network in clear text: "
                       "put an https reverse proxy in front and prefer --host 127.0.0.1 "
                       "(see docs/hosting.md).")
-        if cfg.registration == "open":
+        if cfg.local:
+            console.print("[bold yellow]No sign-in (MOTIONPROOF_LOCAL): only expose this on your "
+                          "own computer, for Docker with -p 127.0.0.1:8000:8000.[/]")
+        elif cfg.registration == "open":
             console.print("[bold yellow]Registration is open: anyone who can reach this server "
                           "can create an account. Use --production or "
                           "MOTIONPROOF_REGISTRATION=closed.[/]")

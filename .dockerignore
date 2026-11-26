@@ -1,0 +1,15 @@
+# Send only what the Dockerfile copies.
+*
+!pyproject.toml
+!uv.lock
+!README.md
+!LICENSE
+!motionproof
+!frontend
+frontend/node_modules
+frontend/dist
+frontend/test-results
+frontend/e2e-results
+frontend/playwright-report
+**/__pycache__
+**/*.pyc

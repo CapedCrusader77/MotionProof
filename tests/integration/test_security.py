@@ -302,12 +302,14 @@ def test_a_new_workspace_gets_one_demo_project_once(tmp_path: Path) -> None:
     from motionproof.services import seed_demo
 
     store = Store(tmp_path)
-    assert seed_demo(store) is True
+    assert seed_demo(store, samples=4) is True
     [project] = store.projects()
     assert project["name"] == "Demo" and len(store.models(project["id"])) == 1
+    [run] = store.experiments(project["id"])
+    assert run["status"] == "completed" and run["summary"]
     store.delete_project(project["id"])
     assert seed_demo(store) is False and store.projects() == []     # not brought back
-    assert seed_demo(Store(tmp_path / "other")) is True
+    assert seed_demo(Store(tmp_path / "other"), samples=4) is True
     busy = Store(tmp_path / "busy")
     busy.create_project("mine")
     assert seed_demo(busy) is False and [p["name"] for p in busy.projects()] == ["mine"]

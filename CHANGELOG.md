@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+* The Demo project now includes a finished 64-scenario reversal experiment, computed on first
+  start.
+* `Dockerfile`, and a `docker` workflow that builds and starts the image and publishes it to
+  `ghcr.io` for version tags and manual runs.
+
 ## 0.4.0 - 2026-11-24 - accounts, interface and reproducibility
 
 * Vercel: `vercel.json` and `.vercelignore` deploy the web app alone and forward `/api/*` to a
