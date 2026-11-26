@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+* X8, a blind test: the X1 v4 transmission-error model, chosen on Stäubli axes 2 and 3, applied
+  unchanged to axis 1. The protocol was committed (40d911f) before any axis 1 file was
+  downloaded. PASS, 0.223× baseline; without the windup term the same fit gives 0.863×.
+* X7 checked against the print files: planet shafts and bearing seats are drawn without
+  clearance, so pin or bearing play cannot explain the missing backlash; X7 is not revised.
+
 * Product screenshots, homepage images and the workflow tour retaken with the current engine
   (reference run 73.9 % pass, real benchmark timings). `frontend/tools/capture-screens.mjs` now
   also waits for "Analysing", so a screen is not captured before its analysis finishes.

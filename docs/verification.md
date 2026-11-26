@@ -12,9 +12,9 @@ What has been checked, how, and what has not.
   real backend.
 * **External experimental validation.** Public measurements of other robots (Stäubli TX2-40,
   Unitree H1, SO-101, KUKA KR300, UR5) test MotionProof's model components on unseen trials,
-  under acceptance criteria committed before the runs. Current result: 3 PASS (X1 and X4 as
-  non-blind revisions that each add one physical term after the first version failed), 2 FAIL
-  (X5 also revised, not blind),
+  under acceptance criteria committed before the runs. Current result: 4 PASS (X3; X1 and X4 as
+  non-blind revisions that each add one physical term after the first version failed; X8, a
+  blind test of the X1 revision on an unseen axis), 2 FAIL (X2; X5, also revised, not blind),
   1 INSUFFICIENT DATA; and X7, a non-blind check of the planetary backlash model against a
   published 3D-printed gearbox: FAIL. All reported in
   [`EXTERNAL_VALIDATION_RESULTS.md`](../EXTERNAL_VALIDATION_RESULTS.md). This is not validation of

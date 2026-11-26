@@ -51,6 +51,7 @@ plot along `q_set`, and the fit's conditioning.
 | `transmission-error-v2` | VALIDATION_003 | FAIL | Orders limited to at least 2 periods. Same validation error, which led to the real cause: the dataset's own `plot_figures.m` shows the published validation recordings were made **with the authors' Fourier compensation active**. Their θ_TE is the residual after compensation, about 6.5× smaller than in the identification recordings. Comparing a predicted uncompensated TE with it compares different quantities, so v1 and v2 are invalid comparisons. |
 | `transmission-error-v3` | VALIDATION_004, VALIDATION_008, VALIDATION_016 | FAIL | Holdout of whole uncompensated recordings at alternate velocity setpoints. Axis 2 PASS (validation RMSE 0.175× baseline); axis 3 FAIL (0.822×, criterion 0.5×). |
 | `transmission-error-v4` | VALIDATION_023 | PASS | v3 plus `w · q_set_dot`, the twist of the gearbox under viscous friction torque. Axis 2 0.037×, axis 3 0.281×; validation RMSE 1.2× identification on both. Not blind: written after the v3 residuals were seen. |
+| `transmission-error-axis1` (X8) | VALIDATION_037 | PASS | **Blind**: protocol committed (40d911f) before any axis 1 file was downloaded. The v4 model, unchanged, on axis 1: 0.223× baseline, validation 1.23× identification RMSE. The same fit without the windup term: 0.863× (diagnostic, computed after the run). |
 
 v1–v3 were each committed before they ran, with unchanged acceptance thresholds. v4 was written
 after v3 ran; split, orders and thresholds are unchanged and the windup term is fitted on the
@@ -70,11 +71,15 @@ it needs recordings at speeds outside the identification range, or another gearb
 ## Reproduce
 
 ```bash
-uv run motionproof external import stuttgart-te --group axis_2 --group axis_3
+uv run motionproof external import stuttgart-te --group axis_1 --group axis_2 --group axis_3
 ```
 
 ```bash
 uv run motionproof external validate transmission-error-v4
+```
+
+```bash
+uv run motionproof external validate transmission-error-axis1
 ```
 
 ## Limitations

@@ -98,6 +98,7 @@ values of the user's parts.
 | X5 | UR5 joint tracking error (v2, not blind) | FAIL | v1: J1 passed (0.73×), J2–J6 0.89–1.00×. v2 adds the position loop's acceleration lag (1/ωn² × target acceleration): J1, J3 (0.799×) and J4 pass; J2 0.86×, J5 0.97×, J6 1.00× do not. J5 and J6 errors are near the controller's resolution. No temperature association (abs(rho) ≤ 0.12). |
 | X6 | UR5 TCP accuracy | INSUFFICIENT DATA | No per-run TCP measurements are published. |
 | X7 | COMPAct 3D-printed planetary, no-load backlash (added 2026-11-26, not blind) | FAIL | Print files alone give 0.6 mrad; with the project's FDM tolerance assumptions 1.4–5.5 mrad (5–95 %); published 10.3 mrad. |
+| X8 | Stäubli TX2-40 axis 1, transmission error (**blind** test of the X1 v4 model) | PASS | Protocol committed (40d911f) before any axis 1 file was downloaded; model form chosen on axes 2 and 3, applied unchanged. 0.223× baseline (needs ≤ 0.5×); validation 1.23× identification RMSE. Without the windup term the same fit gives 0.863×, so the term found on axes 2 and 3 carries over: fitted windup −7.9e-3 rad per rad/s, against −8.3e-3 and −5.6e-3 on axes 2 and 3. |
 
 X7 differs from X1–X6. It compares with one published value, not measurement series, and its
 protocol was written after that value was known; only the tolerance model (the FDM assumptions
@@ -108,6 +109,16 @@ gap between motor and output angle over a slow sine motion, which includes frict
 once-per-revolution errors. Still, the gap is large: the model would need about 0.23 mm of free
 travel at each planet, against 0.08 mm at its median. Either the FDM assumptions are too
 optimistic for printed gears, or real printed gearboxes have lost motion the model leaves out.
+
+Checked afterwards against the print files (2026-11-26): pin and bearing play cannot supply the
+missing travel. The carrier has printed 8 mm planet shafts (measured 7.90–7.94 mm on the facets)
+around 5 mm bolt holes, and each planet has 12 mm bearing seats (11.96 mm) for 8 × 12 mm
+bearings; these fits are drawn without clearance, so the free play left there is the bearings'
+internal clearance, a few micrometres. That rules out the planet pin as the explanation and is
+why X7 was not revised with `carrier_pin_clearance`. The remaining candidates have no published
+numbers: the thickness error of printed 0.5-module teeth (about 0.79 mm thick, two nozzle
+widths) and friction windup inside the measured quantity (2 × no-load drag / 242.7 N·m/rad
+published stiffness; the drag is not published).
 
 What this shows: the dead-band (backlash) and servo model reproduces a real joint's response
 to unseen commands (X3), and the periodic TE term captures the position-dependent transmission

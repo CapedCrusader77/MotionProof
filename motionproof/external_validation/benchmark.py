@@ -58,7 +58,8 @@ def write_results(records: list[dict[str, Any]], path: Path,
          "(nist-tracking-v2) are revisions written after their earlier versions had run and "
          "failed: each adds one physical effect the earlier residuals showed to be missing, "
          "with data split and acceptance unchanged. They are not blind; the earlier runs are "
-         "listed under superseded protocols.", "",
+         "listed under superseded protocols. X8 is a blind test of the X1 revision: its "
+         "protocol was committed (40d911f) before any axis 1 file was downloaded.", "",
          "| ID | Validation | System | Status | Headline | Run |", "|---|---|---|---|---|---|"]
     for rec in records:
         r = rec["result"]
