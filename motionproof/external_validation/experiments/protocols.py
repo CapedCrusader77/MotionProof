@@ -122,6 +122,29 @@ PROTOCOLS: dict[str, Protocol] = {
                                 "sum a sin(c theta + phi)", "backlash dead band b/2",
                                 "friction torque through drive stiffness (windup)"),
         reproduce="motionproof external validate transmission-error-v4"),
+    # Written and committed 2026-11-26 BEFORE any axis 1 file was downloaded or inspected: a
+    # blind test of the transmission-error-v4 model form (chosen on axes 2 and 3) on the axis
+    # no protocol had used. Split rule, order rule and acceptance are those of v4, unchanged.
+    "transmission-error-axis1": Protocol(
+        id="transmission-error-axis1", benchmark="X8", dataset="stuttgart-te",
+        title="Gearbox transmission error, Staubli TX2-40 axis 1 (blind test of the X1 v4 "
+              "model)",
+        system="Staubli TX2-40 gearbox, axis 1, on an experimental setup",
+        quantity="theta_TE (rad) without compensation, at every published sample",
+        identification="identification/axis_1 files whose velocity setpoint has an even rank "
+                       "when the setpoints of each sign are sorted by magnitude",
+        validation="identification/axis_1 files with odd rank (whole recordings)",
+        unused="axes 2 and 3 (used to choose the model form); validation/ folder",
+        baseline="B0: constant transmission error equal to the identification mean",
+        model="transmission-error-v4 unchanged: c0 + (b/2) sign(q_set_dot) + w q_set_dot + "
+              "the 30 largest identifiable orders (>= 2 periods over the shortest "
+              "identification recording), fitted on axis 1 identification files only",
+        acceptance="validation RMSE(model) <= 0.5 x validation RMSE(B0) and validation "
+                   "RMSE(model) <= 1.5 x identification RMSE(model)",
+        motionproof_components=("simulation.engine drive gap equation: TE(theta) term",
+                                "backlash dead band b/2",
+                                "friction torque through drive stiffness (windup)"),
+        reproduce="motionproof external validate transmission-error-axis1"),
     "h1-friction": Protocol(
         id="h1-friction", benchmark="X2", dataset="anchor-lab",
         title="Joint friction and dynamics, Unitree H1 elbow test stand",

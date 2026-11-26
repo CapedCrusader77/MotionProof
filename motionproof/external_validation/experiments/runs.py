@@ -156,16 +156,18 @@ def speed_holdout(rels: list[str]) -> tuple[list[str], list[str]]:
 
 def validate_transmission_error(root: Path, pid: str = "transmission-error",
                                 min_periods: float = 0.0, split: str = "published",
-                                windup: bool = False) -> dict[str, Any]:
+                                windup: bool = False,
+                                axis_names: tuple[str, ...] = ("axis_2", "axis_3")
+                                ) -> dict[str, Any]:
     out = _base(pid)
     a = ADAPTERS["stuttgart-te"]
     have = a.available(root)
-    if not have:
-        return _not_imported(pid, "stuttgart-te")
+    if not any(r.startswith(f"identification/{ax}/") for r in have for ax in axis_names):
+        return _not_imported(pid, "stuttgart-te " + ", ".join(axis_names))
     axes: dict[str, Any] = {}
     ok_all = True
     ev = []
-    for axis in ("axis_2", "axis_3"):
+    for axis in axis_names:
         ident_rel = sorted(r for r in have if r.startswith(f"identification/{axis}/"))
         valid_rel = sorted(r for r in have if r.startswith(f"validation/{axis}/"))
         if split == "speed-holdout":
@@ -216,11 +218,13 @@ def validate_transmission_error(root: Path, pid: str = "transmission-error",
                         "fitted TE harmonics and dead-band offset") for t in ident]
         ev += [evidence("EXTERNAL_VALIDATION", "stuttgart-te", t.trial_id, "validation",
                         "holdout comparison of predicted and measured theta_TE") for t in valid]
-    prefixes = ("identification/axis_2", "identification/axis_3") + (
-        ("validation/axis_2", "validation/axis_3") if split == "published" else ())
+    prefixes = tuple(f"identification/{ax}" for ax in axis_names) + (
+        tuple(f"validation/{ax}" for ax in axis_names) if split == "published" else ())
     out["files_used"] = sorted(r for r in have if r.startswith(prefixes))
     if windup:
         out["details"] = [
+            "Blind: protocol committed before any axis 1 file was downloaded; the model form "
+            "was chosen on axes 2 and 3 only." if axis_names == ("axis_1",) else
             "Not blind: written after transmission-error-v3 (axis 3 FAIL); the windup term "
             "was chosen from the v3 residuals, which fall linearly with the velocity setpoint.",
             "Fitted windup w (rad per rad/s): " + "; ".join(
@@ -732,6 +736,9 @@ VALIDATIONS: dict[str, Callable[[Path], dict[str, Any]]] = {
         root, "transmission-error-v3", min_periods=2.0, split="speed-holdout"),
     "transmission-error-v4": lambda root: validate_transmission_error(
         root, "transmission-error-v4", min_periods=2.0, split="speed-holdout", windup=True),
+    "transmission-error-axis1": lambda root: validate_transmission_error(
+        root, "transmission-error-axis1", min_periods=2.0, split="speed-holdout", windup=True,
+        axis_names=("axis_1",)),
     "h1-friction": validate_h1_friction,
     "so101-tracking": validate_so101_tracking,
     "kuka-inverse": validate_kuka_inverse,
