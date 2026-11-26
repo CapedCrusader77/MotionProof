@@ -64,10 +64,10 @@ Accounts keep their own workspaces. [All features](docs/features.md).
 With [Docker](https://docs.docker.com/get-docker/), no Python or Node needed:
 
 ```bash
-git clone https://github.com/CapedCrusader77/MotionProof && cd MotionProof
-docker build -t motionproof .
-docker run --rm -p 127.0.0.1:8000:8000 -e MOTIONPROOF_LOCAL=1 -v motionproof-data:/data motionproof
+docker run --rm -p 127.0.0.1:8000:8000 -e MOTIONPROOF_LOCAL=1 -v motionproof-data:/data ghcr.io/capedcrusader77/motionproof
 ```
+
+Then open http://127.0.0.1:8000. (To build the image yourself: `docker build -t motionproof .`)
 
 Keep the `127.0.0.1:` in front of the port: with `MOTIONPROOF_LOCAL=1` there is no sign-in.
 
