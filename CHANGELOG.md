@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+* `motionproof hardware predict` records the predicted lost motion of a rig test (5 to 95 % over
+  virtual copies, an acceptance margin, the model fingerprint and a hash) before measuring;
+  `motionproof hardware check` applies it unchanged to the measured analyses and rejects an
+  edited prediction or a different test. Tested with the simulated device only; no rig has been
+  measured.
+* README: a Limitations section.
 * The Demo project now includes a finished 64-scenario reversal experiment, computed on first
   start.
 * `Dockerfile`, and a `docker` workflow that builds and starts the image and publishes it to

@@ -19,6 +19,8 @@ blocked); 2 usage or input error. `--home` selects the workspace.
 | `motionproof experiment export EXP SCENARIO FILE` | Self-contained scenario JSON with trace |
 | `motionproof optimise EXP METRIC [--algorithm --budget --seed --minimise]` | Worst-case search |
 | `motionproof calibration fit DATA.csv -c CONFIG.yaml [--holdout FILE]` | Calibration |
+| `motionproof hardware predict RIG.yaml -o PREDICTION.json [--samples --margin]` | Record the predicted lost motion of a rig test before measuring it |
+| `motionproof hardware check PREDICTION.json ANALYSIS.json...` | Apply the recorded acceptance rule to measured analyses |
 | `motionproof report EXP [-o DIR]` | JSON, Markdown, CSV and PDF report |
 | `motionproof serve [--port --home]` | API and web application |
 

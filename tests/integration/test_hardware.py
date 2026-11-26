@@ -247,3 +247,37 @@ def test_model_independent_session_analysis(single_joint, tmp_path: Path) -> Non
     rep = analyse(cyc, load_session_csv(s2.write_csv(tmp_path / "c.csv")))["repeatability"]
     # approached from one side every time: the spread stays well below the 8 mrad backlash
     assert set(rep) == {"a", "b"} and rep["b"]["n"] == 4 and rep["b"]["range"] < 0.004
+
+
+def test_a_prediction_recorded_before_measuring_is_checked_unchanged(
+        single_joint, tmp_path: Path) -> None:  # type: ignore[no-untyped-def]
+    """The model's backlash tolerance is uniform 0 to 20 mrad. A rig with 8 mrad lies inside the
+    predicted range, one with 50 mrad does not; editing the prediction afterwards is caught."""
+    from motionproof.hardware.analysis import analyse, load_session_csv
+    from motionproof.hardware.prediction import PredictionError, check, predict
+
+    model = _model(single_joint)
+    prediction = predict(model, TEST, samples=24, seed=1, margin=2 * np.pi / 4096)
+    low, high = prediction["interval"]
+    assert 0.0 <= low < 0.008 < high <= 0.02 and prediction["invalid_copies"] == 0
+
+    def measured(backlash: float, name: str) -> dict:  # type: ignore[type-arg]
+        dev = SimulatedDevice(model, truth={"backlash": backlash}, sample_hz=200.0)
+        s = run_test(dev, TEST, LIMITS, confirm_actuation=True)
+        return analyse(TEST, load_session_csv(s.write_csv(tmp_path / name)))
+
+    good, bad = measured(0.008, "good.csv"), measured(0.05, "bad.csv")
+    assert check(prediction, [good])["status"] == "PASS"
+    saved = json.loads(json.dumps(prediction))                  # as written to and read from disk
+    assert check(saved, [json.loads(json.dumps(good, default=float))])["status"] == "PASS"
+    result = check(prediction, [good, bad])
+    assert result["status"] == "FAIL" and [r["inside"] for r in result["runs"]] == [True, False]
+
+    widened = dict(prediction, interval=[0.0, 0.1])            # moved the goalposts afterwards
+    with pytest.raises(PredictionError, match="changed after"):
+        check(widened, [bad])
+    other = TEST.model_copy(update={"excursion": 0.1}).model_dump()
+    with pytest.raises(PredictionError, match="different test"):
+        check(prediction, [good | {"test": other}])
+    with pytest.raises(PredictionError, match="only reversal"):
+        predict(model, TEST.model_copy(update={"kind": "cycles"}))

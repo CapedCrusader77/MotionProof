@@ -1026,6 +1026,58 @@ def hardware_analyse(session_csv: Path, test_file: Annotated[Path, typer.Option(
     _dump(res, output)
 
 
+@hardware_app.command("predict")
+@guard
+def hardware_predict(config_file: Path, output: Annotated[Path, typer.Option(
+        "--output", "-o", help="Prediction file; commit it before measuring")],
+        samples: int = 64, seed: int = 0,
+        margin: Annotated[float, typer.Option(
+            help="rad added to each side of the interval, at least the encoder resolution"
+            )] = 0.0) -> None:
+    """Record the predicted lost motion of a rig test BEFORE measuring it."""
+    from motionproof.hardware.device import HardwareTest
+    from motionproof.hardware.prediction import PredictionError, predict
+
+    if output.exists():
+        fail(f"{output} exists; a prediction is written once and never replaced")
+    model, raw = _yaml_with_model(config_file)
+    try:
+        res = predict(model, HardwareTest.model_validate(raw["test"]), samples, seed, margin)
+    except PredictionError as exc:
+        fail(str(exc))
+    output.write_text(json.dumps(res, indent=1), encoding="utf-8")
+    lo, hi = res["interval"]
+    console.print(f"predicted lost motion {res['nominal'] * 1e3:.3f} mrad nominal, "
+                  f"{lo * 1e3:.3f} to {hi * 1e3:.3f} mrad ({res['interval_rule']}); "
+                  f"margin {margin * 1e3:.3f} mrad")
+    console.print(f"written to {output}. Commit it to version control now, before measuring.")
+
+
+@hardware_app.command("check")
+@guard
+def hardware_check(prediction_file: Path, analyses: list[Path],
+                   output: Annotated[Path | None, typer.Option("--output", "-o")] = None
+                   ) -> None:
+    """Apply a recorded prediction to analyses from `hardware analyse -o`."""
+    from motionproof.hardware.prediction import PredictionError, check
+
+    try:
+        res = check(json.loads(prediction_file.read_text(encoding="utf-8")),
+                    [json.loads(p.read_text(encoding="utf-8")) for p in analyses])
+    except PredictionError as exc:
+        fail(str(exc))
+    lo, hi = res["accepted_range"]
+    for path, r in zip(analyses, res["runs"], strict=True):
+        console.print(f"{path.name}: measured {r['measured'] * 1e3:.3f} mrad, "
+                      f"{'inside' if r['inside'] else 'OUTSIDE'} {lo * 1e3:.3f} to "
+                      f"{hi * 1e3:.3f} mrad")
+    console.print(f"[bold]{res['status']}[/bold] (prediction of {res['prediction_created']}). "
+                  + res["statement"])
+    _dump(res, output)
+    if res["status"] != "PASS":
+        raise typer.Exit(1)
+
+
 measure_app = typer.Typer(help="Measured component dimensions.", no_args_is_help=True)
 app.add_typer(measure_app, name="measurements")
 

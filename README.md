@@ -84,6 +84,22 @@ made on the first start: the reference design and a 64-scenario experiment, comp
 machine in about a minute. Open **Robustness** to see which virtual assemblies fail. From the command line:
 `uv run motionproof reference create demo`.
 
+## Limitations
+
+* **No physical measurement yet.** The reference design is synthetic and several of its values
+  are assumed. The rig procedure, with predictions recorded before measuring, is in
+  [docs/rig-build-and-test.md](docs/rig-build-and-test.md); it has not been carried out.
+* **External validation is mixed.** Against public data from other robots, with criteria fixed
+  before the first run: 1 pass, 4 fail, 1 with too little data
+  ([results](EXTERNAL_VALIDATION_RESULTS.md)).
+* **Reduced-order physics.** Rigid bodies and a drive train with backlash, stiffness and
+  friction; no gear-tooth or bearing contact, deformation, heat or wear.
+* **Narrower than a CAD tool.** Only revolute joints can be driven; geometric tolerances are
+  scalar deviations, not full GD&T zones.
+
+All of them: [engineering limitations](docs/engineering-limitations.md),
+[development status](docs/development-status.md).
+
 ## Go deeper
 
 | | |

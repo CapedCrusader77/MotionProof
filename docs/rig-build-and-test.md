@@ -57,6 +57,33 @@ uv run motionproof hardware devices
 
 The rig appears as a serial port (for example `COM5`).
 
+## Predict first
+
+A comparison made after looking at the measurement proves little: the model can always be tuned
+to fit. So write the prediction down before the rig moves, and commit it:
+
+```bash
+uv run motionproof hardware predict rig_reversal.yaml -o predictions/rig_reversal.json --samples 64 --margin 0.0015
+git add predictions/rig_reversal.json && git commit -m "Prediction for the first rig reversal"
+```
+
+It simulates the test on 64 virtual copies of the model drawn from its tolerances and records the
+5 to 95 % range of lost motion, the acceptance rule (every measured value inside that range,
+widened by `--margin` on each side; use at least the encoder resolution, 1.53 mrad for an
+AS5600), the model's fingerprint and a hash of the file. The command refuses to overwrite an
+existing prediction, and `check` refuses a file that was edited afterwards. The commit date is
+what shows the prediction came first.
+
+After measuring and analysing (below), apply the rule unchanged:
+
+```bash
+uv run motionproof hardware check predictions/rig_reversal.json run1.json run2.json run3.json
+```
+
+`run1.json` is the `-o` output of `hardware analyse`. Report the result whichever way it goes,
+together with the prediction file. Calibrating afterwards is fine, but a calibrated model must
+be checked on a new prediction and new runs, not on the ones used to tune it.
+
 ## Test sequence
 
 Place the arm at the test's first commanded angle (`centre - excursion` for a reversal), then:
@@ -66,7 +93,7 @@ uv run motionproof hardware test rig_reversal.yaml --device COM5 --confirm --csv
 ```
 
 ```bash
-uv run motionproof hardware analyse run1.csv --test rig_reversal.yaml --motor-counts-per-rev 3200 --nominal-ratio 33
+uv run motionproof hardware analyse run1.csv --test rig_reversal.yaml --motor-counts-per-rev 3200 --nominal-ratio 33 -o run1.json
 ```
 
 Recommended set, each repeated at least 3 times:
